@@ -21,7 +21,15 @@ python3 main.py
 The linked JSON output would be located under `./outputs` with the name defined in the main file.
 
 ## Directory Layout
+```
 ./src/minelink
 |-- __init__.py
-|-- params.py
-|-- preprocess.py
+|-- __main__.py
+|-- site_linking
+|   |-- __init__.py
+|   |-- column_mapping.py                   # Reads the data dictionary and find columns relevant to lat/long/crs
+|   |-- dataframe_extraction.py             # Extraction portions of dataframes that would be used
+|-- load_save.py                            # Loads directory, files, and saves file
+|-- tester.py                               # Tests accuracy of the algorithm
+|-- params.py                               # Parameters file
+```
