@@ -1,8 +1,10 @@
 from argparse import ArgumentParser
 from torch.cuda import device_count
 
+from minelink.load_save import *
+
 def main(args):
-    print(args.data_dir)
+    load_dir_items(args.data_dir)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

@@ -8,7 +8,7 @@ import geopandas as gpd
 from shapely import wkt
 # from transformers import AutoTokenizer, AutoModel
 
-from params import *
+from minelink.params import *
 
 def check_dir(path_dir):
     if not os.path.exists(path_dir):
@@ -28,6 +28,8 @@ def loader(path_dir, file_name, extension):
     
     elif extension == '.csv':
         return(pd.read_csv(os.path.join(path_dir, file_name + extension)))
+    
+    # TODO: Add function that will convert json back into dataframe
 
 def dumper(data, path_dir, file_name, save_format):
     if save_format.upper() == 'PKL' or save_format.upper() == 'PICKLE':
@@ -46,7 +48,7 @@ def dumper(data, path_dir, file_name, save_format):
         with open(os.path.join(path_dir, file_name+'.json'), 'w') as handle:
             handle.write(obj_data)
 
-def open_dir(path_dir):
+def load_dir_items(path_dir):
     list_dir_items = os.listdir(path_dir)
     list_files = ['',]
     
@@ -78,6 +80,3 @@ def open_dir(path_dir):
         file_name, file_extension = os.path.splitext(l)
         dataframe = loader(path_dir, file_name, file_extension)
         dumper(dataframe, folder_temporary, file_name, 'PICKLE')
-
-
-open_dir('/home/yaoyi/pyo00005/CriticalMAAS/src/data/pkl/testing')
