@@ -20,6 +20,10 @@ python3 main.py
 ```
 The linked JSON output would be located under `./outputs` with the name defined in the main file.
 
+```
+python -m minelink -d path/to/data/directory
+```
+
 ### Testing
 ```
 python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
