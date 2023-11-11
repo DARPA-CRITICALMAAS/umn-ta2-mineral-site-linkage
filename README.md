@@ -20,9 +20,14 @@ python3 main.py
 ```
 The linked JSON output would be located under `./outputs` with the name defined in the main file.
 
+### Testing
+```
+python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
+```
+
 ## Directory Layout
 ```
-./src/minelink
+./minelink
 |-- __init__.py
 |-- __main__.py
 |-- site_linking

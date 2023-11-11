@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from torch.cuda import device_count
 
 def main(args):
-    print(args.data_dir)
+    print(args)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

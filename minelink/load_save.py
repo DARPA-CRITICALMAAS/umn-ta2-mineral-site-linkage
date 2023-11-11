@@ -8,7 +8,7 @@ import geopandas as gpd
 from shapely import wkt
 # from transformers import AutoTokenizer, AutoModel
 
-from params import *
+from minelink.params import *
 
 def check_dir(path_dir):
     if not os.path.exists(path_dir):
@@ -78,6 +78,3 @@ def open_dir(path_dir):
         file_name, file_extension = os.path.splitext(l)
         dataframe = loader(path_dir, file_name, file_extension)
         dumper(dataframe, folder_temporary, file_name, 'PICKLE')
-
-
-open_dir('/home/yaoyi/pyo00005/CriticalMAAS/src/data/pkl/testing')
