@@ -19,3 +19,9 @@ Run the python file by entering the following code in the command line:
 python3 main.py
 ```
 The linked JSON output would be located under `./outputs` with the name defined in the main file.
+
+## Directory Layout
+./src/minelink
+|-- __init__.py
+|-- params.py
+|-- preprocess.py
