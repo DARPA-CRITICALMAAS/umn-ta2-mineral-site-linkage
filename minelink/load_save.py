@@ -1,4 +1,7 @@
+#!/usr/bin/python
 import os
+import sys
+import shutil
 
 import pickle5 as pickle
 from json import loads, dumps
@@ -63,6 +66,9 @@ def load_dir_items(path_dir):
 
         print("\nModel running with the following files: " + "\n|-- ".join(list_files))
 
+        if len(list_files) == 1:
+            break
+
         user_confirm = str(input("> Confirmed (Y/N)?: ")).upper()
         if user_confirm == 'Y':
             bool_confirm = True
@@ -80,3 +86,9 @@ def load_dir_items(path_dir):
         file_name, file_extension = os.path.splitext(l)
         dataframe = loader(path_dir, file_name, file_extension)
         dumper(dataframe, folder_temporary, file_name, 'PICKLE')
+
+def close_dir(path_dir):
+    try:
+        shutil.rmtree(path_dir, ignore_errors=False)
+    except:
+        pass
