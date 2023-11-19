@@ -1,8 +1,10 @@
 import os
 import pandas as pd
+import geopandas as gpd
+from tqdm import tqdm
 
-# from minelink.site_linking.column_mapping import *
-from column_mapping import *
+from minelink.linking_modules.column_mapping import *
+# from column_mapping import *
 
 def create_dict_info(df_data, col_name):
     # Creates a dictionary with 'id' as the key and 'site_name' as the value
@@ -24,6 +26,11 @@ def create_dict_sameas(df_data):
     input: dataframe with the original data
     return: dictionary with 'id' as key and original data as values
     """
+    try:
+        df_data = df_data.drop(['geometry'], axis=1)
+    except:
+        pass
+
     dict_sameas = df_data.set_index('id')
     dict_sameas = df_data.to_dict('index')
 
@@ -33,14 +40,22 @@ def separate_dataframe(df_data, df_dict, source_name):
     # Appends a temporary index (that will be used for this program)
     df_data['id'] = source_name + df_data.index.astype('string')
 
-    # Creates a 'sameas' dictionary
-    dict_sameas = create_dict_sameas(df_data)
-
     # Find columns related to site name (as col_name) and latitude, longitude, crs (as list_col_remove)
-    col_name, list_col_geometry, bool_geometry = find_geometry_columns(df_data, df_dict)
+    col_name, list_col_geometry, bool_geometry = find_name_geom_columns(df_data, df_dict)
+
+    if not bool_geometry:
+        df_data = gpd.GeoDataFrame(
+            df_data, geometry=gpd.points_from_xy(list_col_geometry[0], list_col_geometry[1]), crs=list_col_geometry[2]
+        )
+
+        print('no')
 
     dict_info = create_dict_info(df_data, col_name)
 
+    # Creates a 'sameas' dictionary
+    dict_sameas = create_dict_sameas(df_data)
+
+    # create_dict_location(df_data, crs, location)
     
     df_data = df_data.drop(list_col_geometry, axis=1)
 

@@ -32,16 +32,23 @@ def loader(path_dir, file_name, extension):
     elif extension == '.csv':
         return(pd.read_csv(os.path.join(path_dir, file_name + extension)))
     
-    # TODO: Add function that will convert json back into dataframe
+    # TODO: Somethng is wrong here; it needs to be editted so that later user inputs can also be read
+    # elif extension == '.json':
+    #     f = open(os.path.join(path_dir, file_name + extension), 'r')
+    #     data  = loads(f)
+    #     return data
 
 def dumper(data, path_dir, file_name, save_format):
     if save_format.upper() == 'PKL' or save_format.upper() == 'PICKLE':
         with open(os.path.join(path_dir, file_name+'.pkl'), 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     elif save_format.upper() == 'CSV':
-        return 0
+        data.to_csv(os.path.join(path_dir, file_name + '.csv'))
+    
     elif save_format.upper() == 'GEOJSON':
         return 0
+    
     elif save_format.upper() == 'JSON':
         json_df = data.to_json(orient='index', default_handler=str)    # default handler set to prevent iteration overflow
 
@@ -78,6 +85,8 @@ def load_dir_items(path_dir):
 
             list_dir_items = list_files
             list_files = ['',]
+
+    # TODO: Do something that will print out {filename} AS {extension}
         
     folder_temporary = './temporary'
     check_dir(folder_temporary)
@@ -86,6 +95,8 @@ def load_dir_items(path_dir):
         file_name, file_extension = os.path.splitext(l)
         dataframe = loader(path_dir, file_name, file_extension)
         dumper(dataframe, folder_temporary, file_name, 'PICKLE')
+
+    return len(list_files) - 1
 
 def close_dir(path_dir):
     try:

@@ -3,4 +3,5 @@ ACCEPTABLE_INPUT_FILE = [
                             '.gdb',
                             '.pkl',
                             '.geojson',
+                            '.json',
                         ]

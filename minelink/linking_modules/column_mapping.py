@@ -27,7 +27,7 @@ def find_crs(list_sent_geo):
 
 #     return list_geo
 
-def find_geometry_columns(df_data, df_dic):
+def find_name_geom_columns(df_data, df_dic):
     """
     input: df_data = dataframe 
     input: df_dic = dataframe
@@ -49,7 +49,11 @@ def find_geometry_columns(df_data, df_dic):
         bool_geometry = False
 
     col_name = 'name'
-    list_col_geom = []
+
+    # Needs to be longitude, latitude, crs
+    list_col_geom = [long, lat, crs]
+
+    selection_threshold = 0.4
 
     return col_name, list_col_geom, bool_geometry
 
