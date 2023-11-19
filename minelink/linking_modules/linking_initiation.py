@@ -1,16 +1,16 @@
-from minelink.linking_modules.dataframe_formatting import *
+from minelink.linking_modules.dataframe_preprocessing import preprocessing
+from minelink.linking_modules.dataframe_postprocessing import postprocessing
 
 def site_linking(count, bool_location, bool_full):
     if count <= 0:
         print("ENDING PROGRAM: No files to process")
         return -1
     
-    print("Processing", count, "files")
-    print(bool_location, bool_full)
-    if bool_full:
-        print("Full based")
-    elif bool_location:
-        print("Location based")
+    if not bool_full and not bool_location:
+        print("ENDING PROGRAM: No linking mode selected")
+        return -1
     
-    print("ENDING PROGRAM: No linking mode selected")
-    return -1
+    print("\nLinking", count, "files:")
+    preprocessing(bool_full, bool_location)
+
+    return 0

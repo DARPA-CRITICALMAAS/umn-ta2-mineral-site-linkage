@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import geopandas as gpd
+import pickle5 as pickle
+import regex as re
 from tqdm import tqdm
 
 from minelink.linking_modules.column_mapping import *
@@ -73,12 +75,21 @@ def separate_dataframe(df_data, df_dict, source_name):
 
     return df_data, dict_sameas
 
+def preprocessing(bool_full, bool_location):
+    list_items = os.listdir('./temporary')
 
+    for i in list_items:
+        file_name, file_extension = os.path.splitext(i)
+        print("  ", file_name, "as", re.split('[^A-Za-z]', file_name)[0])
+        with open(os.path.join('./temporary', i), 'rb') as handle:
+            dataframe = pickle.load(handle)
 
-def create_output_dataframe(df_linked, dict_info, dict_location, dict_sameas):
-    df_output = df_linked
+        # print(dataframe)
 
-    # based on idx in df_linked call dict info, dict location, an dict sameas
-    # for dict location, create a dataframe and select centroid
-
-    return df_linked
+    # if bool_location:
+    #     # separate_dataframe()
+    #     print(list_items, "Location")
+    #     return 1
+    
+    # print(list_items, "Full")
+    # return 2

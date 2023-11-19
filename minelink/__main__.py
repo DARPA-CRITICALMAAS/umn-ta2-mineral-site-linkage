@@ -13,7 +13,7 @@ def main(args):
 
     count = load_dir_items(args.data_dir)
 
-    site_linking(count, args.use_location_base, args.use_full)
+    err = site_linking(count, args.use_location_base, args.use_full)
 
     close_dir('./temporary')
 

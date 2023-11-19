@@ -6,6 +6,7 @@ import shutil
 import pickle5 as pickle
 from json import loads, dumps
 
+import regex as re
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
@@ -86,17 +87,21 @@ def load_dir_items(path_dir):
             list_dir_items = list_files
             list_files = ['',]
 
+        #TODO: Deal with case when other stuffs are inputted in
+
     # TODO: Do something that will print out {filename} AS {extension}
         
     folder_temporary = './temporary'
     check_dir(folder_temporary)
+
+    list_files.pop(0)
 
     for l in list_files:
         file_name, file_extension = os.path.splitext(l)
         dataframe = loader(path_dir, file_name, file_extension)
         dumper(dataframe, folder_temporary, file_name, 'PICKLE')
 
-    return len(list_files) - 1
+    return len(list_files)
 
 def close_dir(path_dir):
     try:
