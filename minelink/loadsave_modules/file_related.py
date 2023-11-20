@@ -23,6 +23,9 @@ def loader(path_dir, file_name, extension):
     elif extension == '.csv':
         return(pd.read_csv(os.path.join(path_dir, file_name + extension)))
     
+    elif extension == '.xls' or extension == '.xlsx':
+        return(pd.read_excel(os.path.join(path_dir, file_name + extension)))
+    
     # TODO: Somethng is wrong here; it needs to be editted so that later user inputs can also be read
     # elif extension == '.json':
     #     f = open(os.path.join(path_dir, file_name + extension), 'r')

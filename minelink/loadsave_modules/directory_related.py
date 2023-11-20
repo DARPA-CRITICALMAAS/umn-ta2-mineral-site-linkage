@@ -8,6 +8,11 @@ from minelink.loadsave_modules.file_related import *
 from minelink.params import *
 
 def check_dir(path_dir):
+    """
+    check_dir function checkes whether the inputted directory path exists and creates one if it does not exist
+    
+    input: path_dir=path to directory
+    """
     if not os.path.exists(path_dir):
         os.makedirs(path_dir)
 

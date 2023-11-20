@@ -4,4 +4,8 @@ ACCEPTABLE_INPUT_FILE = [
                             '.pkl',
                             '.geojson',
                             '.json',
+                            '.xls',
+                            '.xlsx',
                         ]
+
+tmp_location = './temporary'
