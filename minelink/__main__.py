@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from torch.cuda import device_count
 
-from minelink.load_save import *
+from minelink.loadsave_modules.directory_related import *
 from minelink.linking_modules.linking_initiation import site_linking
 
 def main(args):

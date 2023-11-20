@@ -34,10 +34,21 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 ./minelink
 |-- __init__.py
 |-- __main__.py
-|-- site_linking
+|
+|-- initiation_modules
+|
+|-- linking_modules
 |   |-- __init__.py
 |   |-- column_mapping.py                   # Reads the data dictionary and find columns relevant to lat/long/crs
-|   |-- dataframe_formatting.py             # Extraction portions of dataframes that would be used
+|   |-- dataframe_postprocessing.py         # 
+|   |-- dataframe_preprocessing.py          # Extraction portions of dataframes that would be used
+|   |-- initiate_linking.py                 # 
+|
+|-- loadsave_modules
+|   |-- __init__.py                         # 
+|   |-- directory_related.py                # 
+|   |-- file_related.py                     # 
+|
 |-- load_save.py                            # Loads directory, files, and saves file
 |-- tester.py                               # Tests accuracy of the algorithm
 |-- params.py                               # Parameters file

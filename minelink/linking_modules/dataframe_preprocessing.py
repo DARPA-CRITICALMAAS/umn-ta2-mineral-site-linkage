@@ -6,6 +6,7 @@ import regex as re
 from tqdm import tqdm
 
 from minelink.linking_modules.column_mapping import *
+from minelink.loadsave_modules.directory_related import *
 # from column_mapping import *
 
 def create_dict_info(df_data, col_name):
@@ -81,6 +82,9 @@ def preprocessing(bool_full, bool_location):
     for i in list_items:
         file_name, file_extension = os.path.splitext(i)
         print("  ", file_name, "as", re.split('[^A-Za-z]', file_name)[0])
+
+        check_dir('./'+file_name)
+
         with open(os.path.join('./temporary', i), 'rb') as handle:
             dataframe = pickle.load(handle)
 
