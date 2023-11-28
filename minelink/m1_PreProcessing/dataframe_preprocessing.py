@@ -76,8 +76,9 @@ def separate_dataframe(df, source_alias_code, source_name):
         # float with more decimal places?
 
     df = df.rename(columns=dict_loc_col_map)
-
-    dict_sameas = convert_df_to_dict(df)
+    
+    df_sameas = df.drop(['location_source_record_id', 'geometry'], axis=1)
+    dict_sameas = convert_df_to_dict(df_sameas)
     dict_loc, dict_geo = create_dict_location(df, source_name)
 
     # TODO: create dataframe consisting of relevant information (that will be used for linking)

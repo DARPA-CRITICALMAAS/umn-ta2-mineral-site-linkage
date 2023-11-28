@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.cluster import DBSCAN, HDBSCAN, Birch
 
-def location_based_linking(df_tolink):
+def link_with_loc(df_tolink):
+    df_tolink['idx'] = df_tolink.index.astype(str)
     df_tolink = df_tolink.reset_index(drop=True)
     df_geometry = pd.concat([df_tolink['geometry'].x, df_tolink['geometry'].y], axis=1)
     df_geometry.columns = ['X', 'Y']
@@ -13,6 +14,3 @@ def location_based_linking(df_tolink):
     df_linked = pd.concat([df_tolink, series_labels], axis=1)
 
     return df_linked
-
-def link_with_loc():
-    return 0

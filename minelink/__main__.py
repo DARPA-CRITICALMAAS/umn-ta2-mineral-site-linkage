@@ -3,9 +3,12 @@ from torch.cuda import device_count
 
 from minelink.m0_SaveAndLoad.save_load_directory import remove_tmp_dir
 from minelink.m4_InitiateLinking.determine_link_mode import site_linking
+from minelink.m5_PostProcessing.dataframe_postprocessing import postprocessing
 
 def main(args):
     site_linking(args.data_dir, bool_location=args.use_location_base)
+    postprocessing()
+
     # remove_tmp_dir()
 
 if __name__ == '__main__':

@@ -6,13 +6,6 @@ import pandas as pd
 from minelink.params import *
 from minelink.m0_SaveAndLoad.save_load_file import load_file
 
-def find_name_column(columns, bool_dict):
-    if bool_dict == False:
-        list_commonly_used = ['depname', 'dep_name', 'site_name', 'names', 'name', 'other_name', 'name_other', 'ftr_name']
-        return 0
-    
-    return 0
-
 def get_unique_id_column(df):
     len_df = df.shape[0]
 

@@ -27,24 +27,26 @@ def site_linking(path_data, bool_location=False):
 
             dict_tmp_alias[leading_char+follow_char] = source_name
 
+            # Find relevant dictionary and store it in as pickle in to path tmp dir
+
             df = load_file(path_data, file_name, file_extension)
             dump_file(df, tmp_file_folder, 'raw', 'PICKLE')
 
-            dict_sameas, dict_loc, dict_geo, df_link = separate_dataframe(df, leading_char+follow_char, source_name)
+            dict_sameas, dict_loc, dict_geo, df_tolink = separate_dataframe(df, leading_char+follow_char, source_name)
             dump_file(dict_sameas, tmp_file_folder, 'same_as', 'PICKLE')
             dump_file(dict_loc, tmp_file_folder, 'location_info', 'PICKLE')
             dump_file(dict_geo, tmp_file_folder, 'geometry', 'PICKLE')
 
             # TODO: intra link on the df link
-            dump_file(df_link, tmp_file_folder, 'df_link', 'PICKLE')
+            df_links = intra_link(df_tolink)
+            dump_file(df_links, tmp_file_folder, 'df_links', 'PICKLE')
 
             follow_char = chr(ord(follow_char) + 1) 
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
 
     dump_file(dict_tmp_alias, PATH_TMP_DIR, 'code_alias', 'PICKLE')
 
-    # for i in list_dir_items:
-    #     # TODO: run intra linking
-
     # if len_items != 1:
     #     # TODO: pass in the dataframes to inter
+
+    dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
