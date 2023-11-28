@@ -3,4 +3,9 @@ ACCEPTABLE_INPUT_FILE = [
                             '.gdb',
                             '.pkl',
                             '.geojson',
+                            '.json',
+                            '.xls',
+                            '.xlsx',
                         ]
+
+PATH_TMP_DIR = './temporary/'

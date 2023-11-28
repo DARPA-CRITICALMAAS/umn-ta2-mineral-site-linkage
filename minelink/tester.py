@@ -2,7 +2,8 @@ import os
 from argparse import ArgumentParser
 from sklearn.metrics.cluster import rand_score, completeness_score, homogeneity_score
 
-from minelink.load_save import *
+# from minelink.load_save import *
+# from minelink.m6_Testing
 
 # TODO: move the orderby part under evaluate
 # def dataframe_orderby(dataframe, col):
