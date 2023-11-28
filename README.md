@@ -8,21 +8,11 @@ pip install -r requirements.txt
 ```
 
 ## How to run
-Before you run the code, you will need the datasets to be placed under `./data` 
-In the [main.py](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/main.py) modify the following portion:
-```
-# Will combine mineral sites available in 'MRDS_Zinc' and 'Taylor' and save it to 'Zinc.json'
-df_site, dict_loc, dict_sameas, dict_geo = intra_group('MRDS_Zinc', 'Taylor', 'Zinc')
-```
 Run the python file by entering the following code in the command line:
 ```
-python3 main.py
+python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
 ```
 The linked JSON output would be located under `./outputs` with the name defined in the main file.
-
-```
-python -m minelink -d path/to/data/directory [-f or -l]
-```
 
 ### Testing
 ```
@@ -73,6 +63,6 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 ```
 
 ## TODO
-- [] Populate m3
-- [] Develop method to test accuracy of each module (column_mapping, linking procedure)
-- [] Finish m5-determine_location to select most confident location (not just the first)
+-[] Populate m3
+-[] Develop method to test accuracy of each module (column_mapping, linking procedure)
+-[] Finish m5-determine_location to select most confident location (not just the first)
