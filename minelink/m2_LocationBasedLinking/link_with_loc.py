@@ -1,10 +1,8 @@
 import pandas as pd
-
 from sklearn.cluster import DBSCAN, HDBSCAN, Birch
 
-import pickle5 as pickle
-
-def location_based_linking(df_tolink):
+def link_with_loc(df_tolink):
+    df_tolink['idx'] = df_tolink.index.astype(str)
     df_tolink = df_tolink.reset_index(drop=True)
     df_geometry = pd.concat([df_tolink['geometry'].x, df_tolink['geometry'].y], axis=1)
     df_geometry.columns = ['X', 'Y']
@@ -16,20 +14,3 @@ def location_based_linking(df_tolink):
     df_linked = pd.concat([df_tolink, series_labels], axis=1)
 
     return df_linked
-
-def site_name_based_linking(df_tolink):
-    df_loc_linked = location_based_linking(df_tolink)
-
-    return df_loc_linked
-
-def intra_linking():
-    # tmp = pd.read_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/data/dict_Taylor.csv')
-    # separate_dataframe(tmp)
-
-    with open('/home/yaoyi/pyo00005/CriticalMAAS/src/data/pkl/testing/MRDS_GBW.pkl', 'rb') as handle:
-        df = pickle.load(handle)
-
-    df_linked = location_based_linking(df)
-
-def link_with_loc():
-    return 0

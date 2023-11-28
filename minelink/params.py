@@ -9,3 +9,4 @@ ACCEPTABLE_INPUT_FILE = [
                         ]
 
 PATH_TMP_DIR = './temporary/'
+PATH_OUTPUT_DIR = './output/'

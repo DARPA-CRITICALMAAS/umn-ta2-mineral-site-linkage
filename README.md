@@ -53,6 +53,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |-- m3_TextBasedLinking
 |   |-- __init__.py
 |   |-- link_with_all.py
+|   |-- string_match.py
 |
 |-- m4_InitiateLinking
 |   |-- __init__.py
@@ -70,3 +71,8 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- evaluation_metrics.py
 |
 ```
+
+## TODO
+- [] Populate m3
+- [] Develop method to test accuracy of each module (column_mapping, linking procedure)
+- [] Finish m5-determine_location to select most confident location (not just the first)
