@@ -1,3 +1,6 @@
 temporary/
 outputs/
 minelink/intiation_modules
+check.py
+main.py
+gen.py

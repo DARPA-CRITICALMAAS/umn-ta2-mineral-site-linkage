@@ -8,4 +8,4 @@ ACCEPTABLE_INPUT_FILE = [
                             '.xlsx',
                         ]
 
-tmp_location = './temporary'
+PATH_TMP_DIR = './temporary/'

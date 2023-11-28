@@ -1,5 +1,5 @@
-from minelink.linking_modules.dataframe_preprocessing import preprocessing
-from minelink.linking_modules.dataframe_postprocessing import postprocessing
+from minelink.m1_PreProcessing.dataframe_preprocessing import preprocessing
+# from minelink.m1_PreProcessing.dataframe_postprocessing import postprocessing
 
 def site_linking(count, bool_location, bool_full):
     if count <= 0:
@@ -10,7 +10,7 @@ def site_linking(count, bool_location, bool_full):
         print("ENDING PROGRAM: No linking mode selected")
         return -1
     
-    print("\nLinking", count, "files:")
+    # print("\nLinking", count, "files:")
     preprocessing(bool_full, bool_location)
 
     return 0

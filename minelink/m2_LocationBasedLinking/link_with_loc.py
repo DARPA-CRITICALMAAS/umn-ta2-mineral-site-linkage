@@ -1,10 +1,6 @@
 import pandas as pd
 
-
 from sklearn.cluster import DBSCAN, HDBSCAN, Birch
-
-from minelink.linking_modules.dataframe_formatting import *
-# from dataframe_formatting import *
 
 import pickle5 as pickle
 
@@ -24,9 +20,7 @@ def location_based_linking(df_tolink):
 def site_name_based_linking(df_tolink):
     df_loc_linked = location_based_linking(df_tolink)
 
-    df_tolink = df_loc_linked
-
-    return df_tolink
+    return df_loc_linked
 
 def intra_linking():
     # tmp = pd.read_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/data/dict_Taylor.csv')
@@ -36,3 +30,6 @@ def intra_linking():
         df = pickle.load(handle)
 
     df_linked = location_based_linking(df)
+
+def link_with_loc():
+    return 0

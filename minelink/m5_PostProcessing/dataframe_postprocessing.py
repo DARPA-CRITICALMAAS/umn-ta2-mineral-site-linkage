@@ -3,6 +3,8 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 
+from minelink.m4_PostProcessing.determine_location import *
+
 def create_output_dataframe(df_linked, dict_info, dict_location, dict_sameas):
     df_output = df_linked
 

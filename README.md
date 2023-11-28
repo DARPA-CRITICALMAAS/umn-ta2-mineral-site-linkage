@@ -35,20 +35,38 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |-- __init__.py
 |-- __main__.py
 |
-|-- initiation_modules
+|-- m0_SaveAndLoad
+|   |-- __init__.py
+|   |-- directory_related.py
+|   |-- file_related.py
 |
-|-- linking_modules
+|-- m1_PreProcessing
 |   |-- __init__.py
 |   |-- column_mapping.py                   # Reads the data dictionary and find columns relevant to lat/long/crs
-|   |-- dataframe_postprocessing.py         # 
-|   |-- dataframe_preprocessing.py          # Extraction portions of dataframes that would be used
-|   |-- initiate_linking.py                 # 
+|   |-- converting_to_geodataframe.py
+|   |-- dataframe_preprocessing.py
 |
-|-- loadsave_modules
-|   |-- __init__.py                         # 
-|   |-- directory_related.py                # 
-|   |-- file_related.py                     # 
+|-- m2_LocationBasedLinking
+|   |-- __init__.py
+|   |-- link_with_loc.py
 |
-|-- tester.py                               # Tests accuracy of the algorithm
-|-- params.py                               # Parameters file
+|-- m3_TextBasedLinking
+|   |-- __init__.py
+|   |-- link_with_all.py
+|
+|-- m4_InitiateLinking
+|   |-- __init__.py
+|   |-- determine_link_mode.py
+|   |-- inter_linking.py
+|   |-- intra_linking.py
+|
+|-- m5_PostProcessing
+|   |-- __init__.py
+|   |-- dataframe_postprocessing.py
+|   |-- determine_location.py
+|
+|-- m6_Testing
+|   |-- __init__.py
+|   |-- evaluation_metrics.py
+|
 ```

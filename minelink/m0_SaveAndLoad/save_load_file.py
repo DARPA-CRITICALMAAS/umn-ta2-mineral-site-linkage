@@ -8,7 +8,7 @@ import pickle5 as pickle
 
 from json import loads, dumps
 
-def loader(path_dir, file_name, extension):
+def load_file(path_dir, file_name, extension):
     if extension == '.gdb':
         return gpd.read_file(os.path.join(path_dir, file_name + extension), driver="OpenFileGDB")
     
@@ -32,7 +32,7 @@ def loader(path_dir, file_name, extension):
     #     data  = loads(f)
     #     return data
 
-def dumper(data, path_dir, file_name, save_format):
+def dump_file(data, path_dir, file_name, save_format):
     if save_format.upper() == 'PKL' or save_format.upper() == 'PICKLE':
         with open(os.path.join(path_dir, file_name+'.pkl'), 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
