@@ -23,13 +23,18 @@
 # with open(os.path.join('./', 'target'+'.pkl'), 'wb') as handle:
 #     pickle.dump(target_dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-import pandas as pd
+import regex as re
 
-data = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/GeologyMineralOccurrences_USCanada_Australia.csv'
+sample = ['dep_id', 'id_dep', 'dep_id_rec', 'DepId', 'idDep', 'identity']
 
-df = pd.read_csv(data)
-df = df.groupby(['Dep_Name']).agg(lambda x: list(x))
+for i in sample:
+    splitted_col_name = re.split('[^A-Za-z]', i.lower())
 
-print(df)
+    if 'id' in splitted_col_name:
+        print("True")
+    elif re.search('([^A-Za-z]+Id|Id[^A-Za-z]+)', i):
+        print(i)
+    else:
+        print(splitted_col_name, i)
 
-df.to_csv('tmp.csv')
+    # print(re.search('[^A-Za-z]?id[^A-Za-z]?', i), i)
