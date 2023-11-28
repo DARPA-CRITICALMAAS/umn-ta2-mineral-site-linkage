@@ -8,8 +8,7 @@ from minelink.m5_PostProcessing.dataframe_postprocessing import postprocessing
 def main(args):
     site_linking(args.data_dir, bool_location=args.use_location_base)
     postprocessing()
-
-    # remove_tmp_dir()
+    remove_tmp_dir()
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')
