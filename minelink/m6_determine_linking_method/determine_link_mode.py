@@ -1,8 +1,8 @@
 from minelink.params import *
-from minelink.m0_SaveAndLoad.save_load_directory import *
-from minelink.m1_PreProcessing.dataframe_preprocessing import separate_dataframe
-from minelink.m4_InitiateLinking.intra_linking import *
-from minelink.m4_InitiateLinking.inter_linking import *
+from minelink.m0_save_and_load.save_load_directory import *
+from minelink.m1_preprocessing.dataframe_preprocessing import separate_dataframe
+from minelink.m4_intralinking.intra_linking import *
+from minelink.m5_interlinking.inter_linking import *
 
 def site_linking(path_data, bool_location=False):
     check_dir(PATH_TMP_DIR)

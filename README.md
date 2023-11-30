@@ -12,7 +12,7 @@ Run the python file by entering the following code in the command line:
 ```
 python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
 ```
-The linked JSON output would be located under `./outputs` with the name defined in the main file.
+The linked JSON output would be located under `./outputs`.
 
 ### Testing
 ```
@@ -25,38 +25,44 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |-- __init__.py
 |-- __main__.py
 |
-|-- m0_SaveAndLoad
+|-- m0_save_and_load
 |   |-- __init__.py
 |   |-- directory_related.py
 |   |-- file_related.py
 |
-|-- m1_PreProcessing
+|-- m1_preprocessing
 |   |-- __init__.py
 |   |-- column_mapping.py                   # Reads the data dictionary and find columns relevant to lat/long/crs
 |   |-- converting_to_geodataframe.py
 |   |-- dataframe_preprocessing.py
 |
-|-- m2_LocationBasedLinking
+|-- m2_location_lased_linking
 |   |-- __init__.py
 |   |-- link_with_loc.py
 |
-|-- m3_TextBasedLinking
+|-- m3_text_based_linking
 |   |-- __init__.py
 |   |-- link_with_all.py
 |   |-- string_match.py
 |
-|-- m4_InitiateLinking
+|-- m4_intralinking
 |   |-- __init__.py
-|   |-- determine_link_mode.py
-|   |-- inter_linking.py
 |   |-- intra_linking.py
 |
-|-- m5_PostProcessing
+|-- m5_interlinking
+|   |-- __init__.py
+|   |-- inter_linking.py
+|
+|-- m6_determine_linking_method
+|   |-- __init__.py
+|   |-- determine_link_mode.py
+|
+|-- m7_postprocessing
 |   |-- __init__.py
 |   |-- dataframe_postprocessing.py
 |   |-- determine_location.py
 |
-|-- m6_Testing
+|-- m8_testing
 |   |-- __init__.py
 |   |-- evaluation_metrics.py
 |

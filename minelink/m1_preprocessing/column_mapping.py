@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from minelink.params import *
-from minelink.m0_SaveAndLoad.save_load_file import load_file
+from minelink.m0_save_and_load.save_load_file import load_file
 
 def get_unique_id_column(df):
     len_df = df.shape[0]
