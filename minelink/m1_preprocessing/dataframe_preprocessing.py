@@ -6,9 +6,9 @@ import regex as re
 from tqdm import tqdm
 
 from minelink.params import *
-from minelink.m1_PreProcessing.convert_to_geodataframe import *
-from minelink.m1_PreProcessing.column_mapping import find_columns
-from minelink.m1_PreProcessing.datadictionary_processing import *
+from minelink.m1_preprocessing.convert_to_geodataframe import *
+from minelink.m1_preprocessing.column_mapping import find_columns
+from minelink.m1_preprocessing.datadictionary_processing import *
 
 def convert_df_to_dict(df_data):
     dict_data = df_data.to_dict('index')

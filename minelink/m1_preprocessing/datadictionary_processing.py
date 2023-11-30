@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from sentence_transformers import SentenceTransformer, util
-from minelink.m0_SaveAndLoad.save_load_file import load_file
+from minelink.m0_save_and_load.save_load_file import load_file
 
 xfrmer_model = 'all-MiniLM-L6-v2'
 

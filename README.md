@@ -12,7 +12,7 @@ Run the python file by entering the following code in the command line:
 ```
 python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
 ```
-The linked JSON output would be located under `./outputs` with the name defined in the main file.
+The linked JSON output would be located under `./outputs`.
 
 ### Testing
 ```

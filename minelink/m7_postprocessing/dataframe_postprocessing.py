@@ -4,9 +4,9 @@ import geopandas as gpd
 from tqdm import tqdm
 
 from minelink.params import *
-from minelink.m0_SaveAndLoad.save_load_directory import check_dir
-from minelink.m0_SaveAndLoad.save_load_file import *
-from minelink.m5_PostProcessing.determine_location import *
+from minelink.m0_save_and_load.save_load_directory import check_dir
+from minelink.m0_save_and_load.save_load_file import *
+from minelink.m7_postprocessing.determine_location import *
 
 def tmppostprocessing(df_linked, dict_info, dict_location, dict_sameas, dict_geom):
     dict_code_alias = load_file(PATH_TMP_DIR, 'code_alias', '.pkl')
