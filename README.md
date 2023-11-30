@@ -68,7 +68,14 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |
 ```
 
-## TODO
-- [ ] Populate m3
+## Updates
+### In Progress
+- [ ] Populate data dictionary processing
+- [ ] Create data dictionary refering method
+
+### Completed
+
+### To-Do
+- [ ] Populate text based linking method (create python file for each method)
 - [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
-- [ ] Finish m5-determine_location to select most confident location (not just the first)
+- [ ] Finish m7.determine_location to select most confident location (not just the first)
