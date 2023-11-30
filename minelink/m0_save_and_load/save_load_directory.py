@@ -6,8 +6,8 @@ import shutil
 from tabulate import tabulate
 
 from minelink.params import *
-from minelink.m0_SaveAndLoad.save_load_file import *
-from minelink.m1_PreProcessing.dataframe_preprocessing import separate_dataframe
+from minelink.m0_save_and_load.save_load_file import *
+from minelink.m1_preprocessing.dataframe_preprocessing import separate_dataframe
 
 def check_dir(path_dir):
     """
