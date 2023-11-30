@@ -6,6 +6,7 @@ import regex as re
 from tqdm import tqdm
 
 from minelink.params import *
+from minelink.m0_save_and_load.save_load_file import dump_file
 from minelink.m1_preprocessing.convert_to_geodataframe import *
 from minelink.m1_preprocessing.column_mapping import find_columns
 from minelink.m1_preprocessing.datadictionary_processing import *
@@ -44,10 +45,12 @@ def create_dict_location(df_data, source_name):
 
     return dict_loc, dict_geo
 
-def separate_dataframe(df, source_alias_code, source_name):
+def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     # TODO: call column mapping to find site name, latitude, longitude, crs, (maybe substring match for state province), unique_id
     # input: dataframe and source_alias_code
     # [col_site_name, col_other_names], [col_latitude], [col_longitude], [col_crs], col_state_province, [unique_id]
+
+    dump_file(df, path_to_store, 'raw', 'PICKLE')
 
     col_to_drop = []
 
@@ -81,6 +84,10 @@ def separate_dataframe(df, source_alias_code, source_name):
     dict_sameas = convert_df_to_dict(df_sameas)
     dict_loc, dict_geo = create_dict_location(df, source_name)
 
+    dump_file(dict_sameas, path_to_store, 'same_as', 'PICKLE')
+    dump_file(dict_loc, path_to_store, 'location_info', 'PICKLE')
+    dump_file(dict_geo, path_to_store, 'geometry', 'PICKLE')
+
     # TODO: create dataframe consisting of relevant information (that will be used for linking)
     # drop all column relevant to latitude, longitude, crs, (maybe textual location and unique id)
     
@@ -89,4 +96,4 @@ def separate_dataframe(df, source_alias_code, source_name):
 
     # print(df_link.columns)
 
-    return dict_sameas, dict_loc, dict_geo, df_link
+    return df_link

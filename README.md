@@ -71,9 +71,9 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 ## Updates
 ### In Progress
 - [ ] Populate data dictionary processing
-- [ ] Create data dictionary refering method
 
-### Completed
+### Completed 
+- [x] Create data dictionary refering method
 
 ### To-Do
 - [ ] Populate text based linking method (create python file for each method)
