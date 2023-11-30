@@ -37,6 +37,5 @@ def dictionary_available(dict_description):
 
 def df_to_dictionary(df):
     dict_description = df
+    
     return dict_description
-
-    return 0

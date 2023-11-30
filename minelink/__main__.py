@@ -1,14 +1,14 @@
 from argparse import ArgumentParser
 from torch.cuda import device_count
 
-from minelink.m0_save_and_load.save_load_directory import remove_tmp_dir
+from minelink.m0_save_and_load.save_load_directory import remove_dir
 from minelink.m6_determine_linking_method.determine_link_mode import site_linking
 from minelink.m7_postprocessing.dataframe_postprocessing import postprocessing
 
 def main(args):
     site_linking(args.data_dir, bool_location=args.use_location_base)
-    postprocessing()
-    remove_tmp_dir()
+    # postprocessing()
+    # remove_tmp_dir()
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

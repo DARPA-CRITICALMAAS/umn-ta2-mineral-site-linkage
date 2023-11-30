@@ -1,4 +1,7 @@
+#!/usr/bin/python
+
 import os
+import shutil
 
 import regex as re
 import pandas as pd
@@ -51,3 +54,10 @@ def dump_file(data, path_dir, file_name, save_format):
 
         with open(os.path.join(path_dir, file_name+'.json'), 'w') as handle:
             handle.write(obj_data)
+
+def move_file(path_org_file, path_mv_dir):
+    try: 
+        shutil.copy(path_org_file, path_mv_dir)
+        return 0
+    except:
+        return -1
