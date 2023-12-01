@@ -27,9 +27,9 @@ def sort_dictionary_files(path_data, list_dict):
         list_dict_names.append(source_name)
 
         df = load_file(path_data, file_name, file_extension)
-        dict_description = df_to_dictionary(df)
+        df_description = df_to_dictionary(df)
 
-        dump_file(dict_description, os.path.join(PATH_TMP_DIR, 'dictionary'), source_name, 'PICKLE')
+        dump_file(df_description, os.path.join(PATH_TMP_DIR, 'dictionary'), source_name, 'PICKLE')
 
     return list_dict_names
 
@@ -71,7 +71,10 @@ def sort_data_files(path_data):
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
 
     dump_file(dict_tmp_alias, PATH_TMP_DIR, 'code_alias', 'PICKLE')
-    # TODO: close the dictionary folder
+
+    remove_dir(additional='dictionary')
+
+    dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
 
     return len_files
 

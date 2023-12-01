@@ -65,6 +65,8 @@ def get_geocoordinate_columns(df_data, dict_dictionary, col_available):
 
     col_to_compare = set(col_to_compare) - set(col_latitude) - set(col_longitude) - set(col_crs)
 
+    print(col_latitude)
+
     # TODO: Call finding in dictionary function
 
     # TODO: Find in the latitude longitude description
@@ -74,6 +76,7 @@ def get_geocoordinate_columns(df_data, dict_dictionary, col_available):
 
 def find_columns(df, source_alias_code):
     # dict_dictionary = load_file(PATH_TMP_DIR+source_alias_code, 'dictionary', '.pkl')
+    # df_target = load_file('source', 'dictionary', '.pkl')
 
     col_available = set(list(df.columns))
 

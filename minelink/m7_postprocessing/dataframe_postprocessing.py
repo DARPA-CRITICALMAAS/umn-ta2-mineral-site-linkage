@@ -28,24 +28,33 @@ def get_item(idx, source, required_item):
     return dict_required[idx]
 
 def get_sameas(list_idx, list_source, dict_code_alias):
-    compiled_sameas = {dict_code_alias[key]:[] for key in list_source}
+    # compiled_sameas = {dict_code_alias[key]:[] for key in list_source}
+
+    # for i in range(len(list_idx)):
+    #     source = dict_code_alias[list_source[i]]
+
+    #     path_dict = os.path.join(PATH_TMP_DIR, list_source[i])
+    #     dict_sameas = load_file(path_dict, 'same_as', '.pkl')
+    #     dict_geom = load_file(path_dict, 'geometry', '.pkl')
+
+    #     source_id = re.split('_', list_idx[i])[1]
+
+    #     row_dict = {
+    #         "id": source_id,
+    #         "Attributes": dict_sameas[list_idx[i]],
+    #         "geometry": dict_geom[list_idx[i]]['geometry'],
+    #     }
+
+    #     compiled_sameas[source].append(row_dict)
+
+    # return compiled_sameas
+    compiled_sameas = []
 
     for i in range(len(list_idx)):
-        source = dict_code_alias[list_source[i]]
-
         path_dict = os.path.join(PATH_TMP_DIR, list_source[i])
         dict_sameas = load_file(path_dict, 'same_as', '.pkl')
-        dict_geom = load_file(path_dict, 'geometry', '.pkl')
-
-        source_id = re.split('_', list_idx[i])[1]
-
-        row_dict = {
-            "id": source_id,
-            "Attributes": dict_sameas[list_idx[i]],
-            "geometry": dict_geom[list_idx[i]]['geometry'],
-        }
-
-        compiled_sameas[source].append(row_dict)
+        
+        compiled_sameas.append(dict_sameas[list_idx[i]])
 
     return compiled_sameas
 
