@@ -51,6 +51,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |
 |-- m5_interlinking
 |   |-- __init__.py
+|   |-- create_representation.py
 |   |-- inter_linking.py
 |
 |-- m6_determine_linking_method

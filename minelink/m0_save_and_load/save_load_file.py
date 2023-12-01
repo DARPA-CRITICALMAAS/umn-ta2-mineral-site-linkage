@@ -11,7 +11,9 @@ import pickle5 as pickle
 
 from json import loads, dumps
 
-def load_file(path_dir, file_name, extension):
+def load_file(path_dir, file_name, extension, additional=''):
+    path_dir = os.path.join(path_dir, additional)
+    
     if extension == '.gdb':
         return gpd.read_file(os.path.join(path_dir, file_name + extension), driver="OpenFileGDB")
     

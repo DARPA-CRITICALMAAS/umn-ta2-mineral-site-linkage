@@ -71,3 +71,11 @@ def dictionary_available(dict_description):
     col_remove = list(np.array(name_against)[idx])
 
     return col_remove
+
+def find_crs_from_description(description):
+    list_crs = load_file('./minelink/src', 'crs', '.pkl')
+
+    crs_val = description
+
+    # TODO: regex word match
+    return description
