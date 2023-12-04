@@ -71,7 +71,6 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 
 ## Updates
 ### In Progress
-- [ ] Create a function that will determine the CRS value from the description of latitude
 - [ ] Finish function for developing information dictionary
 
 ### Completed 
@@ -79,6 +78,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [x] Populate data dictionary processing
 - [x] Update same as structure
 - [x] Update postprocessing to reflect same as structure
+- [x] Create a function that will determine the CRS value from the description of latitude
 
 ### To-Do
 - [ ] Populate text based linking method (create python file for each method)
