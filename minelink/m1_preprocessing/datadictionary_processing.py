@@ -7,6 +7,7 @@ import pandas as pd
 
 from sentence_transformers import SentenceTransformer, util
 from minelink.m0_save_and_load.save_load_file import load_file
+from minelink.params import *
 
 xfrmer_model = 'all-MiniLM-L6-v2'
 
@@ -21,11 +22,13 @@ def df_to_dictionary(df):
     long = ''
 
     for c in df.columns.tolist():
-        if c == 'label':
+        if re.search('label', c):
             label = c
         elif re.search('short', c):
             short = c
         elif re.search('descri', c):
+            long = c
+        elif re.search('defin', c):
             long = c
 
     df = df.dropna(subset=[label])
@@ -45,17 +48,15 @@ def compare_description_list(df_description_first, df_description_second):
 
     return 0 # string of description of latitude
 
-def dictionary_available(dict_description):
+def compare_dictionary(dict_target, dict_against):
     model = SentenceTransformer(xfrmer_model)
-
-    dict_target = load_file('./src', 'target', '.pkl')
 
     name_target = list(dict_target.keys())
     descrip_target = list(dict_target.values())
     emb_target = model.encode(descrip_target, convert_to_tensor=True)
 
-    name_against = list(dict_description.keys())
-    descrip_against = list(dict_description.values())
+    name_against = list(dict_against.keys())
+    descrip_against = list(dict_against.values())
     emb_against = model.encode(descrip_against, convert_to_tensor=True)
 
     cosine_scores = util.cos_sim(emb_target, emb_against)
@@ -70,10 +71,12 @@ def dictionary_available(dict_description):
     col_merge = []
     col_remove = list(np.array(name_against)[idx])
 
+    print(col_remove)
+
     return col_remove
 
 def find_crs_from_description(description):
-    list_crs = load_file('./minelink/src', 'crs', '.pkl')
+    list_crs = load_file(PATH_SRC_DIR, 'crs', '.pkl')
 
     list_tokens = re.split(' ', description)
 
@@ -84,13 +87,28 @@ def find_crs_from_description(description):
     return 'WGS84'  # Return default if there does not exists a crs value in the data
 
 def find_from_dictionary(df_dictionary, col_remaining, to_find):
-    list_col_return = []
+    """
+    :input: col_remaining (list) = 
+    """
+    dict_col_return = {key:[] for key in to_find}
 
-    print(len(to_find), to_find)
+    # df_dictionary = df_dictionary[['label', 'long']]
+    # dict_against = df_dictionary.to_dict(orient='index')
 
-    # col_latitude = []
-    # col_longitude = []
-    # col_crs = []
+    df_target = load_file(PATH_SRC_DIR, 'df_target', '.pkl')
+    df_target = df_target[df_target['label'].isin(to_find)]
+    dict_target = dict(zip(df_target['label'], df_target['description']))
+    
+
+    df_description = df_dictionary[df_dictionary['label'].isin(col_remaining)]
+    dict_against = dict(zip(df_description['label'], df_description['long']))
+    
+    compare_dictionary(dict_target, dict_against)
+
+    # for i in to_find:
+    #     print(dict_target[i])
+
+    # print(len(to_find), dict_against)
 
     # description = 'latitude is the decimal value in wgs84'
 
@@ -101,4 +119,4 @@ def find_from_dictionary(df_dictionary, col_remaining, to_find):
 
     crs_val = 'WGS84'
 
-    return list_col_return, crs_val
+    return dict_col_return, crs_val

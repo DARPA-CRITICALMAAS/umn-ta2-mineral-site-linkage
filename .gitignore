@@ -4,3 +4,7 @@ minelink/intiation_modules
 check.py
 main.py
 gen.py
+__init__.py
+test.png
+test.py
+tmp.csv

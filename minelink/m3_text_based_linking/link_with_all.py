@@ -4,4 +4,5 @@ from minelink.m3_text_based_linking.string_match import *
 
 def link_with_all():
     link_with_loc()
+    
     return 0
