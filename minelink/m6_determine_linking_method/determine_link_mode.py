@@ -84,6 +84,6 @@ def site_linking(path_data, bool_location=False):
     else:
         inter_linking(list_files)
 
-    dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
+    # dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
 
     

@@ -67,7 +67,7 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
 
     col_to_drop = []
 
-    col_unique_id, dict_loc_col_map, col_geocoordinates, col_available = find_columns(df, source_alias_code)
+    col_unique_id, dict_loc_col_map, col_geocoordinates, col_available = find_columns(df, source_alias_code, source_name)
 
     if col_unique_id:
         df['idx'] = source_alias_code + '_' + df[col_unique_id].astype(str)

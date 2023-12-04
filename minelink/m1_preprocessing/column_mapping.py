@@ -11,7 +11,10 @@ def get_unique_id_column(df):
     len_df = df.shape[0]
 
     # Get count of unique items in each dataframe
-    df_tmp = df.drop(['geometry'], axis=1)
+    try: 
+        df_tmp = df.drop(['geometry'], axis=1)
+    except:
+        df_tmp = df
     count_unique_items = df_tmp.apply(pd.Series.nunique)
     count_unique_items = count_unique_items[count_unique_items == len_df]
 
@@ -33,14 +36,10 @@ def get_site_name_columns(df_data, df_dictionary, col_available):
     df_remaining = df_remaining.select_dtypes(exclude=['number', 'bool'])
     col_remaining = list(df_remaining.columns)
 
-    df_remaining.to_csv('tmp.csv')
-
-    print(df_remaining.columns)
-
     # TODO: find sitename and other names column (must have at least one column)
 
     col_names = []
-    col_names = find_from_dictionary(df_dictionary, col_remaining, ['site_name', 'other_name'])
+    col_names = find_from_dictionary(df_dictionary, col_remaining, ['name'])
 
 def get_textual_location_columns(col_available):
     dict_loc_col_map = {}
@@ -74,25 +73,23 @@ def get_geocoordinate_columns(df_data, df_dictionary, col_available):
             col_crs.append(i)
 
     col_to_compare = set(col_to_compare) - set(col_latitude) - set(col_longitude) - set(col_crs)
+    col_remaining = list(col_to_compare)
 
     # TODO: Call finding in dictionary function
 
-    list_col_return, crs_val = find_from_dictionary(df_dictionary, col_to_compare, ['latitude', 'longitude', 'crs'])
+    list_col_return, crs_val = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
 
     # TODO: [longitudes], [latitudes], crs_val
+    crs_val = 'WGS84'
 
     return col_longitude, col_latitude, crs_val
 
-def find_columns(df, source_alias_code):
+def find_columns(df, source_alias_code, source_name):
     df_dictionary = load_file(path_dir=PATH_TMP_DIR, additional=source_alias_code, file_name='dictionary', extension='.pkl')
-    dict_alias = load_file(path_dir=PATH_TMP_DIR, file_name='code_alias', extension='.pkl')
-    source_name = dict_alias[source_alias_code]
 
     df_dictionary_archive = df_dictionary
     df_dictionary_archive.insert(loc=0, column='source', value=source_name)
     dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
-
-    # df_target = load_file(PATH_SRC_DIR, 'dictionary_target', '.pkl')
 
     col_available = set(list(df.columns))
 
@@ -106,6 +103,6 @@ def find_columns(df, source_alias_code):
 
     get_site_name_columns(df, df_dictionary, col_available)
 
-    col_geocoordinates = get_geocoordinate_columns(df, df, col_available)
+    col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
 
     return col_unique_id, dict_loc_col_map, col_geocoordinates, col_available
