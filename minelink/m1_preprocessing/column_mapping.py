@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 
 from minelink.params import *
-from minelink.m0_save_and_load.save_load_file import load_file
+from minelink.m0_save_and_load.save_load_file import *
+from minelink.m1_preprocessing.datadictionary_processing import *
 
 def get_unique_id_column(df):
     len_df = df.shape[0]
@@ -27,10 +28,19 @@ def get_unique_id_column(df):
         else:
             return False
 
-def get_site_name_columns(df_data, df_dictionary):
-    df_data = df_data.select_dtypes(exclude=['np.number', 'bool'])
+def get_site_name_columns(df_data, df_dictionary, col_available):
+    df_remaining = df_data[list(col_available)]
+    df_remaining = df_remaining.select_dtypes(exclude=['number', 'bool'])
+    col_remaining = list(df_remaining.columns)
+
+    df_remaining.to_csv('tmp.csv')
+
+    print(df_remaining.columns)
+
     # TODO: find sitename and other names column (must have at least one column)
-    return 0
+
+    col_names = []
+    col_names = find_from_dictionary(df_dictionary, col_remaining, ['site_name', 'other_name'])
 
 def get_textual_location_columns(col_available):
     dict_loc_col_map = {}
@@ -46,7 +56,7 @@ def get_textual_location_columns(col_available):
 
     return dict_loc_col_map, col_textual_location
 
-def get_geocoordinate_columns(df_data, dict_dictionary, col_available):
+def get_geocoordinate_columns(df_data, df_dictionary, col_available):
     # TODO: find latitude, longitude, crs columns
     col_latitude = []
     col_longitude = []
@@ -65,18 +75,24 @@ def get_geocoordinate_columns(df_data, dict_dictionary, col_available):
 
     col_to_compare = set(col_to_compare) - set(col_latitude) - set(col_longitude) - set(col_crs)
 
-    print(col_latitude)
-
     # TODO: Call finding in dictionary function
 
-    # TODO: Find in the latitude longitude description
-    crs_val = 'WGS84'
+    list_col_return, crs_val = find_from_dictionary(df_dictionary, col_to_compare, ['latitude', 'longitude', 'crs'])
+
+    # TODO: [longitudes], [latitudes], crs_val
 
     return col_longitude, col_latitude, crs_val
 
 def find_columns(df, source_alias_code):
-    # dict_dictionary = load_file(PATH_TMP_DIR+source_alias_code, 'dictionary', '.pkl')
-    # df_target = load_file('source', 'dictionary', '.pkl')
+    df_dictionary = load_file(path_dir=PATH_TMP_DIR, additional=source_alias_code, file_name='dictionary', extension='.pkl')
+    dict_alias = load_file(path_dir=PATH_TMP_DIR, file_name='code_alias', extension='.pkl')
+    source_name = dict_alias[source_alias_code]
+
+    df_dictionary_archive = df_dictionary
+    df_dictionary_archive.insert(loc=0, column='source', value=source_name)
+    dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
+
+    # df_target = load_file(PATH_SRC_DIR, 'dictionary_target', '.pkl')
 
     col_available = set(list(df.columns))
 
@@ -86,8 +102,9 @@ def find_columns(df, source_alias_code):
     col_available = col_available - set([col_unique_id]) if col_unique_id else col_available
 
     dict_loc_col_map, col_textual_location = get_textual_location_columns(col_available)
-
     col_available = col_available - set(col_textual_location)
+
+    get_site_name_columns(df, df_dictionary, col_available)
 
     col_geocoordinates = get_geocoordinate_columns(df, df, col_available)
 

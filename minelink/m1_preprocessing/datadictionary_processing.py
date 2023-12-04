@@ -71,3 +71,34 @@ def dictionary_available(dict_description):
     col_remove = list(np.array(name_against)[idx])
 
     return col_remove
+
+def find_crs_from_description(description):
+    list_crs = load_file('./minelink/src', 'crs', '.pkl')
+
+    list_tokens = re.split(' ', description)
+
+    for token in list_tokens:
+        if token in list_crs:
+            return token
+        
+    return 'WGS84'  # Return default if there does not exists a crs value in the data
+
+def find_from_dictionary(df_dictionary, col_remaining, to_find):
+    list_col_return = []
+
+    print(len(to_find), to_find)
+
+    # col_latitude = []
+    # col_longitude = []
+    # col_crs = []
+
+    # description = 'latitude is the decimal value in wgs84'
+
+
+    # # TODO: call find_crs_from_description if and only if crs column is empty
+    # if len(col_crs) == 0:
+    #     crs_val = find_crs_from_description(description)
+
+    crs_val = 'WGS84'
+
+    return list_col_return, crs_val
