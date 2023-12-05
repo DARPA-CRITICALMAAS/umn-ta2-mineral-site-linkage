@@ -62,18 +62,15 @@ def compare_dictionary(dict_target, dict_against):
     cosine_scores = util.cos_sim(emb_target, emb_against)
     cosine_scores = np.array(cosine_scores.tolist())
 
-    sns.heatmap(cosine_scores, xticklabels=name_against, yticklabels=name_target, cmap="Blues")
-    plt.yticks(rotation=0) 
-    plt.savefig('heat.png')
+    # sns.heatmap(cosine_scores, xticklabels=name_against, yticklabels=name_target, cmap="Blues")
+    # plt.yticks(rotation=0) 
+    # plt.savefig('heat.png')
 
     idx = list(dict.fromkeys(np.where(cosine_scores > 0.47)[1]))
 
-    col_merge = []
-    col_remove = list(np.array(name_against)[idx])
+    col_match = list(np.array(name_against)[idx])
 
-    print(col_remove)
-
-    return col_remove
+    return col_match
 
 def find_crs_from_description(description):
     list_crs = load_file(PATH_SRC_DIR, 'crs', '.pkl')
@@ -92,9 +89,6 @@ def find_from_dictionary(df_dictionary, col_remaining, to_find):
     """
     dict_col_return = {key:[] for key in to_find}
 
-    # df_dictionary = df_dictionary[['label', 'long']]
-    # dict_against = df_dictionary.to_dict(orient='index')
-
     df_target = load_file(PATH_SRC_DIR, 'df_target', '.pkl')
     df_target = df_target[df_target['label'].isin(to_find)]
     dict_target = dict(zip(df_target['label'], df_target['description']))
@@ -103,7 +97,7 @@ def find_from_dictionary(df_dictionary, col_remaining, to_find):
     df_description = df_dictionary[df_dictionary['label'].isin(col_remaining)]
     dict_against = dict(zip(df_description['label'], df_description['long']))
     
-    compare_dictionary(dict_target, dict_against)
+    col_match = compare_dictionary(dict_target, dict_against)
 
     # for i in to_find:
     #     print(dict_target[i])
@@ -119,4 +113,4 @@ def find_from_dictionary(df_dictionary, col_remaining, to_find):
 
     crs_val = 'WGS84'
 
-    return dict_col_return, crs_val
+    return col_match, crs_val #dict_col_return, crs_val

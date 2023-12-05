@@ -1,4 +1,7 @@
 import os
+import time
+import logging
+
 import pandas as pd
 import geopandas as gpd
 import pickle5 as pickle
@@ -59,15 +62,12 @@ def create_dict_sameas(df_data, source_name):
     return dict_sameas
 
 def separate_dataframe(df, path_to_store, source_alias_code, source_name):
-    # TODO: call column mapping to find site name, latitude, longitude, crs, (maybe substring match for state province), unique_id
-    # input: dataframe and source_alias_code
-    # [col_site_name, col_other_names], [col_latitude], [col_longitude], [col_crs], col_state_province, [unique_id]
+    # logging.basicConfig(filename='preprocessing.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    # logging.warning('is when preprocessing module started.')
 
     dump_file(df, path_to_store, 'raw', 'PICKLE')
 
-    col_to_drop = []
-
-    col_unique_id, dict_loc_col_map, col_geocoordinates, col_available = find_columns(df, source_alias_code, source_name)
+    col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename = find_columns(df, source_alias_code, source_name)
 
     if col_unique_id:
         df['idx'] = source_alias_code + '_' + df[col_unique_id].astype(str)
@@ -93,19 +93,22 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
 
     df = df.rename(columns=dict_loc_col_map)
     
+    dict_info = create_dict_info(df, col_sitename)
     dict_sameas = create_dict_sameas(df, source_name)
     dict_loc, dict_geo = create_dict_location(df, source_name)
 
+    dump_file(dict_info, path_to_store, 'name', 'PICKLE')
     dump_file(dict_sameas, path_to_store, 'same_as', 'PICKLE')
     dump_file(dict_loc, path_to_store, 'location_info', 'PICKLE')
     dump_file(dict_geo, path_to_store, 'geometry', 'PICKLE')
 
     # TODO: create dataframe consisting of relevant information (that will be used for linking)
     # drop all column relevant to latitude, longitude, crs, (maybe textual location and unique id)
-    
     # df_link = df.drop([col_unique_id], axis=1)
     df_link = df
 
     # print(df_link.columns)
+
+    # logging.warning('is when preprocessing module ended.')
 
     return df_link

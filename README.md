@@ -71,19 +71,23 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 
 ## Updates
 ### In Progress
-- [ ] Finish function for developing information dictionary
+- [ ] Develop accuracy testing method for column mapping (column identification)
+- [ ] Make logging available for each module
 - [ ] Create method to create short description when there is no column representing short description
-- [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
 
-### Completed 
+### Completed (For: December 6th)
 - [x] Create data dictionary refering method
 - [x] Populate data dictionary processing
 - [x] Update same as structure
 - [x] Update postprocessing to reflect same as structure
 - [x] Create a function that will determine the CRS value from the description of latitude
 - [x] Bring back the column identification function
+- [x] Finish function for developing information dictionary
 
 ### To-Do
 - [ ] Populate text based linking method (create python file for each method)
 - [ ] Finish m7.determine_location to select most confident location (not just the first)
 - [ ] Develop a clustering algorithm that will allow inter-linking
+- [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
+
+### Archive

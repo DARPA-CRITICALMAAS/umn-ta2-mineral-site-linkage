@@ -71,6 +71,7 @@ def sort_data_files(path_data):
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
 
     dump_file(dict_tmp_alias, PATH_TMP_DIR, 'code_alias', 'PICKLE')
+    dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
 
     remove_dir(additional='dictionary')
 

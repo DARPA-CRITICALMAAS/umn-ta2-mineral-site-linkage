@@ -31,26 +31,6 @@ def get_item(idx, source, required_item):
     return dict_required[idx]
 
 def get_sameas(list_idx, list_source, dict_code_alias):
-    # compiled_sameas = {dict_code_alias[key]:[] for key in list_source}
-
-    # for i in range(len(list_idx)):
-    #     source = dict_code_alias[list_source[i]]
-
-    #     path_dict = os.path.join(PATH_TMP_DIR, list_source[i])
-    #     dict_sameas = load_file(path_dict, 'same_as', '.pkl')
-    #     dict_geom = load_file(path_dict, 'geometry', '.pkl')
-
-    #     source_id = re.split('_', list_idx[i])[1]
-
-    #     row_dict = {
-    #         "id": source_id,
-    #         "Attributes": dict_sameas[list_idx[i]],
-    #         "geometry": dict_geom[list_idx[i]]['geometry'],
-    #     }
-
-    #     compiled_sameas[source].append(row_dict)
-
-    # return compiled_sameas
     compiled_sameas = []
 
     for i in range(len(list_idx)):
@@ -70,14 +50,11 @@ def group_dataframe_items(df_links, dict_code_alias):
     df_grouped = pd.concat([df_no_grouping, df_with_grouping], axis=0, ignore_index=True)
     df_grouped['id'] = 'Site' + df_grouped.index.astype(str)
 
-    # TODO: need sitename thing in preprocessing
-    # df_grouped['name'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'name'), axis=1)
+    df_grouped['name'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'name'), axis=1)
     df_grouped['location_info'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'location_info'), axis=1)
     df_grouped['same_as'] = df_grouped.apply(lambda x: get_item(x['idx'], x['source'], 'same_as'), axis=1)
 
-    # TODO: use the version with the name
-    df_grouped = df_grouped[['id', 'location_info', 'same_as']]
-    # df_grouped = df_grouped[['id', 'name', 'location_info', 'same_as']]
+    df_grouped = df_grouped[['id', 'name', 'location_info', 'same_as']]
 
     return df_grouped
 
