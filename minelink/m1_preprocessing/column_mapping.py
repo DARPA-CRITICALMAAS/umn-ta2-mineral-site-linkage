@@ -1,5 +1,6 @@
 import regex as re
 
+import warnings
 import numpy as np
 import pandas as pd
 
@@ -7,7 +8,13 @@ from minelink.params import *
 from minelink.m0_save_and_load.save_load_file import *
 from minelink.m1_preprocessing.datadictionary_processing import *
 
-def get_unique_id_column(df):
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+def get_unique_id_column(df, dict_dictionary):
+    """
+    : input: df (pandas dataframe) = 
+    : input: df_dictionary (pandas dataframe) = 
+    """
     len_df = df.shape[0]
 
     # Get count of unique items in each dataframe
@@ -23,11 +30,19 @@ def get_unique_id_column(df):
 
     for i in count_unique_items.index.tolist():
         splitted_col_name = re.split('[^A-Za-z]', i.lower())
+        unique_label = ''.join(re.findall('[A-Za-z]', i))
 
         if 'id' in splitted_col_name:
             return i
         # elif re.search('([^A-Za-z]+Id|Id[^A-Za-z]+)', i):
         #     print(i)
+
+        if unique_label not in dict_dictionary.keys():
+            continue
+
+        elif re.search('unique', dict_dictionary[unique_label].lower()):
+            return i
+        
         else:
             return False
 
@@ -38,7 +53,11 @@ def get_site_name_columns(df_data, df_dictionary, col_available):
 
     col_names = find_from_dictionary(df_dictionary, col_remaining, ['name'])
 
-    return col_names[0]
+    print(col_names)
+
+    # TODO: concat columns with the col_names
+
+    return col_names
 
 def get_textual_location_columns(col_available):
     dict_loc_col_map = {}
@@ -54,8 +73,18 @@ def get_textual_location_columns(col_available):
 
     return dict_loc_col_map, col_textual_location
 
+def get_crs_value(description):
+    list_crs = load_file(PATH_SRC_DIR, 'crs', '.pkl')
+
+    list_tokens = re.split(' ', description)
+
+    for token in list_tokens:
+        if token in list_crs:
+            return token
+        
+    return 'WGS84'  # Return default if there does not exists a crs value in the data
+
 def get_geocoordinate_columns(df_data, df_dictionary, col_available):
-    # TODO: find latitude, longitude, crs columns
     col_latitude = []
     col_longitude = []
     col_crs = []
@@ -74,30 +103,41 @@ def get_geocoordinate_columns(df_data, df_dictionary, col_available):
     col_to_compare = set(col_to_compare) - set(col_latitude) - set(col_longitude) - set(col_crs)
     col_remaining = list(col_to_compare)
 
-    list_col_return, crs_val = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
+    list_col_return = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
 
-    # TODO: [longitudes], [latitudes], crs_val
-    crs_val = 'WGS84'
+    # if len(list_col_return) == 0:
+    # if len(list_col_return[2]) == 0:
+        # latitude_description = df_dictionary.loc[col_latitude[0]]
+    df_latitude = df_dictionary[df_dictionary['label'] == col_latitude[0]]
+    description = df_latitude['long'].values[0]
+    crs_val = get_crs_value(description)
+
+    print(col_longitude, col_latitude, crs_val)
 
     return col_longitude, col_latitude, crs_val
 
 def find_columns(df, source_alias_code, source_name):
     df_dictionary = load_file(path_dir=PATH_TMP_DIR, additional=source_alias_code, file_name='dictionary', extension='.pkl')
 
+    # TODO: change this archive part to concatenate
     df_dictionary_archive = df_dictionary
     df_dictionary_archive.insert(loc=0, column='source', value=source_name)
     dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
 
     col_available = set(list(df.columns))
 
-    col_unique_id = get_unique_id_column(df)
+    df_dictionary['reduced_label'] = df_dictionary['label'].apply(lambda x: ''.join(re.findall('[A-Za-z]', x)))
+    dict_dictionary = dict(zip(df_dictionary['reduced_label'], df_dictionary['long']))
+
+    df_dictionary = df_dictionary.drop(['reduced_label'], axis=1)
+
+    col_unique_id = get_unique_id_column(df, df_dictionary)
     col_available = col_available - set([col_unique_id]) if col_unique_id else col_available
 
     dict_loc_col_map, col_textual_location = get_textual_location_columns(col_available)
     col_available = col_available - set(col_textual_location)
 
     col_sitename = get_site_name_columns(df, df_dictionary, col_available)
-
     col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
 
     return col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename

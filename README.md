@@ -63,7 +63,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- dataframe_postprocessing.py     # Formats grouped database into form required for JSON output
 |   |-- determine_location.py           # Determines the most confident location
 |
-|-- m8_testing
+|-- m9_testing
 |   |-- __init__.py
 |   |-- evaluation_metrics.py           # 
 |
@@ -71,9 +71,8 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 
 ## Updates
 ### In Progress
-- [ ] Develop accuracy testing method for column mapping (column identification)
+- [ ] Populate text based linking method (create python file for each method)
 - [ ] Make logging available for each module
-- [ ] Create method to create short description when there is no column representing short description
 
 ### Completed (For: December 6th)
 - [x] Create data dictionary refering method
@@ -85,7 +84,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [x] Finish function for developing information dictionary
 
 ### To-Do
-- [ ] Populate text based linking method (create python file for each method)
+- [ ] Create method to create short description when there is no column representing short description
 - [ ] Finish m7.determine_location to select most confident location (not just the first)
 - [ ] Develop a clustering algorithm that will allow inter-linking
 - [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)

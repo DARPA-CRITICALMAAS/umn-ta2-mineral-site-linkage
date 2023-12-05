@@ -24,6 +24,7 @@ def df_to_dictionary(df):
     for c in df.columns.tolist():
         if re.search('label', c):
             label = c
+            short = c
         elif re.search('short', c):
             short = c
         elif re.search('descri', c):
@@ -39,14 +40,6 @@ def df_to_dictionary(df):
     df_description.columns = ['label', 'short', 'long']
 
     return df_description
-
-def compare_description_list(df_description_first, df_description_second):
-    model = SentenceTransformer(xfrmer_model)
-
-
-    # TODO: grab the long description from both dataframe and compare with the method below
-
-    return 0 # string of description of latitude
 
 def compare_dictionary(dict_target, dict_against):
     model = SentenceTransformer(xfrmer_model)
@@ -72,17 +65,6 @@ def compare_dictionary(dict_target, dict_against):
 
     return col_match
 
-def find_crs_from_description(description):
-    list_crs = load_file(PATH_SRC_DIR, 'crs', '.pkl')
-
-    list_tokens = re.split(' ', description)
-
-    for token in list_tokens:
-        if token in list_crs:
-            return token
-        
-    return 'WGS84'  # Return default if there does not exists a crs value in the data
-
 def find_from_dictionary(df_dictionary, col_remaining, to_find):
     """
     :input: col_remaining (list) = 
@@ -93,24 +75,17 @@ def find_from_dictionary(df_dictionary, col_remaining, to_find):
     df_target = df_target[df_target['label'].isin(to_find)]
     dict_target = dict(zip(df_target['label'], df_target['description']))
     
-
     df_description = df_dictionary[df_dictionary['label'].isin(col_remaining)]
-    dict_against = dict(zip(df_description['label'], df_description['long']))
-    
-    col_match = compare_dictionary(dict_target, dict_against)
 
-    # for i in to_find:
-    #     print(dict_target[i])
+    if df_description.shape[0] > 0:
+        dict_against = dict(zip(df_description['label'], df_description['long']))
+        col_match = compare_dictionary(dict_target, dict_against)
 
-    # print(len(to_find), dict_against)
-
-    # description = 'latitude is the decimal value in wgs84'
-
+    else:
+        col_match = []
 
     # # TODO: call find_crs_from_description if and only if crs column is empty
     # if len(col_crs) == 0:
     #     crs_val = find_crs_from_description(description)
 
-    crs_val = 'WGS84'
-
-    return col_match, crs_val #dict_col_return, crs_val
+    return col_match
