@@ -36,10 +36,9 @@ def get_site_name_columns(df_data, df_dictionary, col_available):
     df_remaining = df_remaining.select_dtypes(exclude=['number', 'bool'])
     col_remaining = list(df_remaining.columns)
 
-    # TODO: find sitename and other names column (must have at least one column)
-
-    col_names = []
     col_names = find_from_dictionary(df_dictionary, col_remaining, ['name'])
+
+    return col_names[0]
 
 def get_textual_location_columns(col_available):
     dict_loc_col_map = {}
@@ -75,8 +74,6 @@ def get_geocoordinate_columns(df_data, df_dictionary, col_available):
     col_to_compare = set(col_to_compare) - set(col_latitude) - set(col_longitude) - set(col_crs)
     col_remaining = list(col_to_compare)
 
-    # TODO: Call finding in dictionary function
-
     list_col_return, crs_val = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
 
     # TODO: [longitudes], [latitudes], crs_val
@@ -93,16 +90,14 @@ def find_columns(df, source_alias_code, source_name):
 
     col_available = set(list(df.columns))
 
-    # [col_site_name, col_other_names]
-
     col_unique_id = get_unique_id_column(df)
     col_available = col_available - set([col_unique_id]) if col_unique_id else col_available
 
     dict_loc_col_map, col_textual_location = get_textual_location_columns(col_available)
     col_available = col_available - set(col_textual_location)
 
-    get_site_name_columns(df, df_dictionary, col_available)
+    col_sitename = get_site_name_columns(df, df_dictionary, col_available)
 
     col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
 
-    return col_unique_id, dict_loc_col_map, col_geocoordinates, col_available
+    return col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename
