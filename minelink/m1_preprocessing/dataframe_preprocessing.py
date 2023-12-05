@@ -21,6 +21,7 @@ def convert_df_to_dict(df_data):
 
 def create_dict_info(df_data, col_name):
     df_info = df_data[col_name]
+    df_info.columns = ['0']
     dict_info = convert_df_to_dict(df_info)
 
     return dict_info
@@ -92,12 +93,14 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
         # float with more decimal places?
 
     df = df.rename(columns=dict_loc_col_map)
+
+    # print(col_longitude, col_latitude, col_sitename)
     
     dict_info = create_dict_info(df, col_sitename)
     dict_sameas = create_dict_sameas(df, source_name)
     dict_loc, dict_geo = create_dict_location(df, source_name)
 
-    dump_file(dict_info, path_to_store, 'name', 'PICKLE')
+    dump_file(dict_info, path_to_store, 'site_name', 'PICKLE')
     dump_file(dict_sameas, path_to_store, 'same_as', 'PICKLE')
     dump_file(dict_loc, path_to_store, 'location_info', 'PICKLE')
     dump_file(dict_geo, path_to_store, 'geometry', 'PICKLE')

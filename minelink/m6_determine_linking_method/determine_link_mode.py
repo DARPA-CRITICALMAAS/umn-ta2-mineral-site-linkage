@@ -64,7 +64,6 @@ def sort_data_files(path_data):
             df = load_file(path_data, file_name, file_extension)
             df_tolink = separate_dataframe(df, tmp_file_folder, leading_char+follow_char, source_name)
 
-            # TODO: intra link on the df link
             df_links = intra_link(df_tolink, tmp_file_folder)
 
             follow_char = chr(ord(follow_char) + 1) 

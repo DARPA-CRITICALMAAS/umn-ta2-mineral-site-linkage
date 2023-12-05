@@ -13,7 +13,7 @@ def add_source_column(df_links):
 
     return df_links
 
-def get_item(idx, source, required_item):
+def get_item(idx, source, required_item, bool_single):
     if isinstance(idx, list):
         list_compiled = []
 
@@ -27,6 +27,9 @@ def get_item(idx, source, required_item):
 
     path_dict = os.path.join(PATH_TMP_DIR, source)
     dict_required = load_file(path_dict, required_item, '.pkl')
+
+    if bool_single:
+        return dict_required[idx]['0']
 
     return dict_required[idx]
 
@@ -50,9 +53,9 @@ def group_dataframe_items(df_links, dict_code_alias):
     df_grouped = pd.concat([df_no_grouping, df_with_grouping], axis=0, ignore_index=True)
     df_grouped['id'] = 'Site' + df_grouped.index.astype(str)
 
-    df_grouped['name'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'name'), axis=1)
-    df_grouped['location_info'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'location_info'), axis=1)
-    df_grouped['same_as'] = df_grouped.apply(lambda x: get_item(x['idx'], x['source'], 'same_as'), axis=1)
+    df_grouped['name'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'site_name', True), axis=1)
+    df_grouped['location_info'] = df_grouped.apply(lambda x: get_item(x['idx'][0], x['source'][0], 'location_info', False), axis=1)
+    df_grouped['same_as'] = df_grouped.apply(lambda x: get_item(x['idx'], x['source'], 'same_as', False), axis=1)
 
     df_grouped = df_grouped[['id', 'name', 'location_info', 'same_as']]
 
