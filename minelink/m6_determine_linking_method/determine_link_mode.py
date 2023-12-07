@@ -33,7 +33,7 @@ def sort_dictionary_files(path_data, list_dict):
 
     return list_dict_names
 
-def sort_data_files(path_data):
+def sort_data_files(path_data, bool_location):
     check_dir(PATH_TMP_DIR)
 
     list_files, len_files, list_dict = open_dir(path_data, bool_dict=True)
@@ -64,7 +64,7 @@ def sort_data_files(path_data):
             df = load_file(path_data, file_name, file_extension)
             df_tolink = separate_dataframe(df, tmp_file_folder, leading_char+follow_char, source_name)
 
-            df_links = intra_link(df_tolink, tmp_file_folder)
+            df_links = intra_link(df_tolink, tmp_file_folder, bool_location)
 
             follow_char = chr(ord(follow_char) + 1) 
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
@@ -77,11 +77,12 @@ def sort_data_files(path_data):
     return list(dict_tmp_alias.keys())
 
 def site_linking(path_data, bool_location=False):
-    list_files = sort_data_files(path_data)
+    list_files = sort_data_files(path_data, bool_location)
 
     if len(list_files) == 1:
         df_links = load_file(os.path.join(PATH_TMP_DIR, list_files[0]), 'df_links', '.pkl')
     else:
+        
         inter_linking(list_files)
 
     # dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')

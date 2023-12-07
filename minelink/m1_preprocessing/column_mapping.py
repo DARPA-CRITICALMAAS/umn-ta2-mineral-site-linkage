@@ -3,6 +3,7 @@ import regex as re
 import warnings
 import numpy as np
 import pandas as pd
+import time
 
 from minelink.params import *
 from minelink.m0_save_and_load.save_load_file import *
@@ -52,8 +53,6 @@ def get_site_name_columns(df_data, df_dictionary, col_available):
     col_remaining = list(df_remaining.columns)
 
     col_names = find_from_dictionary(df_dictionary, col_remaining, ['name'])
-
-    print(col_names)
 
     # TODO: concat columns with the col_names
 
@@ -124,6 +123,8 @@ def find_columns(df, source_alias_code, source_name):
     df_dictionary_archive.insert(loc=0, column='source', value=source_name)
     dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
 
+    start_time = time.time()
+
     col_available = set(list(df.columns))
 
     df_dictionary['reduced_label'] = df_dictionary['label'].apply(lambda x: ''.join(re.findall('[A-Za-z]', x)))
@@ -139,5 +140,8 @@ def find_columns(df, source_alias_code, source_name):
 
     col_sitename = get_site_name_columns(df, df_dictionary, col_available)
     col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
+
+    run_time = time.time() - start_time
+    print(run_time)
 
     return col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename

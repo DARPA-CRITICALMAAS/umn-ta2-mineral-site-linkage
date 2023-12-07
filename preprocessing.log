@@ -1,6 +1,0 @@
-12/05/2023 09:31:44 AM is when preprocessing module started.
-12/05/2023 09:31:44 AM Load pretrained SentenceTransformer: all-MiniLM-L6-v2
-12/05/2023 09:31:44 AM Use pytorch device: cpu
-12/05/2023 09:31:55 AM Load pretrained SentenceTransformer: all-MiniLM-L6-v2
-12/05/2023 09:31:58 AM Use pytorch device: cpu
-12/05/2023 09:32:06 AM is when preprocessing module ended.
