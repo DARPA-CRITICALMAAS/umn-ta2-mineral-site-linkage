@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
 import os
-import sys
 import shutil
-from tabulate import tabulate
 
 from minelink.params import *
 from minelink.m0_save_and_load.save_load_file import *

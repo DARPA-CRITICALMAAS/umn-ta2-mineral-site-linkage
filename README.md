@@ -26,8 +26,11 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |-- __main__.py
 |
 |-- m0_save_and_load
-|   |-- directory_related.py            # 
-|   |-- file_related.py                 # 
+|   |-- create_tmp_dir.py               # 
+|   |-- load_data.py                    # 
+|   |-- save_ckpt_as_pickle.py          # 
+|   |-- directory_related.py            # WILL BE REMOVED
+|   |-- file_related.py                 # WILL BE REMOVED
 |
 |-- m1_preprocessing
 |   |-- column_mapping.py               # Reads the data dictionary and find columns relevant to lat/long/crs
@@ -56,9 +59,9 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- determine_location.py           # Determines the most confident location
 |
 |-- m8_save_output
-|   |-- save_as_json.py                 # 
-|   |-- save_as_geojson.py              # 
-|   |-- remove_tmp_dir.py               # 
+|   |-- save_as_json.py                 # Saves output as a JSON file (in form of proposed schema)
+|   |-- save_as_geojson.py              # Saves output as a GeoJSON file
+|   |-- remove_tmp_dir.py               # Removes temporary directory that saved intermediate check points
 |
 |-- m9_testing
 |   |-- evaluation_metrics.py           # 
