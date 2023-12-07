@@ -7,7 +7,7 @@ from minelink.m7_postprocessing.dataframe_postprocessing import postprocessing
 
 def main(args):
     site_linking(args.data_dir, bool_location=args.use_location_base)
-    postprocessing()
+    # postprocessing()
     remove_dir()
 
 if __name__ == '__main__':

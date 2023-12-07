@@ -126,10 +126,6 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     # df_link = df.drop([col_unique_id], axis=1)
     df_link = df
 
-    save_ckpt(df_link, path_to_store, 'link')
-
-    # print(df_link.columns)
-
-    # logging.warning('is when preprocessing module ended.')
+    save_ckpt(df_link, path_to_store, 'df_tolink')
 
     return df_link

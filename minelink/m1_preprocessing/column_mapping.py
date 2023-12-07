@@ -7,6 +7,7 @@ import time
 
 from minelink.params import *
 from minelink.m0_save_and_load.load_data import *
+from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
 from minelink.m1_preprocessing.datadictionary_processing import *
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -104,14 +105,9 @@ def get_geocoordinate_columns(df_data, df_dictionary, col_available):
 
     list_col_return = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
 
-    # if len(list_col_return) == 0:
-    # if len(list_col_return[2]) == 0:
-        # latitude_description = df_dictionary.loc[col_latitude[0]]
     df_latitude = df_dictionary[df_dictionary['label'] == col_latitude[0]]
     description = df_latitude['long'].values[0]
     crs_val = get_crs_value(description)
-
-    print(col_longitude, col_latitude, crs_val)
 
     return col_longitude, col_latitude, crs_val
 
@@ -121,7 +117,7 @@ def find_columns(df, source_alias_code, source_name):
     # TODO: change this archive part to concatenate
     df_dictionary_archive = df_dictionary
     df_dictionary_archive.insert(loc=0, column='source', value=source_name)
-    dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
+    save_ckpt(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive')
 
     start_time = time.time()
 
@@ -142,6 +138,5 @@ def find_columns(df, source_alias_code, source_name):
     col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
 
     run_time = time.time() - start_time
-    print(run_time)
 
     return col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename

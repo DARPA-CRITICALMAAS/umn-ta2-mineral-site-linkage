@@ -3,6 +3,7 @@ import pandas as pd
 import geopandas as gpd
 
 from minelink.m0_save_and_load.load_data import *
+from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
 
 # TODO: change into format that fits with the df_dict model
 def add_is(columns, df_cells, dictionary):
@@ -23,6 +24,8 @@ def create_documents(df_tolink, source_alias_code):
     df_documentized['unique_id'] = df_tolink.index.astype(str)
     df_documentized['geometry'] = df_tolink['geometry']
     df_documentized['document'] = pd.DataFrame(np.vectorize(add_is)(df_tolink.columns, df_tolink, dictionary)).sum(axis=1)
+
+    save_ckpt(df_documentized, PATH_TMP_DIR, 'df_doc', additional=source_alias_code)
 
     df_documentized = df_tolink
 
