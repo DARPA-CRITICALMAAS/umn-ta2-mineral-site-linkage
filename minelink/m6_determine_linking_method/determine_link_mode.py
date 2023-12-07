@@ -1,5 +1,3 @@
-import os
-
 from minelink.params import *
 from minelink.m0_save_and_load.load_data import *
 from minelink.m1_preprocessing.dataframe_preprocessing import separate_dataframe
@@ -28,7 +26,7 @@ def sort_dictionary_files(path_data, list_dict):
         df = load_file(path_data, file_name, file_extension)
         df_description = df_to_dictionary(df)
 
-        dump_file(df_description, os.path.join(PATH_TMP_DIR, 'dictionary'), source_name, 'PICKLE')
+        save_ckpt(df_description, PATH_TMP_DIR, source_name, additional='dictionary')
 
     return list_dict_names
 
@@ -68,22 +66,23 @@ def sort_data_files(path_data, bool_location):
             follow_char = chr(ord(follow_char) + 1) 
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
 
-    dump_file(dict_tmp_alias, PATH_TMP_DIR, 'code_alias', 'PICKLE')
-    dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
+    save_ckpt(dict_tmp_alias, PATH_TMP_DIR, 'code_alias')
+    save_ckpt(df_links, PATH_TMP_DIR, 'df_links')
 
-    remove_dir(additional='dictionary')
+    # remove_dir(additional='dictionary')
 
     return list(dict_tmp_alias.keys())
 
 def site_linking(path_data, bool_location=False):
     list_files = sort_data_files(path_data, bool_location)
 
-    if len(list_files) == 1:
-        df_links = load_file(os.path.join(PATH_TMP_DIR, list_files[0]), 'df_links', '.pkl')
-    else:
-        
-        inter_linking(list_files)
+    # if len(list_files) == 1:
+    #     df_links = load_file(os.path.join(PATH_TMP_DIR, list_files[0]), 'df_links', '.pkl')
+    # else:
+    #     inter_linking(list_files, bool_location)
 
     # dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
+
+    return 0
 
     

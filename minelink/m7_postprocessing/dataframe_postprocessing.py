@@ -4,8 +4,8 @@ import geopandas as gpd
 from tqdm import tqdm
 
 from minelink.params import *
-from minelink.m0_save_and_load.save_load_directory import check_dir
-from minelink.m0_save_and_load.save_load_file import *
+from minelink.m0_save_and_load.load_data import *
+from minelink.m0_save_and_load.create_tmp_dir import check_dir
 from minelink.m7_postprocessing.determine_location import *
 
 def add_source_column(df_links):
@@ -69,4 +69,4 @@ def postprocessing():
     df_grouped = group_dataframe_items(df_links, dict_code_alias)
 
     check_dir(PATH_OUTPUT_DIR)
-    dump_file(df_grouped, PATH_OUTPUT_DIR, 'linked_result', 'JSON')
+    # dump_file(df_grouped, PATH_OUTPUT_DIR, 'linked_result', 'JSON')

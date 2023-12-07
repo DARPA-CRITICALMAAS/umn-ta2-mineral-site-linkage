@@ -7,6 +7,7 @@ import time
 
 from minelink.params import *
 from minelink.m0_save_and_load.load_data import *
+from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
 from minelink.m1_preprocessing.datadictionary_processing import *
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -104,24 +105,25 @@ def get_geocoordinate_columns(df_data, df_dictionary, col_available):
 
     list_col_return = find_from_dictionary(df_dictionary, col_remaining, ['latitude', 'longitude', 'crs'])
 
-    # if len(list_col_return) == 0:
-    # if len(list_col_return[2]) == 0:
-        # latitude_description = df_dictionary.loc[col_latitude[0]]
     df_latitude = df_dictionary[df_dictionary['label'] == col_latitude[0]]
     description = df_latitude['long'].values[0]
     crs_val = get_crs_value(description)
-
-    print(col_longitude, col_latitude, crs_val)
 
     return col_longitude, col_latitude, crs_val
 
 def find_columns(df, source_alias_code, source_name):
     df_dictionary = load_file(path_dir=PATH_TMP_DIR, additional=source_alias_code, file_name='dictionary', extension='.pkl')
 
-    # TODO: change this archive part to concatenate
-    df_dictionary_archive = df_dictionary
-    df_dictionary_archive.insert(loc=0, column='source', value=source_name)
-    dump_file(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive', 'PICKLE')
+    df_current_dictionary = df_dictionary
+    df_current_dictionary.insert(loc=0, column='source', value=source_name)
+
+    # TODO: bring it back later
+    # try: 
+    #     df_previous_archive = load_file(PATH_SRC_DIR, 'dictionary_archive')
+    #     df_dictionary_archive = pd.concat([df_previous_archive, df_current_dictionary], axis=0)
+    # except:
+    #     df_dictionary_archive = df_current_dictionary
+    # save_ckpt(df_dictionary_archive, PATH_SRC_DIR, 'dictionary_archive')
 
     start_time = time.time()
 
@@ -132,7 +134,7 @@ def find_columns(df, source_alias_code, source_name):
 
     df_dictionary = df_dictionary.drop(['reduced_label'], axis=1)
 
-    col_unique_id = get_unique_id_column(df, df_dictionary)
+    col_unique_id = get_unique_id_column(df, dict_dictionary)
     col_available = col_available - set([col_unique_id]) if col_unique_id else col_available
 
     dict_loc_col_map, col_textual_location = get_textual_location_columns(col_available)
@@ -142,6 +144,5 @@ def find_columns(df, source_alias_code, source_name):
     col_geocoordinates = get_geocoordinate_columns(df, df_dictionary, col_available)
 
     run_time = time.time() - start_time
-    print(run_time)
 
     return col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename

@@ -14,6 +14,6 @@ def intra_link(df_tolink, path_store, bool_location):
 
     df_links = df_linked[['idx', 'GroupID']]
 
-    save_ckpt(df_links, path_store, 'df_links')
+    save_ckpt(df_links, path_store, 'df_intra_linked')
 
     return df_links

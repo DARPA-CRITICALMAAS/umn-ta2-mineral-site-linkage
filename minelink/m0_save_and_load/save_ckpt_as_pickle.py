@@ -9,6 +9,8 @@ import pickle5 as pickle
 #     elif save_format.upper() == 'CSV':
 #         data.to_csv(os.path.join(path_dir, file_name + '.csv'))
 
-def save_ckpt(data, path_dir, file_name):
+def save_ckpt(data, path_dir, file_name, additional=''):
+    path_dir = os.path.join(path_dir, additional)
+    
     with open(os.path.join(path_dir, file_name+'.pkl'), 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)

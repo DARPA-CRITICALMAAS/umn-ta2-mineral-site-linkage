@@ -88,7 +88,7 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
 
         if len(col_longitude)==1 and len(col_latitude)==1:
             df = convert_to_gdb(df, col_longitude[0], col_latitude[0], crs=crs_val)
-            # dump_file(df, './', source_alias_code, 'GEOJSON')
+
         else:
             precise_col_longitude = col_longitude[0]
             precise_col_latitude = col_latitude[0]
@@ -126,10 +126,6 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     # df_link = df.drop([col_unique_id], axis=1)
     df_link = df
 
-    save_ckpt(df_link, path_to_store, 'link')
-
-    # print(df_link.columns)
-
-    # logging.warning('is when preprocessing module ended.')
+    save_ckpt(df_link, path_to_store, 'df_tolink')
 
     return df_link
