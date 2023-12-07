@@ -46,7 +46,20 @@ def dump_file(data, path_dir, file_name, save_format):
         data.to_csv(os.path.join(path_dir, file_name + '.csv'))
     
     elif save_format.upper() == 'GEOJSON':
-        return 0
+        # TODO: remove when the name columns are combined to a singular 'site_name' column
+        try:
+            data.insert(loc=0, column='site_name', value='abcdef')
+        except:
+            pass
+        
+        data = data[['source_name', 'site_name', 'geometry']]
+
+        # dataframe = dataframe.apply(pd.to_numeric, errors='ignore')
+        # gdf = gpd.GeoDataFrame(
+        #     dataframe
+        # )
+
+        data.to_file(os.path.join(path_dir, file_name+'.geojson'), driver='GeoJSON')
     
     elif save_format.upper() == 'JSON':
         json_df = data.to_json(orient='index', default_handler=str)    # default handler set to prevent iteration overflow

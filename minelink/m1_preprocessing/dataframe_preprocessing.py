@@ -88,9 +88,25 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
 
         if len(col_longitude)==1 and len(col_latitude)==1:
             df = convert_to_gdb(df, col_longitude[0], col_latitude[0], crs=crs_val)
+            # dump_file(df, './', source_alias_code, 'GEOJSON')
+        else:
+            precise_col_longitude = col_longitude[0]
+            precise_col_latitude = col_latitude[0]
+
+            df_len = pd.DataFrame()
+            for i in col_longitude:
+                df_len[i] = df[i].apply(lambda x: len(re.split('\.', x)[1]))
+
+            df_len = df_len.max()
+
+            for i in col_latitude:
+                print()
+
+            df = convert_to_gdb(df, precise_col_longitude, precise_col_latitude, crs=crs_val)
 
         # TODO: determine which one to select if there are multiple longitude/latitude values
         # float with more decimal places?
+        # split at dot, take the second part, get the length, select one with the longest length in the column, use that column as the the latitude value to convert to gdb
 
     df = df.rename(columns=dict_loc_col_map)
 
@@ -109,6 +125,8 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     # drop all column relevant to latitude, longitude, crs, (maybe textual location and unique id)
     # df_link = df.drop([col_unique_id], axis=1)
     df_link = df
+
+    dump_file(df_link, path_to_store, 'link', 'PICKLE')
 
     # print(df_link.columns)
 

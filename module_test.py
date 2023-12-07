@@ -8,7 +8,7 @@ def main(args):
     print("here")
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Module accuracy check')
+    parser = ArgumentParser(description='Module accuracy/time check')
     parser.add_argument('--module', '-,m',
                         help='module number that will be tested')
     parser.add_argument('--data_dir', '-d',
