@@ -5,7 +5,6 @@ import geopandas as gpd
 from minelink.m0_save_and_load.load_data import *
 from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
 
-# TODO: change into format that fits with the df_dict model
 def add_is(columns, df_cells, dictionary):
     if df_cells:
         if df_cells[0] == ' ':
@@ -16,6 +15,10 @@ def add_is(columns, df_cells, dictionary):
     return ''
 
 def create_documents(df_tolink, source_alias_code):
+    """
+    : input: df_tolink (gpd)
+    : input: source_lias_code (str)
+    """
     # load df_dict based on source alias code
     df_dictionary = load_file(PATH_TMP_DIR, 'dictionary', '.pkl', additional=source_alias_code)
     dictionary = dict(zip(df_dictionary['label'], df_dictionary['short']))

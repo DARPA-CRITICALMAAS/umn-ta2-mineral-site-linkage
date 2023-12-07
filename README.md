@@ -68,6 +68,9 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 
 ## Updates
 ### In Progress
+- [ ] Create ground truth set for tunsten skarn that can be used to check intra linking performance
+- [ ] Test performance of intra linking with the document forming method
+- [ ] Check which parts are more deterministic by going through BERT embedding
 
 ### Completed (For: December 20th)
 - [x] Create data dictionary refering method
@@ -81,6 +84,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [x] Recheck dictionary for Alaska dataset
 - [x] Populate text based linking method (create python file for each method)
 - [x] Check time of column identification task (prev method v. current method)
+- [x] Update the dictionary archival function so that it can store all previous dictionary and be used in case maybe when there is no data dictionary
 
 ### To-Do
 - [ ] Create method to create short description when there is no column representing short description
