@@ -9,7 +9,7 @@ import regex as re
 from tqdm import tqdm
 
 from minelink.params import *
-from minelink.m0_save_and_load.save_load_file import dump_file
+from minelink.m0_save_and_load.save_ckpt_as_pickle import *
 from minelink.m1_preprocessing.convert_to_geodataframe import *
 from minelink.m1_preprocessing.column_mapping import find_columns
 from minelink.m1_preprocessing.datadictionary_processing import *
@@ -66,7 +66,7 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     # logging.basicConfig(filename='preprocessing.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
     # logging.warning('is when preprocessing module started.')
 
-    dump_file(df, path_to_store, 'raw', 'PICKLE')
+    save_ckpt(df, path_to_store, 'raw')
 
     col_unique_id, dict_loc_col_map, col_geocoordinates, col_sitename = find_columns(df, source_alias_code, source_name)
 
@@ -116,17 +116,17 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
     dict_sameas = create_dict_sameas(df, source_name)
     dict_loc, dict_geo = create_dict_location(df, source_name)
 
-    dump_file(dict_info, path_to_store, 'site_name', 'PICKLE')
-    dump_file(dict_sameas, path_to_store, 'same_as', 'PICKLE')
-    dump_file(dict_loc, path_to_store, 'location_info', 'PICKLE')
-    dump_file(dict_geo, path_to_store, 'geometry', 'PICKLE')
+    save_ckpt(dict_info, path_to_store, 'site_name')
+    save_ckpt(dict_sameas, path_to_store, 'same_as')
+    save_ckpt(dict_loc, path_to_store, 'location_info')
+    save_ckpt(dict_geo, path_to_store, 'geometry')
 
     # TODO: create dataframe consisting of relevant information (that will be used for linking)
     # drop all column relevant to latitude, longitude, crs, (maybe textual location and unique id)
     # df_link = df.drop([col_unique_id], axis=1)
     df_link = df
 
-    dump_file(df_link, path_to_store, 'link', 'PICKLE')
+    save_ckpt(df_link, path_to_store, 'link')
 
     # print(df_link.columns)
 
