@@ -6,7 +6,8 @@ import regex as re
 import pandas as pd
 
 from sentence_transformers import SentenceTransformer, util
-from minelink.m0_save_and_load.save_load_file import load_file
+from minelink.m0_save_and_load.load_data import load_file
+
 from minelink.params import *
 
 xfrmer_model = 'all-MiniLM-L6-v2'

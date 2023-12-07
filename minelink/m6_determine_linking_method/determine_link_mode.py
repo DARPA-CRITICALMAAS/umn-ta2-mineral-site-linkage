@@ -1,8 +1,7 @@
 import os
 
 from minelink.params import *
-from minelink.m0_save_and_load.save_load_directory import *
-from minelink.m0_save_and_load.save_load_file import *
+from minelink.m0_save_and_load.load_data import *
 from minelink.m1_preprocessing.dataframe_preprocessing import separate_dataframe
 from minelink.m1_preprocessing.datadictionary_processing import *
 from minelink.m4_intralinking.intra_linking import *

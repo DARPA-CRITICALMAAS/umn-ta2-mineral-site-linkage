@@ -29,8 +29,6 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- create_tmp_dir.py               # 
 |   |-- load_data.py                    # 
 |   |-- save_ckpt_as_pickle.py          # 
-|   |-- directory_related.py            # WILL BE REMOVED
-|   |-- file_related.py                 # WILL BE REMOVED
 |
 |-- m1_preprocessing
 |   |-- column_mapping.py               # Reads the data dictionary and find columns relevant to lat/long/crs
@@ -71,7 +69,6 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 ## Updates
 ### In Progress
 - [ ] Check time of column identification task (prev method v. current method)
-- [ ] Recheck dictionary for Alaska dataset
 
 ### Completed (For: December 20th)
 - [x] Create data dictionary refering method
@@ -82,13 +79,15 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [x] Bring back the column identification function
 - [x] Finish function for developing information dictionary
 - [x] When saving to geojson, also save the source of the file
+- [x] Recheck dictionary for Alaska dataset
+- [x] Populate text based linking method (create python file for each method)
 
 ### To-Do
 - [ ] Create method to create short description when there is no column representing short description
 - [ ] Finish m7.determine_location to select most confident location (not just the first)
 - [ ] Develop a clustering algorithm that will allow inter-linking
 - [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
-- [ ] Populate text based linking method (create python file for each method)
 - [ ] Make logging available for each module (move timing and accuracy to log)
+- [ ] (Extended) Change to polars / geopolars
 
 ### Archive

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from torch.cuda import device_count
 
-from minelink.m0_save_and_load.save_load_directory import remove_dir
+from minelink.m8_save_output.remove_tmp_dir import remove_dir
 from minelink.m6_determine_linking_method.determine_link_mode import site_linking
 from minelink.m7_postprocessing.dataframe_postprocessing import postprocessing
 

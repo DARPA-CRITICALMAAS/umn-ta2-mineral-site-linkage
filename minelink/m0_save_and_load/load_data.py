@@ -21,30 +21,6 @@ def check_dir(path_dir, additional=''):
     if not os.path.exists(path_dir):
         os.makedirs(path_dir)
 
-def open_dir(path_dir, bool_dict=False):
-    list_dir_items = os.listdir(path_dir)
-
-    list_files = []
-    list_dict = []
-
-    if bool_dict==False:
-        return list_dir_items, len(list_dir_items)
-
-    for l in list_dir_items:
-        file_name, file_extension = os.path.splitext(l)
-
-        if file_extension != '':
-            if re.search('dict', file_name):
-                list_dict.append(l)
-            else:
-                list_files.append(l)
-        else:
-            list_dict_items = os.listdir(os.path.join(path_dir, l))
-            list_dict_items = [l+'/'+i for i in list_dict_items]
-            list_dict.extend(list_dict_items)
-
-    return list_files, len(list_files), list_dict
-
 def load_file(path_dir, file_name, extension, additional=''):
     path_dir = os.path.join(path_dir, additional)
     
@@ -70,6 +46,30 @@ def load_file(path_dir, file_name, extension, additional=''):
     #     f = open(os.path.join(path_dir, file_name + extension), 'r')
     #     data  = loads(f)
     #     return data
+
+def open_dir(path_dir, bool_dict=False):
+    list_dir_items = os.listdir(path_dir)
+
+    list_files = []
+    list_dict = []
+
+    if bool_dict==False:
+        return list_dir_items, len(list_dir_items)
+
+    for l in list_dir_items:
+        file_name, file_extension = os.path.splitext(l)
+
+        if file_extension != '':
+            if re.search('dict', file_name):
+                list_dict.append(l)
+            else:
+                list_files.append(l)
+        else:
+            list_dict_items = os.listdir(os.path.join(path_dir, l))
+            list_dict_items = [l+'/'+i for i in list_dict_items]
+            list_dict.extend(list_dict_items)
+
+    return list_files, len(list_files), list_dict
 
 def move_file(path_org_file, path_mv_dir):
     try: 
