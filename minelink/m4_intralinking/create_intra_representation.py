@@ -10,4 +10,6 @@ def create_representation(source_alias_code):
     df_intra_rep = df_intra_linked
 
     save_ckpt(df_intra_rep, PATH_TMP_DIR, 'df_rep', additional=source_alias_code)
+
+    # Need to preserve all locations
     return df_intra_rep
