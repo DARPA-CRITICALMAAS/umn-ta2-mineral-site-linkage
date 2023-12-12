@@ -3,6 +3,7 @@ import time
 import logging
 
 import pandas as pd
+import polars as pl
 import geopandas as gpd
 import pickle5 as pickle
 import regex as re
@@ -35,10 +36,9 @@ def create_dict_geometry(df_loc):
 
 def create_dict_location(df_data, source_name):
     df_loc = df_data
-    df_loc.insert(loc=0, column='location_source', value=source_name)
     df_loc.insert(loc=0, column='crs', value='WGS84')
 
-    col_location = set(['geometry', 'country', 'state_or_province', 'crs', 'location_source', 'location_source_record_id'])
+    col_location = set(['geometry', 'country', 'state_or_province', 'crs'])
     col_available = set(list(df_data.columns))
     col_in_common = list(col_location & col_available)
 
@@ -50,14 +50,7 @@ def create_dict_location(df_data, source_name):
     return dict_loc, dict_geo
 
 def create_dict_sameas(df_data, source_name):
-    df_sameas = df_data
-    df_sameas['record_id'] = df_sameas.index.astype(str)
-    df_sameas['record_id'] = df_sameas['record_id'].apply(lambda x: re.split('_', x)[1])
-
-    df_sameas.insert(loc=0, column='source', value=source_name)
-
-    df_sameas = df_sameas[['source', 'record_id']]
-
+    df_sameas = df_data[['source_id', 'record_id']]
     dict_sameas = convert_df_to_dict(df_sameas)
 
     return dict_sameas
@@ -72,10 +65,11 @@ def separate_dataframe(df, path_to_store, source_alias_code, source_name):
 
     if col_unique_id:
         df['idx'] = source_alias_code + '_' + df[col_unique_id].astype(str)
-        df['location_source_record_id'] = df[col_unique_id].astype(str)
+        df['record_id'] = df[col_unique_id].astype(str)
     else:
         df['idx'] = source_alias_code + '_' + df.index.astype(str)
-        df['location_source_record_id'] = df.index.astype(str)
+        df['record_id'] = df.index.astype(str)
+    df.insert(loc=0, column='source_id', value=source_name)
 
     df = df.set_index('idx')
 

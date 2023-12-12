@@ -1,9 +1,14 @@
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+from transformers import AutoTokenizer, AutoModel
+from sentence_transformers import SentenceTransformer
 
 from minelink.m0_save_and_load.load_data import *
 from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
+
+xfrmer_model = 'bert-base-uncased'
+snt_xfrmer = 'all-distilroberta-v1'
 
 def add_is(columns, df_cells, dictionary):
     if df_cells:
@@ -33,3 +38,9 @@ def create_documents(df_tolink, source_alias_code):
     df_documentized = df_tolink
 
     return df_documentized
+
+def text_to_embedding(input_text):
+    model = AutoModel(snt_xfrmer)
+    txt_embed = model.encode(input_text, convert_to_tensor=True)
+
+    return txt_embed

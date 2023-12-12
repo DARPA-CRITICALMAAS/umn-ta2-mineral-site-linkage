@@ -32,21 +32,21 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |
 |-- m1_preprocessing
 |   |-- column_mapping.py               # Reads the data dictionary and find columns relevant to lat/long/crs
-|   |-- converting_to_geodataframe.py   #
-|   |-- dataframe_preprocessing.py      #
+|   |-- converting_to_geodataframe.py   # Converts different databases into geodataframe with same crs
+|   |-- dataframe_preprocessing.py      # Preprocesses the input data into form for the program to run
 |
 |-- m2_location_based_linking
 |   |-- link_with_loc.py                # Completes linking based on geolocation information
 |
 |-- m3_text_based_linking
-|   |-- link_with_all.py                # Completes linking with geolocation and textual information
 |   |-- create_documents.py             # Create the psuedo document that will be used for linking
+|   |-- link_with_all.py                # Completes linking with geolocation and textual information
 |
 |-- m4_intralinking
 |   |-- intra_linking.py                # Completes linking within databases
+|   |-- create_representation.py        # Creates a representation of intra-linked clusters
 |
 |-- m5_interlinking
-|   |-- create_representation.py        # Creates a representation of intra-linked clusters
 |   |-- inter_linking.py                # Completes linking across databases
 |
 |-- m6_determine_linking_method
@@ -71,6 +71,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [ ] Create ground truth set for tunsten skarn that can be used to check intra linking performance
 - [ ] Test performance of intra linking with the document forming method
 - [ ] Check which parts are more deterministic by going through BERT embedding
+- [ ] Change to polars
 
 ### Completed (For: December 20th)
 - [x] Create data dictionary refering method
@@ -92,6 +93,6 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 - [ ] Develop a clustering algorithm that will allow inter-linking
 - [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
 - [ ] Make logging available for each module (move timing and accuracy to log)
-- [ ] (Extended) Change to polars / geopolars
+- [ ] (Maybe) change to geopolars (package not fully mature as of 12/11)
 
 ### Archive
