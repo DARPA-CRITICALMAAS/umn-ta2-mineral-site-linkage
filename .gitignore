@@ -1,5 +1,6 @@
 temporary/
 outputs/
+run_results/
 minelink/intiation_modules
 check.py
 main.py
