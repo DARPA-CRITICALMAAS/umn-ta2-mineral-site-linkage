@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "minelink/intiation_modules/check_individual.py", line 58, in <module>
-    pl_tmp = pl_USMIN.select(
-  File "/home/yaoyi/pyo00005/.local/lib/python3.8/site-packages/polars/dataframe/frame.py", line 6239, in map_rows
-    out, is_df = self._df.map_rows(function, return_dtype, inference_size)
-polars.exceptions.ComputeError: expected tuple, got list

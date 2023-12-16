@@ -25,6 +25,26 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |-- __init__.py
 |-- __main__.py
 |
+|-- m0_load_input
+|
+|-- m1_input_preprocessing
+|
+|-- m2_intralinking
+|
+|-- m3_interlinking
+|
+|-- m4_postprocessing
+|
+|-- m5_save_output
+|
+|-- m6_testing
+```
+
+```
+./minelink
+|-- __init__.py
+|-- __main__.py
+|
 |-- m0_save_and_load
 |   |-- create_tmp_dir.py               # 
 |   |-- load_data.py                    # 
@@ -65,34 +85,3 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- evaluation_metrics.py           # 
 |
 ```
-
-## Updates
-### In Progress
-- [ ] Create ground truth set for tunsten skarn that can be used to check intra linking performance
-- [ ] Test performance of intra linking with the document forming method
-- [ ] Check which parts are more deterministic by going through BERT embedding
-- [ ] Change to polars
-
-### Completed (For: December 20th)
-- [x] Create data dictionary refering method
-- [x] Populate data dictionary processing
-- [x] Update same as structure
-- [x] Update postprocessing to reflect same as structure
-- [x] Create a function that will determine the CRS value from the description of latitude
-- [x] Bring back the column identification function
-- [x] Finish function for developing information dictionary
-- [x] When saving to geojson, also save the source of the file
-- [x] Recheck dictionary for Alaska dataset
-- [x] Populate text based linking method (create python file for each method)
-- [x] Check time of column identification task (prev method v. current method)
-- [x] Update the dictionary archival function so that it can store all previous dictionary and be used in case maybe when there is no data dictionary
-
-### To-Do
-- [ ] Create method to create short description when there is no column representing short description
-- [ ] Finish m7.determine_location to select most confident location (not just the first)
-- [ ] Develop a clustering algorithm that will allow inter-linking
-- [ ] Develop method to test accuracy of each module (column_mapping, linking procedure)
-- [ ] Make logging available for each module (move timing and accuracy to log)
-- [ ] (Maybe) change to geopolars (package not fully mature as of 12/11)
-
-### Archive

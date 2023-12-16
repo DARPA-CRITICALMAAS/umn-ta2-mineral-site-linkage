@@ -37,3 +37,7 @@ def determine_cluster(df_data):
     df_data['potential_cluster'] = []
 
     return df_data
+
+def cosine_similarity_text(df_data):
+    
+    return 0

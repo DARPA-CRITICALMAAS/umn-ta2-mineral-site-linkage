@@ -10,4 +10,4 @@
 
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/
 module load python3
-python3 minelink/intiation_modules/check_individual.py
+python3 -m minelink -d /home/yaoyi/pyo00005/CriticalMAAS/src/data/raw

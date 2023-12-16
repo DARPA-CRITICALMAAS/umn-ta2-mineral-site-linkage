@@ -1,9 +1,10 @@
 from minelink.params import *
 from minelink.m0_save_and_load.load_data import *
+from minelink.m0_save_and_load.save_ckpt_as_pickle import save_ckpt
 from minelink.m1_preprocessing.dataframe_preprocessing import separate_dataframe
 from minelink.m1_preprocessing.datadictionary_processing import *
-from minelink.m4_intralinking.intra_linking import *
-from minelink.m5_interlinking.inter_linking import *
+from minelink.m4_intralinking.intra_linking import intra_link
+from minelink.m5_interlinking.inter_linking import inter_link
 
 def sort_dictionary_files(path_data, list_dict):
     check_dir(PATH_TMP_DIR, 'dictionary')
@@ -67,7 +68,6 @@ def sort_data_files(path_data, bool_location):
             leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
 
     save_ckpt(dict_tmp_alias, PATH_TMP_DIR, 'code_alias')
-    save_ckpt(df_links, PATH_TMP_DIR, 'df_links')
 
     # remove_dir(additional='dictionary')
 
@@ -82,6 +82,8 @@ def site_linking(path_data, bool_location=False):
     #     inter_linking(list_files, bool_location)
 
     # dump_file(df_links, PATH_TMP_DIR, 'df_links', 'PICKLE')
+    df_linked = inter_link(list_files, bool_location)
+    save_ckpt(df_linked, PATH_TMP_DIR, 'df_links')
 
     return 0
 
