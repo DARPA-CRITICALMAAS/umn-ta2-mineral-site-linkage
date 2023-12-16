@@ -1,19 +1,19 @@
 from argparse import ArgumentParser
 from torch.cuda import device_count
 
-from minelink.m8_save_output.remove_tmp_dir import remove_dir
-from minelink.m6_determine_linking_method.determine_link_mode import site_linking
-from minelink.m7_postprocessing.dataframe_postprocessing import postprocessing
+from minelink.m0_load_input.load_data import load_dir
+from minelink.m1_input_preprocessing.preprocess_input import preprocessing
+from minelink.m2_intralinking.intralink import intralink
 
 def main(args):
-    site_linking(args.data_dir, bool_location=args.use_location_base)
-    # postprocessing()
-    remove_dir()
+    list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
+    preprocessing(list_code)
+    intralink(list_code, args.use_location_base)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')
     parser.add_argument('--data_dir', '-d',
-                        help='directory in which the data files(.gdb, .csv, .geojson, .pkl) and data dictionaries are saved')
+                        help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
     parser.add_argument('--use_location_base', '-l',
                         help='use location based method to link data', action='store_true')
     
