@@ -1,9 +1,52 @@
 import regex as re
 import polars as pl
 import polars.selectors as cs
+import numpy as np
+from sentence_transformers import SentenceTransformer, util
 
 from minelink.params import *
 from minelink.m0_load_input.load_data import load_file
+
+def compare_dictionary(dict_target, dict_against):
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    name_target = list(dict_target.keys())
+    descrip_target = list(dict_target.values())
+    emb_target = model.encode(descrip_target, convert_to_tensor=True)
+
+    name_against = list(dict_against.keys())
+    descrip_against = list(dict_against.values())
+    emb_against = model.encode(descrip_against, convert_to_tensor=True)
+
+    cosine_scores = util.cos_sim(emb_target, emb_against)
+    cosine_scores = np.array(cosine_scores.tolist())
+
+    idx = list(dict.fromkeys(np.where(cosine_scores > 0.47)[1]))
+
+    col_match = list(np.array(name_against)[idx])
+
+    return col_match
+
+def find_from_dictionary(df_dictionary, col_remaining, to_find):
+    """
+    :input: col_remaining (list) = 
+    """
+    dict_col_return = {key:[] for key in to_find}
+
+    df_target = load_file(PATH_SRC_DIR, 'df_target', '.pkl')
+    df_target = df_target[df_target['label'].isin(to_find)]
+    dict_target = dict(zip(df_target['label'], df_target['description']))
+    
+    df_description = df_dictionary[df_dictionary['label'].isin(col_remaining)]
+
+    if df_description.shape[0] > 0:
+        dict_against = dict(zip(df_description['label'], df_description['long']))
+        col_match = compare_dictionary(dict_target, dict_against)
+
+    else:
+        col_match = []
+
+    return col_match
 
 def identify_unique_id(pl_data):
     pl_count = pl_data.select(
@@ -33,14 +76,20 @@ def identify_unique_id(pl_data):
 
     return False
 
-def identify_site_name(pl_data, remaining_columns):
+def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
+    pl_name = pl_data.select(
+        pl.col(remaining_columns)
+    ).select(
+        ~cs.by_dtype(pl.NUMERIC_DTYPES, pl.Boolean)
+    )
+    
+    print(pl_name)
+    
     return 'site_name'
 
-# df_remaining = df_data[list(col_available)]
-#     df_remaining = df_remaining.select_dtypes(exclude=['number', 'bool'])
-#     col_remaining = list(df_remaining.columns)
+#     remaining_columns = list(df_remaining.columns)
 
-#     col_names = find_from_dictionary(df_dictionary, col_remaining, ['name'])
+#     col_names = find_from_dictionary(df_dictionary, remaining_columns, ['name'])
 
 #     # TODO: concat columns with the col_names
 
@@ -57,14 +106,14 @@ def identify_textual_location(remaining_columns):
 
     return dict_text_loc
 
-def identify_geo_location(pl_data, pl_dict, col_remaining):
+def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
     col_latitude = []
     col_longitude = []
     col_crs = []
     crs_value = ''
 
     pl_geo_loc = pl_data.select(
-        pl.col(col_remaining)
+        pl.col(remaining_columns)
     ).select(
         cs.by_dtype(pl.NUMERIC_DTYPES),
     )
@@ -82,6 +131,11 @@ def identify_geo_location(pl_data, pl_dict, col_remaining):
     def_latitude = 'something something in'
     crs_value = identify_crs(def_latitude)
 
+    if dict_data == None:
+        return col_latitude, col_longitude, crs_value
+
+    print(crs_value)
+
     return col_latitude, col_longitude, crs_value
 
 def identify_crs(def_latitude):
@@ -95,7 +149,11 @@ def identify_crs(def_latitude):
 
     return 'WGS84'
 
-def identify_column(pl_data, pl_dict=None):
+def identify_column(pl_data, dict_data=None):
+    dict_target = load_file([PATH_SRC_DIR],
+                            'dictionary_target',
+                            '.pkl')
+    
     remaining_columns = set(pl_data.columns)
 
     unique_id = identify_unique_id(pl_data)
@@ -104,9 +162,9 @@ def identify_column(pl_data, pl_dict=None):
     dict_text_loc = identify_textual_location(remaining_columns)
     remaining_columns = remaining_columns - set(list(dict_text_loc.keys()))
 
-    col_name = identify_site_name(pl_data, remaining_columns)
+    col_name = identify_site_name(pl_data, remaining_columns, dict_data, dict_target)
 
-    latitude, longitude, crs = identify_geo_location(pl_data, pl_dict, remaining_columns)
+    latitude, longitude, crs = identify_geo_location(pl_data, remaining_columns, dict_data, dict_target)
     remaining_columns = remaining_columns - set(latitude) - set(longitude)
 
     remaining_columns = list(remaining_columns)
