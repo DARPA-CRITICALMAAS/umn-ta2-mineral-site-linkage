@@ -126,8 +126,8 @@ def load_dir(path_dir, bool_dict=False):
         dict_code_alias[alias_code] = source_id
         save_ckpt(df, [PATH_TMP_DIR, alias_code], 'raw')
 
-        if source_id in list_dict_names:
-            move_file([PATH_TMP_DIR, 'dictionary', source_id+'.pkl'], [PATH_TMP_DIR, alias_code, 'dictionary.pkl'])
+        if file_name in list_dict_names:
+            move_file([PATH_TMP_DIR, 'dictionary', file_name+'.pkl'], [PATH_TMP_DIR, alias_code, 'dictionary.pkl'])
 
         follow_char = chr(ord(follow_char) + 1) 
         leading_char = chr(ord(leading_char) + 1) if follow_char == 'a' else leading_char
