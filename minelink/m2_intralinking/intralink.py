@@ -15,9 +15,9 @@ def intralink(list_code, bool_location):
             pl_doc, pl_txt_linked = text_based_linking(i, pl_loc_linked)
             pl_intra_linked = pl_txt_linked
 
-            # save_ckpt(data=pl_doc,
-            #           list_path=[PATH_TMP_DIR, i],
-            #           file_name='pl_document')
+            save_ckpt(data=pl_doc,
+                      list_path=[PATH_TMP_DIR, i],
+                      file_name='pl_document')
 
         # pl_intra_linked = pl_intra_linked.group_by(
         #     'GroupID'
@@ -43,5 +43,5 @@ def just_dimension(alias_code):
     )
 
     save_ckpt(data=pl_reduced,
-              list_path=[PATH_TMP_DIR, 'aa'],
+              list_path=[PATH_TMP_DIR, alias_code],
                   file_name='pl_reduced')

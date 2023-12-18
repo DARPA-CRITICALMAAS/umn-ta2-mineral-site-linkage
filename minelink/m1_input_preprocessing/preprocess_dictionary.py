@@ -30,21 +30,22 @@ def process_dictionary(alias_code):
     #     # TODO: add a way to extract short description from the long description
     #     pass
 
-    pl_short = pl_dict.select(
-        label = pl.col(label),
-        short = pl.col(short)
-    )
-    dict_short = dict(zip(pl_short['label'], pl_short['short']))
+    # pl_short = pl_dict.select(
+    #     label = pl.col(label),
+    #     short = pl.col(short)
+    # )
+    dict_short = dict(zip(pl_dict[label], pl_dict[short]))
 
-    pl_long = pl_dict.select(
-        label = pl.col(label),
-        long = pl.col(long)
-    )
+    # pl_long = pl_dict.select(
+    #     label = pl.col(label),
+    #     long = pl.col(long)
+    # )
+    dict_long = dict(zip(pl_dict[label], pl_dict[long]))
 
     save_ckpt(data=dict_short, 
               list_path=[PATH_TMP_DIR, alias_code],
               file_name='mini_dictionary')
     
-    save_ckpt(data=pl_long, 
+    save_ckpt(data=dict_long, 
               list_path=[PATH_TMP_DIR, alias_code],
               file_name='reg_dictionary') 

@@ -11,44 +11,37 @@ def compare_dictionary(dict_target, dict_against):
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
     name_target = list(dict_target.keys())
-    descrip_target = list(dict_target.values())
+    descrip_target = list(np.array(list(dict_target.values())).flatten())
     emb_target = model.encode(descrip_target, convert_to_tensor=True)
 
     name_against = list(dict_against.keys())
-    descrip_against = list(dict_against.values())
+    descrip_against = list(np.array(list(dict_against.values())).flatten())
     emb_against = model.encode(descrip_against, convert_to_tensor=True)
 
     cosine_scores = util.cos_sim(emb_target, emb_against)
     cosine_scores = np.array(cosine_scores.tolist())
 
-    idx = list(dict.fromkeys(np.where(cosine_scores > 0.47)[1]))
+    idx = list(dict.fromkeys(np.where(cosine_scores > 0.52)[1]))
 
     col_match = list(np.array(name_against)[idx])
 
-    return col_match
+    return col_match    # For some reason this is making it flat, needs to be changed?
 
-def find_from_dictionary(df_dictionary, col_remaining, to_find):
-    """
-    :input: col_remaining (list) = 
-    """
-    dict_col_return = {key:[] for key in to_find}
+def compare_description(dict_data, dict_target, col_candidates, col_target):
+    col_candidates = list(set(col_candidates) & set(list(dict_data.keys())))
+    dict_candidates = pl.from_dict(dict_data).select(
+        pl.col(col_candidates)
+    ).to_dict(as_series=False)
 
-    df_target = load_file(PATH_SRC_DIR, 'df_target', '.pkl')
-    df_target = df_target[df_target['label'].isin(to_find)]
-    dict_target = dict(zip(df_target['label'], df_target['description']))
-    
-    df_description = df_dictionary[df_dictionary['label'].isin(col_remaining)]
+    dict_target = pl.from_dict(dict_target).select(
+        pl.col(col_target)
+    ).to_dict(as_series=False)
 
-    if df_description.shape[0] > 0:
-        dict_against = dict(zip(df_description['label'], df_description['long']))
-        col_match = compare_dictionary(dict_target, dict_against)
-
-    else:
-        col_match = []
+    col_match = compare_dictionary(dict_target, dict_candidates)
 
     return col_match
 
-def identify_unique_id(pl_data):
+def identify_unique_id(pl_data, dict_data):
     pl_count = pl_data.select(
         pl.all().unique().count() == pl_data.shape[0]
     )
@@ -57,6 +50,8 @@ def identify_unique_id(pl_data):
 
     if len(potential_unique_id) == 0:
         return False
+    elif len(potential_unique_id) == 1:
+        return potential_unique_id[0]   # maybe need to check with the attribute dictionary too
     
     for i in potential_unique_id:
         splitted_col_name = re.split('[^A-Za-z]', i.lower())
@@ -83,17 +78,10 @@ def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
         ~cs.by_dtype(pl.NUMERIC_DTYPES, pl.Boolean)
     )
     
-    print(pl_name)
+    potential_name = pl_name.columns
+    col_match = compare_description(dict_data, dict_target, potential_name, ['name'])
     
-    return 'site_name'
-
-#     remaining_columns = list(df_remaining.columns)
-
-#     col_names = find_from_dictionary(df_dictionary, remaining_columns, ['name'])
-
-#     # TODO: concat columns with the col_names
-
-#     return col_names
+    return col_match[0]
 
 def identify_textual_location(remaining_columns):
     dict_text_loc = {}
@@ -112,29 +100,52 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
     col_crs = []
     crs_value = ''
 
-    pl_geo_loc = pl_data.select(
+    pl_data_remaining = pl_data.select(
         pl.col(remaining_columns)
-    ).select(
+    )
+
+    pl_geo_loc = pl_data_remaining.select(
         cs.by_dtype(pl.NUMERIC_DTYPES),
     )
 
+    pl_crs = pl_data_remaining.select(
+         ~cs.by_dtype(pl.NUMERIC_DTYPES, pl.Boolean),
+    )
+
     potential_geo_location = [col.name for col in pl_geo_loc]
+    potential_crs = [col.name for col in pl_crs]
 
     for i in potential_geo_location:
-        if i.lower() == 'latitude':
+        if re.search('latitude', i.lower()):
             col_latitude.append(i)
-        elif i.lower() == 'longitude':
-            col_longitude.append(i)
-        elif i.lower() == 'crs':
+        elif re.search('longitude', i.lower()):
             col_longitude.append(i)
 
-    def_latitude = 'something something in'
-    crs_value = identify_crs(def_latitude)
+    for i in potential_crs:
+        if i.lower() == 'crs':
+            col_longitude.append(i)
+
+    potential_geo_loc = list(set(pl_geo_loc.columns) - set(col_latitude) - set(col_longitude))
+    if len(potential_geo_loc) != 0:
+        col_match = compare_description(dict_data, dict_target, potential_geo_loc, ['latitude', 'longitude'])
+    
+    potential_crs = list(set(pl_crs.columns) - set(col_crs))
+    if len(potential_crs) != 0:
+        col_match = compare_description(dict_data, dict_target, potential_crs, ['crs'])
+
+    if len(col_crs) != 0:
+        rep_crs = col_crs[0]
+        crs_value = pl_crs.select(
+            pl.first(rep_crs)
+        ).item()
+    else:
+        rep_latitude = col_latitude[0]
+        def_latitude = dict_data[rep_latitude]
+
+        crs_value = identify_crs(def_latitude)
 
     if dict_data == None:
         return col_latitude, col_longitude, crs_value
-
-    print(crs_value)
 
     return col_latitude, col_longitude, crs_value
 
@@ -156,7 +167,7 @@ def identify_column(pl_data, dict_data=None):
     
     remaining_columns = set(pl_data.columns)
 
-    unique_id = identify_unique_id(pl_data)
+    unique_id = identify_unique_id(pl_data, dict_data)
     remaining_columns = remaining_columns - set([unique_id])
 
     dict_text_loc = identify_textual_location(remaining_columns)

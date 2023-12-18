@@ -32,6 +32,12 @@ def interlink(list_code, bool_location):
     inter_loc_linked = location_based_linking(pl_geom_all, bool_location)
     print(inter_loc_linked)
 
+    # pl_interlinked = inter_loc_linked
+
+    # save_ckpt(data=pl_interlinked,
+    #           list_path=[PATH_TMP_DIR],
+    #           file_name='pl_linked')
+
     # if not bool_location:
     #     text_based_linking(pl_text_all)
 

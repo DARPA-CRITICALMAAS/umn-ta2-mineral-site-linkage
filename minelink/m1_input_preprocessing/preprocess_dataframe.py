@@ -102,27 +102,27 @@ def process_dataframe(alias_code):
         source_id = pl.lit(alias_dict[alias_code]),
     )
 
-    # gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
-    # save_ckpt(data=pl_geom, 
-    #           list_path=[PATH_TMP_DIR, alias_code],
-    #           file_name='df_geometry')
+    gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
+    save_ckpt(data=pl_geom, 
+              list_path=[PATH_TMP_DIR, alias_code],
+              file_name='df_geometry')
 
-    # dict_basic_info = create_basic_info(pl_data, col_name)
-    # save_ckpt(data=dict_basic_info, 
-    #           list_path=[PATH_TMP_DIR, alias_code],
-    #           file_name='basic_info')
+    dict_basic_info = create_basic_info(pl_data, col_name)
+    save_ckpt(data=dict_basic_info, 
+              list_path=[PATH_TMP_DIR, alias_code],
+              file_name='basic_info')
 
-    # dict_location_info = create_location_info(pl_data, dict_text_loc, crs, gpd_geom)
-    # save_ckpt(data=dict_location_info, 
-    #           list_path=[PATH_TMP_DIR, alias_code],
-    #           file_name='location_info')
+    dict_location_info = create_location_info(pl_data, dict_text_loc, crs, gpd_geom)
+    save_ckpt(data=dict_location_info, 
+              list_path=[PATH_TMP_DIR, alias_code],
+              file_name='location_info')
 
-    # dict_sameas = create_sameas(pl_data)
-    # save_ckpt(data=dict_sameas, 
-    #           list_path=[PATH_TMP_DIR, alias_code],
-    #           file_name='same_as')
+    dict_sameas = create_sameas(pl_data)
+    save_ckpt(data=dict_sameas, 
+              list_path=[PATH_TMP_DIR, alias_code],
+              file_name='same_as')
 
-    # pl_tolink = create_tolink_df(pl_data, remaining_columns)
-    # save_ckpt(data=pl_tolink, 
-    #           list_path=[PATH_TMP_DIR, alias_code],
-    #           file_name='df_tolink')
+    pl_tolink = create_tolink_df(pl_data, remaining_columns)
+    save_ckpt(data=pl_tolink, 
+              list_path=[PATH_TMP_DIR, alias_code],
+              file_name='df_tolink')
