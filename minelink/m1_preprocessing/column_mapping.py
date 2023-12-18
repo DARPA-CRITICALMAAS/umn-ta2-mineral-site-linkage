@@ -73,17 +73,6 @@ def get_textual_location_columns(col_available):
 
     return dict_loc_col_map, col_textual_location
 
-def get_crs_value(description):
-    list_crs = load_file(PATH_SRC_DIR, 'crs', '.pkl')
-
-    list_tokens = re.split(' ', description)
-
-    for token in list_tokens:
-        if token in list_crs:
-            return token
-        
-    return 'WGS84'  # Return default if there does not exists a crs value in the data
-
 def get_geocoordinate_columns(df_data, df_dictionary, col_available):
     col_latitude = []
     col_longitude = []
