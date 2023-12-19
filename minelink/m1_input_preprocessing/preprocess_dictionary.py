@@ -23,23 +23,21 @@ def process_dictionary(alias_code):
             long = i
         elif re.search('label', i.lower()) or re.search('name', i.lower()):
             label = i
-            if short == '':
-                short = i
+
+    if short == '':
+        short = label
+
+    pl_dict = pl_dict.select(
+        pl.col(label).str.strip_chars(),
+        pl.col(short).str.strip_chars(),
+        pl.col(long).str.strip_chars(),
+    )
 
     # if short == '':
     #     # TODO: add a way to extract short description from the long description
     #     pass
 
-    # pl_short = pl_dict.select(
-    #     label = pl.col(label),
-    #     short = pl.col(short)
-    # )
     dict_short = dict(zip(pl_dict[label], pl_dict[short]))
-
-    # pl_long = pl_dict.select(
-    #     label = pl.col(label),
-    #     long = pl.col(long)
-    # )
     dict_long = dict(zip(pl_dict[label], pl_dict[long]))
 
     save_ckpt(data=dict_short, 

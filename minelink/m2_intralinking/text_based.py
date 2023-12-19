@@ -1,3 +1,4 @@
+import numpy as np
 import polars as pl
 import umap.umap_ as umap
 import hdbscan
@@ -13,28 +14,66 @@ from sentence_transformers import SentenceTransformer
 def global_embedding_reduction(pl_data):
     list_embeddings = pl_data['embeddings'].to_list()
 
-    n_neighbors = [5, 10, 15, 20, 30, 50]
+    reducer = umap.UMAP(n_neighbors=15, min_dist=0.2, n_components=4, metric='cosine', verbose = 0)
+    umap_embeddings = reducer.fit_transform(list_embeddings)
+    umap_embeddings = umap_embeddings.tolist()
+
+    return umap_embeddings
+
+# def global_embedding_reduction(pl_data):
+#     list_embeddings = pl_data['embeddings'].to_list()
+
+#     n_neighbors = [5, 10, 15, 20, 30, 50]
+#     min_dist = [0, 0.2, 0.4, 0.6, 0.8, 1]
+#     n_components = [2, 3, 4, 5]
+
+#     combinations = list(product(n_neighbors, min_dist, n_components))
+
+#     dict_umap_embeddings = {}
+#     list_umap_embeddings = []
+
+#     for c in combinations:
+#         reducer = umap.UMAP(n_neighbors=c[0], min_dist=c[1], n_components=c[2], metric='cosine', verbose = 0)
+#         umap_embeddings = reducer.fit_transform(list_embeddings)
+#         # dict_umap_embeddings[str(c)] = umap_embeddings
+#         list_umap_embeddings.append(umap_embeddings.tolist())
+
+#     return list_umap_embeddings
+
+def local_embedding_reduction(counter, group_id, list_embeddings):
+    if group_id == -1:
+        return -1, 0
+    
+    n_neighbors = list(range(2, len(list_embeddings)))
     min_dist = [0, 0.2, 0.4, 0.6, 0.8, 1]
-    n_components = [2, 3, 4, 5]
+    n_components = list(range(1, len(list_embeddings)))
 
     combinations = list(product(n_neighbors, min_dist, n_components))
 
-    dict_umap_embeddings = {}
-    list_umap_embeddings = []
 
-    for c in combinations:
-        reducer = umap.UMAP(n_neighbors=c[0], min_dist=c[1], n_components=c[2], metric='cosine', verbose = 0)
-        umap_embeddings = reducer.fit_transform(list_embeddings)
-        # dict_umap_embeddings[str(c)] = umap_embeddings
-        list_umap_embeddings.append(umap_embeddings)
+    reducer = umap.UMAP(n_neighbors=len(list_embeddings)-1, min_dist=0.2, n_components=len(list_embeddings)-1, metric='cosine', verbose = 0)
+    umap_embeddings = reducer.fit_transform(list_embeddings)
 
-    return list_umap_embeddings
+    print(umap_embeddings)
 
-# def local_embedding_reduction(pl_data):
+    # for c in combinations:
+    #     reducer = umap.UMAP(n_neighbors=c[0], min_dist=c[1], n_components=c[2], metric='cosine', verbose = 0)
+    #     umap_embeddings = reducer.fit_transform(list_embeddings)
 
+    #     print(umap_embeddings)
 
-def link_embeddings():
-    clsuter = hdbscan.HDBSCAN(min_samples=1)
+    return group_id, len(list_embeddings)
+
+def link_embeddings(group_id, list_embeddings):
+    if group_id == -1:
+        return -1, 0
+    
+    cluster = hdbscan.HDBSCAN(min_samples=1)
+    cluster.fit(list_embeddings)
+
+    print(cluster.labels_, cluster.probabilities_)
+
+    return 1, 0
     # cluster.fit(df_data['reduced_embedding'])
 
 def embedding_reduction(list_grouped_embedding):
@@ -94,9 +133,6 @@ def text_based_linking(alias_code, pl_loc_linked):
     
     pl_tolink = pl_tolink.sort('idx')
 
-    # pl_idx = pl_tolink.select(
-    #     pl.col('idx')
-    # )
     pl_tolink = pl_tolink.drop('idx').with_columns(
         pl.when(pl.all() == None)
         .then(pl.lit(' '))
@@ -104,11 +140,7 @@ def text_based_linking(alias_code, pl_loc_linked):
         .name.keep()
     )
 
-    # TODO: remove later
-    # pl_idx = pl_idx.head(4)
-    # pl_tolink = pl_tolink.head(4)
-    # pl_loc_linked = pl_loc_linked.head(4)
-
+    # TODO: ACTIVATE LATER
     pl_doc = pl_tolink.select(
         pl.struct(pl.all()).alias('data_as_struct')
     ).map_rows(
@@ -119,26 +151,37 @@ def text_based_linking(alias_code, pl_loc_linked):
         [pl_doc, pl_loc_linked], 
         how='horizontal'
     )
+
+    # pl_doc = load_file([PATH_TMP_DIR, alias_code],
+    #                       'pl_document',
+    #                       '.pkl')
     
-    # TODO: Test on local level embedding reduction
-    # pl_text_linked = pl_doc.group_by(
+    # pl_loc_grouped = pl_doc.group_by(
     #     'GroupID'
     # ).agg(
     #     [pl.all()]
-    # ).with_columns(
-    #     pl.struct('embeddings').apply(embedding_reduction).alias('reduced')
+    # )
+    # counter = pl_loc_grouped.shape[0]
+
+    # pl_loc_grouped = pl_loc_grouped.head(2)
+
+    # pl_embeddings = pl_loc_grouped.map_rows(
+    #     lambda x: link_embeddings(counter, x[0], x[1])
     # )
 
-    # print(pl_text_linked)
+    # print(pl_loc_grouped)
+    # print(pl_embeddings)
 
     reduced_embedding = global_embedding_reduction(pl_doc)
+    # pl_reduced_embeddings = pl.DataFrame(reduced_embedding).transpose(include_header=False)   # number of rows matches the number of rows of data
+    
 
-    pl_text_linked = pl_doc.with_columns(
-        reduced = pl.Series(reduced_embedding)
-    )
+    # pl_text_linked = pl_doc.with_columns(
+    #     reduced = pl.Series(reduced_embedding)
+    # )
 
-    pl_text_linked = pl_text_linked.select(
-        pl.col(['idx', 'GroupID'])
-    )
+    # pl_text_linked = pl_text_linked.select(
+    #     pl.col(['idx', 'GroupID'])
+    # )
 
-    return pl_doc, pl_text_linked
+    return pl_doc, reduced_embedding

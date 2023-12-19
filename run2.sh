@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=embedding_reduction
-#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/run_results/emb_reduct.out
+#SBATCH --job-name=aa_reduction
+#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/run_results/aa_reduct.out
 #SBATCH --time=8:00:00
 #SBATCH -p amd2tb
 #SBATCH --ntasks=1
@@ -10,4 +10,4 @@
 
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/
 module load python3
-python3 -m minelink.mid_run -d /home/yaoyi/pyo00005/CriticalMAAS/src/data/raw
+python3 -m minelink.aa_run -d /home/yaoyi/pyo00005/CriticalMAAS/src/data/raw

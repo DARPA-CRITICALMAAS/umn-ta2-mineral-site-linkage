@@ -6,9 +6,9 @@ from minelink.m1_input_preprocessing.preprocess_dictionary import process_dictio
 
 def preprocessing(list_code):
     for i in list_code:
-        try:
-            process_dictionary(i)
-        except:
-            pass
+        # try:
+        #     process_dictionary(i)
+        # except:
+        #     pass
         
         process_dataframe(i)
