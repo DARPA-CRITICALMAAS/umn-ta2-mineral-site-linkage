@@ -8,10 +8,8 @@ from minelink.m2_intralinking.intralink import just_dimension
 def main(args):
     # list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
     # preprocessing(list_code)
-    # just_dimension('aa')
-    df = load_file([PATH_TMP_DIR, 'aa'],
-                          'pl_reduced',
-                          '.pkl')
+    just_dimension('aa')
+    
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

@@ -13,24 +13,22 @@ from minelink.m5_save_output.save_output import *
 
 def main(args):
     # list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
+    # print(list_code)
+    list_code = ['aa', 'ab']
     # preprocessing(list_code)
-    # intralink(list_code, args.use_location_base)
+    intralink(list_code, args.use_location_base)
     # create_intra_rep(list_code, args.use_location_base)
     # interlink(list_code, args.use_location_base)
 
-    list_code = ['aa']
-
-    if len(list_code) > 1:
-        # create_intra_rep(list_code)
-        # interlink(list_code, args.use_location_base)
-        # interlink(list_code, True)    # Later change it with text allowed
-        df_linked = postprocessing(list_code=list_code,
-                                   bool_interlink=True)
-    elif len(list_code) == 1:
-        df_linked = postprocessing(list_code=list_code,
-                                   bool_interlink=False)
-    
-    # print(df_linked)
+    # if len(list_code) > 1:
+    #     # create_intra_rep(list_code)
+    #     # interlink(list_code, args.use_location_base)
+    #     # interlink(list_code, True)    # Later change it with text allowed
+    #     df_linked = postprocessing(list_code=list_code,
+    #                                bool_interlink=True)
+    # elif len(list_code) == 1:
+    #     df_linked = postprocessing(list_code=list_code,
+    #                                bool_interlink=False)
 
     # save_output_json(df_linked, ['./'], 'sample')
 

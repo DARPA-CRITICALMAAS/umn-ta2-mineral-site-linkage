@@ -20,15 +20,18 @@ def compare_dictionary(dict_target, dict_against):
 
     cosine_scores = util.cos_sim(emb_target, emb_against)
     cosine_scores = np.array(cosine_scores.tolist())
+    print(cosine_scores)
 
-    idx = list(dict.fromkeys(np.where(cosine_scores > 0.52)[1]))
+    idx = list(dict.fromkeys(np.where(cosine_scores > 0.45)[1]))
+    print(idx)
 
-    col_match = list(np.array(name_against)[idx])
+    col_match = np.array(name_against)[idx]
 
     return col_match    # For some reason this is making it flat, needs to be changed?
 
 def compare_description(dict_data, dict_target, col_candidates, col_target):
     col_candidates = list(set(col_candidates) & set(list(dict_data.keys())))
+
     dict_candidates = pl.from_dict(dict_data).select(
         pl.col(col_candidates)
     ).to_dict(as_series=False)
@@ -77,7 +80,7 @@ def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
     ).select(
         ~cs.by_dtype(pl.NUMERIC_DTYPES, pl.Boolean)
     )
-    
+
     potential_name = pl_name.columns
     col_match = compare_description(dict_data, dict_target, potential_name, ['name'])
     
@@ -133,6 +136,8 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
     if len(potential_crs) != 0:
         col_match = compare_description(dict_data, dict_target, potential_crs, ['crs'])
 
+    print(col_latitude, col_longitude, crs_value)
+
     if len(col_crs) != 0:
         rep_crs = col_crs[0]
         crs_value = pl_crs.select(
@@ -140,9 +145,11 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
         ).item()
     else:
         rep_latitude = col_latitude[0]
-        def_latitude = dict_data[rep_latitude]
+        crs_value = identify_crs(rep_latitude)
 
+        def_latitude = dict_data[rep_latitude]
         crs_value = identify_crs(def_latitude)
+        print(crs_value)
 
     if dict_data == None:
         return col_latitude, col_longitude, crs_value
@@ -173,11 +180,12 @@ def identify_column(pl_data, dict_data=None):
     dict_text_loc = identify_textual_location(remaining_columns)
     remaining_columns = remaining_columns - set(list(dict_text_loc.keys()))
 
-    col_name = identify_site_name(pl_data, remaining_columns, dict_data, dict_target)
+    # col_name = identify_site_name(pl_data, remaining_columns, dict_data, dict_target)
+    # remaining_columns = remaining_columns - set(col_name)
 
     latitude, longitude, crs = identify_geo_location(pl_data, remaining_columns, dict_data, dict_target)
-    remaining_columns = remaining_columns - set(latitude) - set(longitude)
+    # remaining_columns = remaining_columns - set(latitude) - set(longitude)
 
-    remaining_columns = list(remaining_columns)
+    # remaining_columns = list(remaining_columns)
 
-    return unique_id, col_name, latitude, longitude, crs, dict_text_loc, remaining_columns
+    # return unique_id, col_name, latitude, longitude, crs, dict_text_loc, remaining_columns
