@@ -20,10 +20,8 @@ def compare_dictionary(dict_target, dict_against):
 
     cosine_scores = util.cos_sim(emb_target, emb_against)
     cosine_scores = np.array(cosine_scores.tolist())
-    print(cosine_scores)
 
     idx = list(dict.fromkeys(np.where(cosine_scores > 0.45)[1]))
-    print(idx)
 
     col_match = np.array(name_against)[idx]
 
@@ -31,6 +29,9 @@ def compare_dictionary(dict_target, dict_against):
 
 def compare_description(dict_data, dict_target, col_candidates, col_target):
     col_candidates = list(set(col_candidates) & set(list(dict_data.keys())))
+    if len(col_candidates) == 0:
+        return []
+
 
     dict_candidates = pl.from_dict(dict_data).select(
         pl.col(col_candidates)
@@ -83,6 +84,8 @@ def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
 
     potential_name = pl_name.columns
     col_match = compare_description(dict_data, dict_target, potential_name, ['name'])
+
+    print(col_match)
     
     return col_match[0]
 
@@ -180,12 +183,12 @@ def identify_column(pl_data, dict_data=None):
     dict_text_loc = identify_textual_location(remaining_columns)
     remaining_columns = remaining_columns - set(list(dict_text_loc.keys()))
 
-    # col_name = identify_site_name(pl_data, remaining_columns, dict_data, dict_target)
-    # remaining_columns = remaining_columns - set(col_name)
+    col_name = identify_site_name(pl_data, remaining_columns, dict_data, dict_target)
+    remaining_columns = remaining_columns - set(col_name)
 
     latitude, longitude, crs = identify_geo_location(pl_data, remaining_columns, dict_data, dict_target)
-    # remaining_columns = remaining_columns - set(latitude) - set(longitude)
+    remaining_columns = remaining_columns - set(latitude) - set(longitude)
 
-    # remaining_columns = list(remaining_columns)
+    remaining_columns = list(remaining_columns)
 
-    # return unique_id, col_name, latitude, longitude, crs, dict_text_loc, remaining_columns
+    return unique_id, col_name, latitude, longitude, crs, dict_text_loc, remaining_columns

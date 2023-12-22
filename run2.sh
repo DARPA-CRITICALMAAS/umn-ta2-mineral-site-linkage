@@ -9,5 +9,7 @@
 #SBATCH --mail-user=pyo00005@umn.edu
 
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/
+module load mamba
 module load python3
+conda activate ta2
 python3 -m minelink.aa_run -d /home/yaoyi/pyo00005/CriticalMAAS/src/data/raw
