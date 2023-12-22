@@ -120,7 +120,7 @@ import pickle
 # usmin_cobalt_file_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/goal/USGS_Cobalt_US.gdb'
 # usmin_tunsten_full_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/goal/USMIN.gdb'
 # usmin_idmt_ground_truth = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/TungstenSkarn/MineralSites.csv'
-mrds_full = '/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/full_MRDS.pkl'
+mrds_full = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/goal/full_MRDS.pkl'
 # mrds_mvtzinc_file_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/MVTZinc/MRDS.csv'
 # alaska_zinc_file_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/MVTZinc/10.5066_P96MMRFD.csv'
 
