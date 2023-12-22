@@ -14,23 +14,25 @@ from minelink.m5_save_output.save_output import *
 def main(args):
     # list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
     # print(list_code)
-    list_code = ['aa', 'ab']
+	list_code = ['aa', 'ab']
+	# list_code = ['aa', 'ab', 'ad']
+	intralink(list_code, args.use_location_base)
     # preprocessing(list_code)
-    intralink(list_code, args.use_location_base)
+    # intralink(list_code, args.use_location_base)
     # create_intra_rep(list_code, args.use_location_base)
     # interlink(list_code, args.use_location_base)
 
-    # if len(list_code) > 1:
-    #     # create_intra_rep(list_code)
-    #     # interlink(list_code, args.use_location_base)
-    #     # interlink(list_code, True)    # Later change it with text allowed
-    #     df_linked = postprocessing(list_code=list_code,
-    #                                bool_interlink=True)
-    # elif len(list_code) == 1:
-    #     df_linked = postprocessing(list_code=list_code,
-    #                                bool_interlink=False)
+    # list_code = ['aa', 'ab']
 
-    # save_output_json(df_linked, ['./'], 'sample')
+    # if len(list_code) > 1:
+    #     create_intra_rep(list_code, args.use_location_base)
+    #     # interlink(list_code, args.use_location_base)
+    #     interlink(list_code, True)    # Later change it with text allowed
+    #     df_linked = postprocessing(bool_interlink=True)
+    # # elif len(list_code) == 1:
+    # #     df_linked = postprocessing(bool_interlink=False)
+
+    # save_output_json(df_linked, 'MVT_Zinc_ver1')
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

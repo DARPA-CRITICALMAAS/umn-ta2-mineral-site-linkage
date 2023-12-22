@@ -7,7 +7,15 @@ from json import loads, dumps
 from minelink.params import *
 from minelink.m0_load_input.save_ckpt import open_ckpt_dir
 
-def save_output_json(df_data, list_path, file_name):
+# def save_output_json(pl_data, list_path, file_name):
+#     path_dir = ''
+#     for i in list_path:
+#         path_dir = os.path.join(path_dir, i)
+
+#     pl_data.write_ndjson(os.path.join(path_dir, file_name+'.json'))
+#     return 0
+
+def save_output_json(df_data, file_name, list_path=[PATH_OUTPUT_DIR]):
     path_dir = ''
     for i in list_path:
         path_dir = os.path.join(path_dir, i)

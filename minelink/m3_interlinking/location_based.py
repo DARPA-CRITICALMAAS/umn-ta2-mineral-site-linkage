@@ -11,11 +11,11 @@ def location_based_linking(pl_data, bool_location):
     else:
         epsilon = 0.05
 
-    coords = pl_data[['long_rep', 'lat_rep']].to_numpy()
+    coords = pl_data[['longitude', 'latitude']].to_numpy()
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
 
     pl_loc_linked = pl_data.select(
-        idx = pl.col('intra_GroupID'),
+        idx = pl.col('idx'),
         GroupID = pl.Series(clusters.labels_),
     )
 

@@ -23,7 +23,7 @@ def location_based_linking(alias_code, bool_location):
     pl_loc_linked = pl_geom.select(
         idx = pl.col('idx'),
         GroupID = pl.Series(clusters.labels_),
-    )
+    ).sort('idx')
 
     # df_loc_linked = pd.concat([df_geom, series_labels], axis=1)
     # pl_loc_linked = pl.from_pandas(df_loc_linked.drop('geometry', axis=1))
