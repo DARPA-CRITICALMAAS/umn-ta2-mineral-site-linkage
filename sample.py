@@ -269,3 +269,101 @@
 #     handle.write(obj_data)
 
 # print(df.columns)
+
+import geopandas as gpd
+import pandas as pd
+import polars as pl
+import pickle
+
+def define_region(pl_data):
+    pl_intra_data = pl_data.group_by(
+        'GroupID'
+    ).agg(
+        [pl.all()]
+    ).sort('GroupID')
+
+    df_data = pl_data.to_pandas()
+
+    gpd_poly = gpd.GeoDataFrame(
+        df_data, geometry = gpd.points_from_xy(df_data['longitude'], df_data['latitude'], crs='WGS84')
+    ).to_crs(3857)
+
+    gpd_poly = gpd_poly.dissolve('GroupID').convex_hull.buffer(5)
+    gpd_poly.name = 'rep_geometry'
+    gpd_poly = gpd_poly.to_crs('WGS84').to_frame().reset_index().sort_values(by=['GroupID'])
+    gpd_poly = gpd_poly.set_geometry('rep_geometry')
+
+    return pl_intra_data, gpd_poly
+
+def location_based_linking(pl_intra_linked, df_geom):
+    pl_intra_linked = pl_intra_linked.sort('idx')
+    df_geom = df_geom.sort('idx').drop('idx')
+
+    pl_data = pl.concat(
+        [pl_intra_linked, df_geom],
+        how='horizontal'
+    )
+
+    pl_intra_data, gpd_poly = define_region(pl_data)
+
+def check_overlap(list_codes):
+    print(list_codes)
+
+def select_max_overlap():
+    return 0
+
+usmin_idmt_ground_truth = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/TungstenSkarn/MineralSites.csv'
+usmin_tungsten_file_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/pkl/USMIN.pkl'
+mrds_tungsten_file_path = '/home/yaoyi/pyo00005/CriticalMAAS/src/data/TungstenSkarn/MRDS.csv'
+
+pl_data = pl.read_csv(usmin_idmt_ground_truth)
+pl_data = pl_data.with_columns(
+    splitted_ID = pl.col('source_ID').str.split('; ')
+).explode('splitted_ID')
+
+pl_USMIN = pl_data.filter(
+    pl.col('splitted_ID').str.contains('USMIN')
+).with_columns(
+    idx = pl.col('splitted_ID').str.split('_').list.to_struct()
+).unnest('idx').rename(
+    {'field_0':'source', 'field_1':'idx'}
+).with_columns(
+    pl.col('idx').cast(pl.Int64)
+).sort('idx')
+
+pl_idx = pl_USMIN.select(
+    idx = pl.col('idx'),
+    GroupID = pl.col('OID_')
+)
+
+with open(usmin_tungsten_file_path, 'rb') as handle:
+    dataframe = pickle.load(handle).to_crs("WGS84")
+
+dict_geom = {"idx": pl_idx['idx'].to_list(),
+            "latitude": dataframe.geometry.y.to_list(),
+             "longitude": dataframe.geometry.x.to_list()}
+
+gpd_geom = pl.DataFrame(dict_geom)
+ 
+location_based_linking(pl_idx, gpd_geom)
+
+pl_MRDS = pl_data.filter(
+    pl.col('splitted_ID').str.contains('MRDS')
+).with_columns(
+    idx = pl.col('splitted_ID').str.split('_').list.to_struct()
+).unnest('idx').rename(
+    {'field_0':'source', 'field_1':'idx'}
+).with_columns(
+    pl.col('idx').cast(pl.Int64)
+).sort('idx').select(
+    idx = pl.col('idx'),
+    GroupID = pl.col('OID_')
+)
+
+pl_dataframe_mrds = pl.read_csv(mrds_tungsten_file_path).select(
+    idx = pl.col('OBJECTID'),
+    longitude = pl.col('Long_NAD83'),
+    latitude = pl.col('Lat_NAD83'),
+)
+
+location_based_linking(pl_MRDS, pl_dataframe_mrds)

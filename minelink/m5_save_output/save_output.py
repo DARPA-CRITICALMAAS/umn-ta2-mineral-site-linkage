@@ -2,7 +2,7 @@ import os
 import pickle
 import geopandas as gpd
 
-from json import loads, dumps
+from json import dump
 
 from minelink.params import *
 from minelink.m0_load_input.save_ckpt import open_ckpt_dir
@@ -20,15 +20,18 @@ def save_output_json(df_data, file_name, list_path=[PATH_OUTPUT_DIR]):
     for i in list_path:
         path_dir = os.path.join(path_dir, i)
 
-    json_df = df_data.to_json(orient='index', default_handler=str)
-
-    json_data = loads(json_df)
-    obj_data = dumps(json_data, indent=4)
-
     open_ckpt_dir(list_path=[PATH_OUTPUT_DIR])
 
-    with open(os.path.join(path_dir, file_name+'.json'), 'w') as handle:
-        handle.write(obj_data)
+    df_data_asdict = df_data.to_dict(orient='records')
+    df_with_key = {"MineralSite":df_data_asdict}
+
+    with open(os.path.join(path_dir, file_name+'.json'), 'w') as f:
+        dump(df_with_key, f, indent=4)
+
+    # json_df = df_data.to_json(os.path.join(path_dir, file_name+'.json'), 
+    #                           orient='records', 
+    #                           lines=True, 
+    #                           default_handler=str)
 
 def save_as_geojson(data, path_dir, file_name):        
     data = data[['source_name', 'site_name', 'geometry', 'GroupID']]

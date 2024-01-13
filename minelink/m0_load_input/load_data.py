@@ -108,7 +108,7 @@ def load_dir(path_dir, bool_dict=False):
 
     dict_code_alias = {}
     leading_char = 'a'
-    follow_char = 'd'
+    follow_char = 'a'
 
     for f in list_files:
         file_name, file_extension = os.path.splitext(f)

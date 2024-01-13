@@ -12,11 +12,12 @@ from minelink.m4_postprocessing.postprocess_dataframe import postprocessing
 from minelink.m5_save_output.save_output import *
 
 def main(args):
+    data_zinc = 0
     # list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
     # print(list_code)
-	list_code = ['aa', 'ab']
+	# list_code = ['aa', 'ab']
 	# list_code = ['aa', 'ab', 'ad']
-	intralink(list_code, args.use_location_base)
+	# intralink(list_code, args.use_location_base)
     # preprocessing(list_code)
     # intralink(list_code, args.use_location_base)
     # create_intra_rep(list_code, args.use_location_base)
