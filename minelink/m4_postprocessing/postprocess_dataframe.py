@@ -1,35 +1,15 @@
 import os
+import logging
+from time import perf_counter
+
 import regex as re
 import polars as pl
 import pandas as pd
+import geopandas as gpd
 
 from minelink.params import *
 from minelink.m0_load_input.load_data import load_file
 from minelink.m0_load_input.save_ckpt import open_ckpt_dir
-
-# def get_info(list_idx, split_keyword, dict_alias):
-#     source_id, record_id = re.split(split_keyword, list_idx[0])
-
-#     basic_info = load_file([PATH_TMP_DIR, source_id], 'basic_info', '.pkl')
-#     location_info = load_file([PATH_TMP_DIR, source_id], 'location_info', '.pkl')
-
-#     rep_basic = basic_info[list_idx[0]]
-#     rep_location = location_info[list_idx[0]]
-
-#     # print(rep_basic['name'], rep_basic['source_id'], rep_basic['record_id'])
-
-#     return rep_basic['name'], rep_basic['source_id'], str(rep_basic['record_id']), rep_location
-
-    # same_as = []
-    # for i in list_idx:
-    #     source_id, record_id = re.split(split_keyword, i)
-    #     same_as_info = load_file([PATH_TMP_DIR, source_id], 'same_as', '.pkl')
-
-    #     same_as.append(same_as_info[i])
-
-    # return rep_basic['name'], rep_basic['source_id'], rep_basic['record_id']
-
-    # return 0
 
 def get_info(list_alias, list_idx, split_keyword):
     source_id = list_alias[0]
@@ -46,12 +26,17 @@ def get_info(list_alias, list_idx, split_keyword):
 
         same_as.append(same_as_info[i])
 
-    return rep_basic['name'], rep_basic['source_id'], rep_basic['record_id'], rep_location, same_as
+    try:
+        return rep_basic['name'], rep_basic['source_id'], rep_basic['record_id'], rep_location, same_as
+    except:
+        return 'Unnamed', rep_basic['source_id'], rep_basic['record_id'], rep_location, same_as
   
 
 def postprocessing(bool_interlink):
+    module_start = perf_counter()
+
     if bool_interlink:
-        linked_file_name = 'pl_linked'
+        linked_file_name = 'pl_linkedZn'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:
@@ -91,6 +76,111 @@ def postprocessing(bool_interlink):
     df_linked = pd.DataFrame()
     df_linked[['name', 'source_id', 'record_id', 'location_info', 'same_as']] = df_output.apply(lambda x: get_info(x['source_alias'], x['idx'], split_keyword), axis=1, result_type="expand")
 
+    module_end = perf_counter()
+
     # df_output = pl_output.to_pandas()
 
     return df_linked
+
+def get_geojson_info(list_alias, list_idx, split_keyword):
+    source_id = list_alias[0]
+    basic_info = load_file([PATH_TMP_DIR, source_id], 'basic_info', '.pkl')
+    location_info = load_file([PATH_TMP_DIR, source_id], 'location_info', '.pkl')
+
+    rep_basic = basic_info[list_idx[0]]
+    rep_location = location_info[list_idx[0]]
+
+    geometry = rep_location['location']
+
+    rep_location['location'] = str(rep_location['location'])
+
+    same_as = []
+    for i in list_idx:
+        source_id, record_id = re.split(split_keyword, i)
+        same_as_info = load_file([PATH_TMP_DIR, source_id], 'same_as', '.pkl')
+
+        same_as_string = same_as_info[i]['source_id'] + str(same_as_info[i]['record_id'])
+
+        same_as.append(same_as_string)
+
+    all_same_as = ", ".join(same_as)
+
+    try:
+        return rep_basic['name'], rep_basic['source_id'], rep_basic['record_id'], rep_location, all_same_as, geometry
+    except:
+        return 'Unnamed', rep_basic['source_id'], rep_basic['record_id'], rep_location, all_same_as, geometry
+
+def postprocess_toGeoJSON(list_code, bool_interlink):
+    if bool_interlink:
+        linked_file_name = 'pl_linkedNi'
+        pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
+        split_keyword = '_'     # May need to be changed later
+    else:
+        linked_file_name = 'pl_intra_linked'
+        pl_linked = load_file([PATH_TMP_DIR, 'aa'], linked_file_name, '.pkl')
+        split_keyword = '_'
+    
+    dict_alias = load_file([PATH_TMP_DIR], 'alias_code', '.pkl')
+
+    pl_linked = pl_linked.select(
+        idx = pl.col('idx'),
+        source = pl.col('idx').str.split(split_keyword).list.get(0).replace(dict_alias),
+        source_id = pl.col('idx').str.split(split_keyword).list.get(1),
+        prediction = pl.col('GroupID')
+    ).sort('idx')
+
+    # print(pl_linked)
+
+    pl_geometry = pl.DataFrame()
+    pl_other_info = pl.DataFrame()
+    pl_name = pl.DataFrame()
+
+    for i in list_code:
+        tmp_geometry = load_file([PATH_TMP_DIR, i], 'df_geometry', '.pkl')
+        tmp_other = load_file([PATH_TMP_DIR, i], 'df_tolink', '.pkl')
+        dict_basicinfo = load_file([PATH_TMP_DIR, i], 'basic_info', '.pkl')
+
+        tmp_basicinfo = pd.DataFrame.from_dict(dict_basicinfo, orient='index')
+        tmp_basicinfo.reset_index(inplace=True)
+        tmp_basicinfo = pl.from_pandas(tmp_basicinfo).select(
+            pl.col(['index', 'name'])
+        )
+
+        print(tmp_basicinfo)
+        
+        
+        pl_name = pl.concat(
+            [pl_name, tmp_basicinfo],
+            how='vertical'
+        )
+
+        pl_geometry = pl.concat(
+            [pl_geometry, tmp_geometry],
+            how='vertical'
+        )
+
+        pl_other_info = pl.concat(
+            [pl_other_info, tmp_other],
+            how='diagonal'
+        )
+
+    # print(pl_linked)
+
+    pl_name = pl_name.sort('index').drop('index')
+    pl_geometry = pl_geometry.sort('idx').drop('idx')
+    pl_other_info = pl_other_info.sort('idx').drop('idx')
+
+    print(pl_name.shape)
+
+    df_tojson = pl.concat(
+        [pl_linked, pl_geometry, pl_name, pl_other_info],
+        how='horizontal'
+    ).to_pandas()
+
+    print(df_tojson.columns)
+
+    gpd_geom = gpd.GeoDataFrame(
+        df_tojson, geometry=gpd.points_from_xy(df_tojson['longitude'], df_tojson['latitude'], crs='WGS84')
+    )
+
+    return gpd_geom

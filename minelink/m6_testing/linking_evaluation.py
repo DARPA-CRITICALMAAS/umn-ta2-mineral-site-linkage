@@ -3,7 +3,27 @@ from sklearn.metrics.cluster import normalized_mutual_info_score, adjusted_rand_
 
 # Calculate accuracy
 def calculate_accuracy(list_truth, list_test):
-    return 0
+    counter = 0
+    ours_total_length = len(list_test)
+    gt_total_length = len(list_truth)
+
+    incorrect_grouping = []
+
+    for i in list_test:
+        if i in list_truth:
+            counter = counter + 1
+        else:
+            incorrect_grouping.extend(i)
+
+    # file1.write('Matching groups: ' + str(counter) + '\n')
+    # file1.write('Groups in this: ' + str(ours_total_length) + '\n')
+    # file1.write('Groups in ground truth:' + str(gt_total_length) + '\n')
+            
+    # print('Matching groups:', counter)
+    # print('Groups in this:', ours_total_length)
+    # print('Groups in ground truth:', gt_total_length)
+
+    return counter / gt_total_length, incorrect_grouping
 
 # Calculate NMI
 def calculate_NMI(list_truth, list_test):

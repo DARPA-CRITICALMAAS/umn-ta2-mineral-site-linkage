@@ -2,6 +2,8 @@
 
 import os
 import shutil
+import json
+from time import perf_counter
 
 import regex as re
 import polars as pl
@@ -28,7 +30,7 @@ def load_file(list_path, file_name, file_extension):
         return dataframe
 
     elif file_extension == '.csv':
-        dataframe = pl.read_csv(os.path.join(file_path, file_name+'.csv'))
+        dataframe = pl.read_csv(os.path.join(file_path, file_name+'.csv'), encoding='utf8-lossy')
         return dataframe
     
     elif file_extension == '.xls' or file_extension == 'xlsx':
@@ -108,7 +110,7 @@ def load_dir(path_dir, bool_dict=False):
 
     dict_code_alias = {}
     leading_char = 'a'
-    follow_char = 'a'
+    follow_char = 'g'
 
     for f in list_files:
         file_name, file_extension = os.path.splitext(f)
@@ -135,3 +137,47 @@ def load_dir(path_dir, bool_dict=False):
     save_ckpt(dict_code_alias, [PATH_TMP_DIR], 'alias_code')
 
     return list(dict_code_alias.keys())
+
+def load_mss(path_dir):
+    open_ckpt_dir([PATH_TMP_DIR, 'mss'])
+
+    list_dir_items = os.listdir(path_dir)
+
+    mss_total = pl.DataFrame()
+
+    for i in list(range(len(list_dir_items))):
+        file_name = list_dir_items[i]
+
+        with open(os.path.join(path_dir, file_name)) as json_file:
+            data = json.load(json_file)['MineralSite'][0]
+
+        mineralsite_as_list = {key:[value] for key, value in data.items()}
+
+        pl_mineralsite = pl.DataFrame(mineralsite_as_list).unnest('location_info')
+
+        pl_mineralsite = pl_mineralsite.with_columns(
+            idx = 'mss_' + pl.lit(i+1).cast(pl.Utf8)
+        )
+
+        # TODO: TEMPORARY 
+        pl_mineralsite = pl_mineralsite.drop(
+            ['MineralInventory', 'deposit_type']
+        )
+        #####
+
+        mss_columns = list(set(pl_mineralsite.columns) & set(ATTRIBUTE_MINERAL_SITE))
+
+        # TODO: modify when taking in deposit type or mineral inventory
+        pl_mineralsite = pl_mineralsite.select(
+            pl.col(mss_columns)
+        )
+        #######
+
+        mss_total = pl.concat(
+            [mss_total, pl_mineralsite],
+            how='diagonal'
+        ).drop_nulls(['source_id', 'record_id', 'location', 'crs'])
+
+    save_ckpt(mss_total, [PATH_TMP_DIR, 'mss'], 'raw')
+
+    return 'mss'
