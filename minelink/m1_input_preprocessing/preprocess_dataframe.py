@@ -10,6 +10,9 @@ def convert_df_to_dict(df_data):
     df_data = df_data.set_index('idx')
     dict_data = df_data.to_dict('index')
 
+    tmp_data = pd.DataFrame(dict_data)
+    dict_data = {col: tmp_data[col].dropna().to_dict() for col in tmp_data}
+
     return dict_data
 
 def gdb_to_geometry_df(geometry_data, crs_value):
@@ -27,7 +30,11 @@ def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
 
     gpd_geom = gpd.GeoDataFrame(
         df_idx, geometry = gpd.points_from_xy(pl_data[rep_longitude], pl_data[rep_latitude], crs=crs_value)
+    ).rename_geometry(
+        'location', inplace=False
     )
+
+    print(gpd_geom)
 
     pl_geom = pl_data.select(
         idx = pl.col('idx'),
@@ -40,7 +47,9 @@ def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
 def create_basic_info(pl_data, col_name):
     df_info = pl_data.select(
         pl.col(['idx', 'source_id', 'record_id']),
-        name = pl.col(col_name),
+        name = pl.when(pl.col(col_name).str.strip_chars() == "")
+            .then("Unknown")
+            .otherwise(pl.col(col_name)).str.replace_all("[^\p{Ascii}]", ""),
     ).to_pandas()
 
     dict_basic_info = convert_df_to_dict(df_info)
@@ -51,9 +60,17 @@ def create_location_info(pl_data, dict_text_loc, crs_value, gpd_geom):
     pl_textual_data = pl_data.select(
         pl.col(list(dict_text_loc.keys())),
         crs = pl.lit(crs_value)
+    ).select(
+        pl.when(pl.col(pl.Utf8).str.strip_chars() == "")
+            .then(None)
+            .otherwise(pl.col(pl.Utf8))
+            .name.keep()
     ).rename(dict_text_loc).to_pandas()
 
     gpd_loc_info = pd.concat([gpd_geom, pl_textual_data], axis=1)
+
+    print(gpd_loc_info)
+
     dict_location_info = convert_df_to_dict(gpd_loc_info)
 
     return dict_location_info
@@ -127,11 +144,16 @@ def process_dataframe(alias_code):
         source_id = pl.lit(alias_dict[alias_code]),
     )
 
-    if not bool_gdb:
-        gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
-        save_ckpt(data=pl_geom, 
-                list_path=[PATH_TMP_DIR, alias_code],
-                file_name='df_geometry')
+    # if not bool_gdb:
+    #     gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
+    #     save_ckpt(data=pl_geom, 
+    #             list_path=[PATH_TMP_DIR, alias_code],
+    #             file_name='df_geometry')
+        
+    gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
+    save_ckpt(data=pl_geom, 
+            list_path=[PATH_TMP_DIR, alias_code],
+            file_name='df_geometry')
 
     dict_basic_info = create_basic_info(pl_data, col_name)
     save_ckpt(data=dict_basic_info, 

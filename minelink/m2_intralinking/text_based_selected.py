@@ -1,20 +1,28 @@
+import logging
+from time import perf_counter
+
 import numpy as np
 import polars as pl
 import umap.umap_ as umap
 import hdbscan
-from itertools import product
+from itertools import product, combinations
+from scipy import spatial
 
 from minelink.params import *
 from minelink.m0_load_input.load_data import load_file
+from minelink.m0_load_input.save_ckpt import save_ckpt
 
 from sentence_transformers import SentenceTransformer
+
+def tsne_embedding_reduction(pl_data):
+    return 0
 
 def global_embedding_reduction(pl_data):
     list_embeddings = pl_data['embeddings'].to_list()
 
-    n_neighbors = [5, 10, 15, 20, 30, 50]
+    n_neighbors = [5, 10]
     min_dist = [0, 0.2, 0.4, 0.6, 0.8, 1]
-    n_components = [16, 32, 128]
+    n_components = [10]
 
     combinations = list(product(n_neighbors, min_dist, n_components))
 
@@ -79,6 +87,9 @@ def text_clustering(pl_row, total_count):
 
     new_grouping = list(map(lambda x: group_map[x], max_labels))
 
+    print(new_grouping)
+    print(loc_grouped_idx)
+
     return new_grouping, loc_grouped_idx
 
 def create_document(struct_data, dictionary):
@@ -115,7 +126,7 @@ def text_based_linking(alias_code, pl_loc_linked):
     pl_tolink = pl_tolink.sort('idx')
 
     pl_tolink = pl_tolink.drop('idx').with_columns(
-        pl.when(pl.all() == None)
+        pl.when(pl.all().is_null())
         .then(pl.lit(' '))
         .otherwise(pl.all())
         .name.keep()
@@ -128,40 +139,116 @@ def text_based_linking(alias_code, pl_loc_linked):
         lambda x: (create_document(x, dictionary))
     ).rename({'column_0':'embeddings'})
 
-    # pl_doc = pl.concat(
-    #     [pl_loc_linked, pl_doc], 
-    #     how='horizontal'
-    # )
+    # save_ckpt(data=pl_doc,
+    #           list_path=[PATH_TMP_DIR, 'ab'],
+    #           file_name='pl_document')
 
-    reduced_embedding = global_embedding_reduction(pl_doc)
-    pl_reduced_embeddings = pl.DataFrame(
-        reduced_embedding
-    )
-    # .transpose(
-    #     include_header=False
-    # )
-
-    pl_reduced_embeddings = pl.concat(
-        [pl_loc_linked, pl_reduced_embeddings],
+    #### DELETE ####
+    # pl_doc = load_file([PATH_TMP_DIR, 'ab'],
+    #                       'pl_document',
+    #                       '.pkl')
+    #### DELETE ####
+    
+    pl_doc = pl.concat(
+        [pl_loc_linked, pl_doc], 
         how='horizontal'
     )
 
-    pl_text_linked = pl_reduced_embeddings.filter(
-         pl.col('GroupID') != None
+    # print(pl_doc)
+
+    # pl_doc_linked = pl_reduced_embeddings.filter(
+    #      pl.col('GroupID') != None
+    # ).group_by(
+    #     'GroupID'
+    # ).agg(
+    #     [pl.all()]
+    # )
+
+    save_ckpt(data=pl_doc,
+              list_path=[PATH_TMP_DIR, 'ab'],
+              file_name='pl_document')
+
+    # reduced_embedding = global_embedding_reduction(pl_doc)
+    # pl_reduced_embeddings = pl.DataFrame(
+    #     reduced_embedding
+    # )
+
+    # save_ckpt(data=pl_reduced_embeddings,
+    #           list_path=[PATH_TMP_DIR, 'ab'],
+    #           file_name='pl_reduced')
+
+    # pl_reduced_embeddings = pl.concat(
+    #     [pl_loc_linked, pl_reduced_embeddings],
+    #     how='horizontal'
+    # )
+
+    pl_text_linked = pl_doc.filter(
+        pl.col('GroupID').is_null()
     ).group_by(
         'GroupID'
     ).agg(
-        [pl.all()]
+        pl.all()
     )
 
-    total_count = pl_text_linked.shape[0]
+    print(pl_text_linked)
 
-    pl_text_linked = pl_text_linked.map_rows(
-        lambda x: text_clustering(x, total_count)
-    ).explode(
-        'column_0', 'column_1'
-    ).rename(
-        {'column_0':'GroupID', 'column_1':'idx'}
-    )
+    # pl_text_linked = pl_reduced_embeddings.filter(
+    #      pl.col('GroupID') != None
+    # ).group_by(
+    #     'GroupID'
+    # ).agg(
+    #     [pl.all()]
+    # )
 
-    return pl_doc, pl_reduced_embeddings, pl_text_linked
+    # total_count = pl_text_linked.shape[0]
+
+    # pl_text_linked = pl_text_linked.map_rows(
+    #     lambda x: text_clustering(x, total_count)
+    # ).explode(
+    #     'column_0', 'column_1'
+    # ).rename(
+    #     {'column_0':'GroupID', 'column_1':'idx'}
+    # )
+
+    # return pl_doc, pl_reduced_embeddings, pl_text_linked
+
+
+def get_cosine_similarity(dataset: dict) -> dict:
+    idx_list = dataset['idx']
+    name_embedding_list = dataset['name_embeddings']
+    commod_embedding_list = dataset['commodity_embedding']
+    other_embedding_list = dataset['other_embedding']
+
+    len_input = list(range(len(name_embedding_list)))
+    list_cosine_similarity = []
+
+    mapping_dict = {key: None for key in idx_list}
+    cosine_dict = {key: 0 for key in idx_list}
+
+    for c in combinations(len_input, 2):
+        name_similarity = 1 - spatial.distance.cosine(name_embedding_list[c[0]], name_embedding_list[c[1]])
+        commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
+        other_similarity = 1 - spatial.distance.cosine(other_embedding_list[c[0]], other_embedding_list[c[1]])
+
+        similarity = EMBEDDING_RATIO1 * name_similarity + (EMBEDDING_RATIO2) * commod_similarity + (1-EMBEDDING_RATIO1 - EMBEDDING_RATIO2) * other_similarity
+        list_cosine_similarity.append(similarity)
+
+        idx_first = idx_list[c[0]]
+        idx_second = idx_list[c[1]]
+
+        if mapping_dict[idx_first] is None:
+            mapping_dict[idx_first] = c[0]
+
+        if(similarity > THRESHOLD_SIMILARITY):
+            if(similarity > cosine_dict[idx_second]):
+                mapping_dict[idx_second] = mapping_dict[idx_first]
+                cosine_dict[idx_second] = similarity
+        elif mapping_dict[idx_second] is None:
+            mapping_dict[idx_second] = c[1]
+
+    new_group = []
+    for i in list(mapping_dict.values()):
+        group_code = str(dataset['GroupID']) + '_' + str(i)
+        new_group.append(group_code)
+
+    return {'idx': list(mapping_dict.keys()), 'new_group': new_group}

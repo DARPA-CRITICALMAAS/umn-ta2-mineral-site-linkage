@@ -32,7 +32,6 @@ def compare_description(dict_data, dict_target, col_candidates, col_target):
     if len(col_candidates) == 0:
         return []
 
-
     dict_candidates = pl.from_dict(dict_data).select(
         pl.col(col_candidates)
     ).to_dict(as_series=False)
@@ -51,6 +50,8 @@ def identify_unique_id(pl_data, dict_data):
     )
 
     potential_unique_id = [col.name for col in pl_count if col.all()]
+
+    print(potential_unique_id)
 
     if len(potential_unique_id) == 0:
         return False
@@ -85,9 +86,13 @@ def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
     potential_name = pl_name.columns
     col_match = compare_description(dict_data, dict_target, potential_name, ['name'])
 
-    print(col_match)
+    print("name", col_match)
     
-    return col_match[0]
+    # Will be deleted
+    potential = set(remaining_columns) & set(['Ftr_Name', 'Site_Name', 'site_name', 'Site'])
+    potential = set(col_match) | potential
+    
+    return list(potential)[0]
 
 def identify_textual_location(remaining_columns):
     dict_text_loc = {}
@@ -126,6 +131,10 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
             col_latitude.append(i)
         elif re.search('longitude', i.lower()):
             col_longitude.append(i)
+        elif re.search('approx_lon', i.lower()):
+            col_longitude.append(i)
+        elif re.search('approx_lat', i.lower()):
+            col_latitude.append(i)
 
     for i in potential_crs:
         if i.lower() == 'crs':
@@ -134,10 +143,20 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
     potential_geo_loc = list(set(pl_geo_loc.columns) - set(col_latitude) - set(col_longitude))
     if len(potential_geo_loc) != 0:
         col_match = compare_description(dict_data, dict_target, potential_geo_loc, ['latitude', 'longitude'])
+
+        for i in col_match:
+            if re.search('lat', i.lower()):
+                col_latitude.append(i)
+            elif re.search('long', i.lower()):
+                col_longitude.append(i)
+
+    # Delete later
+    # col_latitude = list(set(['Lat_WGS84', 'latitude', 'Latitude']) & set(pl_geo_loc.columns))
+    # col_longitude = list(set(['Long_WGS84', 'longitude', 'Longitude']) & set(pl_geo_loc.columns))
     
     potential_crs = list(set(pl_crs.columns) - set(col_crs))
     if len(potential_crs) != 0:
-        col_match = compare_description(dict_data, dict_target, potential_crs, ['crs'])
+        col_crs = compare_description(dict_data, dict_target, potential_crs, ['crs'])
 
     print(col_latitude, col_longitude, crs_value)
 

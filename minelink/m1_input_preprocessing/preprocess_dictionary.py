@@ -28,17 +28,17 @@ def process_dictionary(alias_code):
         short = label
 
     pl_dict = pl_dict.select(
-        pl.col(label).str.strip_chars(),
-        pl.col(short).str.strip_chars(),
-        pl.col(long).str.strip_chars(),
+        label = pl.col(label).str.strip_chars(),
+        short = pl.col(short).str.strip_chars(),
+        long = pl.col(long).str.strip_chars(),
     )
 
     # if short == '':
     #     # TODO: add a way to extract short description from the long description
     #     pass
 
-    dict_short = dict(zip(pl_dict[label], pl_dict[short]))
-    dict_long = dict(zip(pl_dict[label], pl_dict[long]))
+    dict_short = dict(zip(pl_dict['label'], pl_dict['short']))
+    dict_long = dict(zip(pl_dict['label'], pl_dict['long']))
 
     save_ckpt(data=dict_short, 
               list_path=[PATH_TMP_DIR, alias_code],
