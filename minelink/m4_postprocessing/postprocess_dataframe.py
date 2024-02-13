@@ -36,7 +36,7 @@ def postprocessing(bool_interlink):
     module_start = perf_counter()
 
     if bool_interlink:
-        linked_file_name = 'pl_linkedZn'
+        linked_file_name = 'pl_linkedNi'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:

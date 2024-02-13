@@ -132,9 +132,17 @@ def process_schema(mss_code):
     )
     df_geometry, dict_location_info = create_location_info(df_location)
 
+    df_tolink = df_info.select(
+        pl.col(['idx', 'name'])
+    )
+
     save_ckpt(data=df_geometry, 
               list_path=[PATH_TMP_DIR, 'mss'],
               file_name='df_geometry')
+    
+    save_ckpt(data=df_tolink, 
+              list_path=[PATH_TMP_DIR, 'mss'],
+              file_name='df_tolink')
     
     save_ckpt(data=dict_location_info, 
               list_path=[PATH_TMP_DIR, 'mss'],

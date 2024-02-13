@@ -17,17 +17,43 @@ def convert_to_embedding(mine_struct:dict) -> list:
     return txt_embed
 
 def create_relevant_embeddings(alias_code:str, name_columns:list, commodity_columns:list):
-    pl_tolink = load_file([PATH_TMP_DIR, alias_code],
+    pl_tolink_org = load_file([PATH_TMP_DIR, alias_code],
                           'df_tolink',
                           '.pkl')
     
-    pl_tolink = pl_tolink.sort('idx')
+    pl_tolink_org = pl_tolink_org.sort('idx')
 
-    pl_tolink = pl_tolink.select(
-        pl.col('idx'),
-        pl.col(name_columns).fill_null(" "),
-        pl.col(commodity_columns).fill_null(" ")
-    )
+    if commodity_columns:
+        pl_tolink = pl_tolink_org.select(
+            pl.col('idx'),
+            pl.col(name_columns).fill_null(" "),
+            pl.col(commodity_columns).fill_null(" ")
+        )
+
+        pl_commod = pl_tolink.select(
+            pl.col('idx'),
+            input = pl.concat_str(
+                pl.col(commodity_columns),
+                separator = ', '
+            )
+        )
+
+        pl_commod = pl_commod.with_columns(
+            commodity_embedding = pl.struct(pl.col('input')).map_elements(convert_to_embedding)
+        ).drop(
+            'input'
+        ).sort('idx')
+        
+    else:
+        pl_tolink = pl_tolink_org.select(
+            pl.col('idx'),
+            pl.col(name_columns).fill_null(" "),
+        )
+
+        pl_commod - pl_tolink_org.select(
+            pl.col('idx'),
+            pl.Series('commodity_embedding', [[]], dtype=pl.List)
+        )
 
     pl_name = pl_tolink.select(
         pl.col('idx'),
@@ -36,20 +62,6 @@ def create_relevant_embeddings(alias_code:str, name_columns:list, commodity_colu
             separator = ', '
         )
     )
-
-    pl_commod = pl_tolink.select(
-        pl.col('idx'),
-        input = pl.concat_str(
-            pl.col(commodity_columns),
-            separator = ', '
-        )
-    )
-
-    pl_commod = pl_commod.with_columns(
-        commodity_embedding = pl.struct(pl.col('input')).map_elements(convert_to_embedding)
-    ).drop(
-        'input'
-    ).sort('idx')
 
     pl_name = pl_name.select(
         pl.col('idx'),
@@ -98,11 +110,15 @@ def get_cosine_similarity(dataset: dict) -> dict:
 
     for c in combinations(len_input, 2):
         name_similarity = 1 - spatial.distance.cosine(name_embedding_list[c[0]], name_embedding_list[c[1]])
-        commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
+        if commod_embedding_list[c[0]]:
+            commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
+
         # other_similarity = 1 - spatial.distance.cosine(other_embedding_list[c[0]], other_embedding_list[c[1]])
 
         # similarity = EMBEDDING_RATIO1 * name_similarity + (EMBEDDING_RATIO2) * commod_similarity + (1-EMBEDDING_RATIO1 - EMBEDDING_RATIO2) * other_similarity
-        similarity = EMBEDDING_RATIO1 * name_similarity + (1-EMBEDDING_RATIO1) * commod_similarity
+            similarity = EMBEDDING_RATIO1 * name_similarity + (1-EMBEDDING_RATIO1) * commod_similarity
+        else: 
+            similarity = name_similarity
         list_cosine_similarity.append(similarity)
 
         idx_first = idx_list[c[0]]
