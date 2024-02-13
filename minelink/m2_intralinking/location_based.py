@@ -13,10 +13,7 @@ def location_based_linking(alias_code, bool_location):
                         'df_geometry',
                         '.pkl')
 
-    if bool_location:
-        epsilon = 0.05
-    else:
-        epsilon = 0.05
+    epsilon = INTRALINK_BOUNDARY
 
     df_geom = pl_geom.to_pandas()
 

@@ -59,6 +59,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
 
 | Name | Description | Value |
+| --- | --- | --- |
 | `INTRALINK_BOUNDARY` | Intralink Boundary | 0.05 (kilometers) |
 | `INTERLINK_BUFFER` | Interlink Buffer | 15 (meters) |
 | `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
