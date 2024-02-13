@@ -10,14 +10,14 @@ pip install -r requirements.txt
 ## How to run
 Run the python file by entering the following code in the command line:
 ```
-python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
+python -m minelink -d path/to/data/directory [-l if only using geolocation for linking] -s path/to/schema/data/directory
 ```
 The linked JSON output would be located under `./outputs`.
 
-### Testing
+<!-- ### Testing
 ```
 python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
-```
+``` -->
 
 ## Directory Layout
 ```
@@ -43,8 +43,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |
 |-- m3_interlinking
 |   |-- interlink.py                        # Initiates interlinking
-|   |-- location_based.py                   # Completes linking based on geolocation
-|   |-- text_based.py                       # Completes linking based on textual attributes
+|   |-- overlapping_region.py               # Completes linking based on geolocation
 |
 |-- m4_postprocessing
 |   |-- postprocess_dataframe.py            # Formats the linked result into the format required by the schema
@@ -55,3 +54,14 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |
 |-- m6_testing
 ```
+
+### Parameters
+The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
+
+| Name | Description | Value |
+| `INTRALINK_BOUNDARY` | Intralink Boundary | 0.05 (kilometers) |
+| `INTERLINK_BUFFER` | Interlink Buffer | 15 (meters) |
+| `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
+| `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 |
+| `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
+| `EMBEDDING_RATIO2` | Ratio of Commodity Embedding | 0.29 |
