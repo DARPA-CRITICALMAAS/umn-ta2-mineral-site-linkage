@@ -26,6 +26,9 @@ def intralink(list_code, bool_location):
             elif i == 'ag' or i == 'ai':
                 names_column = ['Site_Name', 'Other_Name']
                 commod_column = ['Commodity']
+            elif i == 'mss':
+                names_column = ['name']
+                commod_column = []
             else:
                 names_column = ['site_name', 'names']
                 commod_column = ['commod1', 'commod2', 'commod3']

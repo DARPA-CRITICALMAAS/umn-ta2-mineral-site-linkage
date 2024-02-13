@@ -46,7 +46,7 @@ def define_region(pl_data, alias_code, crs_code='WGS84'):
 
     gpd_poly = gpd.GeoDataFrame(
         df_data, geometry = gpd.points_from_xy(df_data['longitude'], df_data['latitude'], crs=crs_code)
-    ).to_crs({'proj': 'cea'})
+    ).to_crs(epsg=3857)
 
     gpd_poly = gpd_poly.dissolve('GroupAlias').convex_hull.buffer(2000)   # 15 meter buffer on projected map
     gpd_poly.name = 'rep_geometry'
@@ -69,13 +69,13 @@ def find_overlapping_region(gpd_poly1, gpd_poly2, base_col, selecting_col):
 
     gpd_overlapped = gpd_overlapped.to_crs({'proj': 'cea'}) # cylidrical equal area format preserve area measure
 
-    gpd_overlapped['area'] = (gpd_overlapped.area)
+    gpd_overlapped['area'] = gpd_overlapped.area
 
     df_overlapped = pd.DataFrame(gpd_overlapped).drop('geometry', axis=1)
     pl_overlapped = pl.from_pandas(df_overlapped)
 
     pl_overlapped_threshold_area = pl_overlapped.filter(
-        pl.col('area') > 1
+        pl.col('area') > 0.001
     )
 
     pl_overlapped_threshold_area = pl_overlapped
