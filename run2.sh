@@ -1,9 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=refined_document_test
-#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/document_testing/refined_document.out
-#SBATCH --time=8:00:00
-#SBATCH -p a100-4     
-#SBATCH --gres=gpu:a100:1
+#SBATCH --job-name=preprocessing_W
+#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/document_testing/preprocessing_W.out
+#SBATCH --time=12:00:00
+#SBATCH -p ag2tb
 #SBATCH --ntasks=1
 #SBATCH --mem=10g
 #SBATCH --mail-type=ALL
@@ -11,6 +10,4 @@
 
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/
 module load python3
-module load mamba
-conda activate ta2
-python3 refined_document_ver.py
+python3 testing_file.py

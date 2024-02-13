@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=preprocessing_Ni
-#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/document_testing/preprocessing_Ni.out
+#SBATCH --job-name=tungsten_mini
+#SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/document_testing/testing_tungsten.out
 #SBATCH --time=12:00:00
 #SBATCH -p aglarge
 #SBATCH --ntasks=1
@@ -11,4 +11,5 @@
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/
 module load python3
 # python3 individual.py
-python3 testing_file2.py
+python3 testing_mini_W.py
+# python3 mineralsite.py

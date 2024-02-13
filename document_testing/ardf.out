@@ -1,0 +1,55 @@
+slurmstepd: error: *** JOB 78893158 ON aga14 CANCELLED AT 2024-02-02T11:01:31 ***
+['ARDF_no']
+name ['Site']
+['Latitude'] ['Longitude'] 
+NAD27
+           idx                     location
+0     ab_AC001  POINT (-144.07000 68.95000)
+1     ab_AC002  POINT (-144.60000 68.42000)
+2     ab_AC003  POINT (-146.22000 68.97000)
+3     ab_AC004  POINT (-146.35000 68.08000)
+4     ab_AC005  POINT (-146.73000 68.27000)
+...        ...                          ...
+7714  ab_YA010  POINT (-139.05000 59.83000)
+7715  ab_YA011  POINT (-138.14900 59.48900)
+7716  ab_YA012  POINT (-138.70600 59.79800)
+7717  ab_YA013  POINT (-138.79650 59.25660)
+7718  ab_YA014  POINT (-138.51510 59.24100)
+
+[7719 rows x 2 columns]
+           idx                     location state_or_province    crs
+0     ab_AC001  POINT (-144.07000 68.95000)                AK  NAD27
+1     ab_AC002  POINT (-144.60000 68.42000)                AK  NAD27
+2     ab_AC003  POINT (-146.22000 68.97000)                AK  NAD27
+3     ab_AC004  POINT (-146.35000 68.08000)                AK  NAD27
+4     ab_AC005  POINT (-146.73000 68.27000)                AK  NAD27
+...        ...                          ...               ...    ...
+7714  ab_YA010  POINT (-139.05000 59.83000)                AK  NAD27
+7715  ab_YA011  POINT (-138.14900 59.48900)                AK  NAD27
+7716  ab_YA012  POINT (-138.70600 59.79800)                AK  NAD27
+7717  ab_YA013  POINT (-138.79650 59.25660)                AK  NAD27
+7718  ab_YA014  POINT (-138.51510 59.24100)                AK  NAD27
+
+[7719 rows x 4 columns]
+0.05
+Traceback (most recent call last):
+  File "testing_file.py", line 40, in <module>
+    main()
+  File "testing_file.py", line 28, in main
+    intralink(list_code, False)
+  File "/panfs/jay/groups/28/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/minelink/m2_intralinking/intralink.py", line 17, in intralink
+    pl_intra_linked = text_based_linking(pl_loc_linked, i, names_column, commod_column)
+  File "/panfs/jay/groups/28/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/minelink/m2_intralinking/text_based.py", line 129, in text_based_linking
+    pl_embeddings = create_relevant_embeddings(alias_code, name_columns, commodity_columns)
+  File "/panfs/jay/groups/28/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/minelink/m2_intralinking/text_based.py", line 26, in create_relevant_embeddings
+    pl_tolink = pl_tolink.select(
+  File "/home/yaoyi/pyo00005/.local/lib/python3.8/site-packages/polars/dataframe/frame.py", line 7851, in select
+    return self.lazy().select(*exprs, **named_exprs).collect(_eager=True)
+  File "/home/yaoyi/pyo00005/.local/lib/python3.8/site-packages/polars/utils/deprecation.py", line 100, in wrapper
+    return function(*args, **kwargs)
+  File "/home/yaoyi/pyo00005/.local/lib/python3.8/site-packages/polars/lazyframe/frame.py", line 1788, in collect
+    return wrap_df(ldf.collect())
+polars.exceptions.ColumnNotFoundError: site_name
+
+Error originated just after this operation:
+DF ["idx", "Ore_minerals", "MRDS_no", "Site"]; PROJECT */35 COLUMNS; SELECTION: "None"

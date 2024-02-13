@@ -6,7 +6,7 @@ import polars as pl
 from minelink.params import *
 from minelink.m0_load_input.load_data import load_file
 from minelink.m0_load_input.save_ckpt import save_ckpt
-from minelink.m3_interlinking.location_based_methods.overlapping_region import *
+from minelink.m3_interlinking.overlapping_region import *
 
 def interlink(list_code, bool_location):
     seed_code = list_code.pop(0)
