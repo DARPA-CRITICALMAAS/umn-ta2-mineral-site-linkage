@@ -20,3 +20,4 @@ __init__.py
 test.png
 test.py
 tmp.csv
+*.sh
