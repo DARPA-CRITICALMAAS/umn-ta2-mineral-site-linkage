@@ -13,8 +13,8 @@ import polars as pl
 import geopandas as gpd
 import pickle5 as pickle
 
-from minelink.params import *
-from minelink.m0_load_input.save_ckpt import *
+from params import *
+from m0_load_input.save_ckpt import *
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -145,50 +145,6 @@ def load_dir(path_dir, bool_dict=False):
 
     return list(dict_code_alias.keys())
 
-def load_mss(path_dir):
-    open_ckpt_dir([PATH_TMP_DIR, 'mss'])
-
-    list_dir_items = os.listdir(path_dir)
-
-    mss_total = pl.DataFrame()
-
-    for i in list(range(len(list_dir_items))):
-        file_name = list_dir_items[i]
-
-        with open(os.path.join(path_dir, file_name)) as json_file:
-            data = json.load(json_file)['MineralSite'][0]
-
-        mineralsite_as_list = {key:[value] for key, value in data.items()}
-
-        pl_mineralsite = pl.DataFrame(mineralsite_as_list).unnest('location_info')
-
-        pl_mineralsite = pl_mineralsite.with_columns(
-            idx = 'mss_' + pl.lit(i+1).cast(pl.Utf8)
-        )
-
-        # TODO: TEMPORARY 
-        pl_mineralsite = pl_mineralsite.drop(
-            ['MineralInventory', 'deposit_type']
-        )
-        #####
-
-        mss_columns = list(set(pl_mineralsite.columns) & set(ATTRIBUTE_MINERAL_SITE))
-
-        # TODO: modify when taking in deposit type or mineral inventory
-        pl_mineralsite = pl_mineralsite.select(
-            pl.col(mss_columns)
-        )
-        #######
-
-        mss_total = pl.concat(
-            [mss_total, pl_mineralsite],
-            how='diagonal'
-        ).drop_nulls(['source_id', 'record_id', 'location', 'crs'])
-
-    save_ckpt(mss_total, [PATH_TMP_DIR, 'mss'], 'raw')
-
-    return 'mss'
-
 def run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=False):
     # add prefixes
     final_query = '''
@@ -242,7 +198,8 @@ def load_kg():
             WHERE {
                 ?ms a :MineralSite .
                 ?ms :name ?name .
-                ?ms :mineral_inventory [ :commodity [:name ?commodity] ] .
+                ?ms :mineral_inventory [ :commodity [ :name "Nickel"@en ] ] .
+                ?ms :mineral_inventory [ :commodity [ :name ?commodity ] ] .
                 ?ms :source_id ?source_id .
                 ?ms :record_id ?record_id . 
                 ?ms :location_info [ :location ?location ] .

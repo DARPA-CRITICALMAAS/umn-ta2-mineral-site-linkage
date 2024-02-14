@@ -1,10 +1,10 @@
 import polars as pl
 
-from minelink.params import *
-from minelink.m0_load_input.load_data import load_file
-from minelink.m0_load_input.save_ckpt import save_ckpt
-from minelink.m2_intralinking.location_based import location_based_linking
-from minelink.m2_intralinking.text_based import text_based_linking
+from params import *
+from m0_load_input.load_data import load_file
+from m0_load_input.save_ckpt import save_ckpt
+from m2_intralinking.location_based import location_based_linking
+from m2_intralinking.text_based import text_based_linking
 
 def intralink(list_code, bool_location, names_column, commod_column):
     print('enter intralinking')

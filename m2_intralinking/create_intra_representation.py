@@ -2,9 +2,9 @@ import polars as pl
 import pandas as pd
 import geopandas as gpd
 
-from minelink.params import *
-from minelink.m0_load_input.load_data import load_file
-from minelink.m0_load_input.save_ckpt import save_ckpt
+from params import *
+from m0_load_input.load_data import load_file
+from m0_load_input.save_ckpt import save_ckpt
 
 def create_loc_rep(pl_linked_data, pl_geom):
     pl_linked_data = pl_linked_data.sort('idx')

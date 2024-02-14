@@ -57,55 +57,53 @@ def run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=Fal
 def run_minmod_query(query, values=False):
     return run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=values)
 
-query = ''' SELECT ?ms ?source_id ?record_id ?commodity ?name ?location ?crs ?country ?state_province
+def load_kg():
+    query = ''' SELECT ?ms ?source_id ?record_id ?commodity ?name ?location ?crs ?country ?state_province
             WHERE {
                 ?ms a :MineralSite .
                 ?ms :name ?name .
-                ?ms :mineral_inventory [ :commodity [:name ?commodity] ] .
+                ?ms :mineral_inventory [ :commodity [ :name "Nickel"@en ] ] .
+                ?ms :mineral_inventory [ :commodity [ :name ?commodity ] ] .
                 ?ms :source_id ?source_id .
                 ?ms :record_id ?record_id . 
                 ?ms :location_info [ :location ?location ] .
-                OPTIONAL { ?ms :location_info [ :crs ?crs ] } .
+                OPTIONAL { ?ms :location_info [ :crs ?crs ] }.
                 ?ms :location_info [ :country ?country ] .
                 OPTIONAL { ?ms :location_info [ :state_or_province ?state_or_province ] }.
             } '''
 
-pl_data = run_minmod_query(query, values=True)
+    pl_data = run_minmod_query(query, values=True)
 
-pl_data = pl_data.group_by(
-    'ms'
-).agg(
-    [pl.all()]
-).drop(
-    'ms'
-).select(
-    pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
-)
+    # pl_data = pl_data.filter(
+    #     pl.col('commodity') == 'Nickel'
+    # )
 
-length = pl_data.shape[0]
-complete_list = range(1, length+1)
-pl_mineralsite = pl_data.with_columns(
-    idx = 'mss_' + pl.Series(complete_list).cast(pl.Utf8)
-)
+    # print(pl_data)
 
-pl_mineralsite = pl_mineralsite.with_columns(
-    crs = pl.when(
-        pl.col('crs') == 'null'
-    ).then(
-        pl.lit('WGS84')
-    ).otherwise(
-        pl.col('crs')
+    pl_data = pl_data.group_by(
+        'ms'
+    ).agg(
+        [pl.all()]
+    ).drop(
+        'ms'
+    ).select(
+        pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
     )
-)
 
+    length = pl_data.shape[0]
+    complete_list = range(1, length+1)
 
-print(pl_mineralsite)
+    mss_total = pl_data.with_columns(
+        idx = 'mss_' + pl.Series(complete_list).cast(pl.Utf8),
+        crs = pl.when(
+            pl.col('crs') == 'null'
+        ).then(
+            pl.lit('WGS84')
+        ).otherwise(
+            pl.col('crs')
+        )
+    )
 
-# import pickle5 as pickle
+    print(mss_total)
 
-# file_name = '/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/temporary/mss/pl_embeddings.pkl'
-
-# with open(file_name, 'rb') as handle:
-#     df = pickle.load(handle)
-
-# print(df)
+load_kg()
