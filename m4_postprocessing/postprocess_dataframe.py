@@ -124,31 +124,39 @@ def postprocess_toGeoJSON(list_code, bool_interlink):
 
     pl_linked = pl_linked.select(
         idx = pl.col('idx'),
-        source = pl.col('idx').str.split(split_keyword).list.get(0).replace(dict_alias),
-        source_id = pl.col('idx').str.split(split_keyword).list.get(1),
         prediction = pl.col('GroupID')
     ).sort('idx')
 
     # print(pl_linked)
 
     pl_geometry = pl.DataFrame()
-    pl_other_info = pl.DataFrame()
+    # pl_other_info = pl.DataFrame()
     pl_name = pl.DataFrame()
 
     for i in list_code:
         tmp_geometry = load_file([PATH_TMP_DIR, i], 'df_geometry', '.pkl')
-        tmp_other = load_file([PATH_TMP_DIR, i], 'df_tolink', '.pkl')
+        print("org geometry", tmp_geometry)
+        tmp_geometry = tmp_geometry.select(
+            idx = pl.col('idx').cast(pl.Utf8),
+            latitude = pl.col('latitude').cast(pl.Float64),
+            longitude = pl.col('longitude').cast(pl.Float64)
+        )
+        # tmp_other = load_file([PATH_TMP_DIR, i], 'df_tolink', '.pkl')
         dict_basicinfo = load_file([PATH_TMP_DIR, i], 'basic_info', '.pkl')
 
         tmp_basicinfo = pd.DataFrame.from_dict(dict_basicinfo, orient='index')
         tmp_basicinfo.reset_index(inplace=True)
+
+        print("basic info", tmp_basicinfo)
         tmp_basicinfo = pl.from_pandas(tmp_basicinfo).select(
-            pl.col(['index', 'name'])
+            idx = pl.col('index').cast(pl.Utf8),
+            name = pl.col('name').cast(pl.Utf8),
+            source = pl.col('source_id').cast(pl.Utf8),
+            source_id = pl.col('record_id').cast(pl.Utf8),
         )
 
-        print(tmp_basicinfo)
-        
-        
+        print("geometry", tmp_geometry)
+         
         pl_name = pl.concat(
             [pl_name, tmp_basicinfo],
             how='vertical'
@@ -159,23 +167,21 @@ def postprocess_toGeoJSON(list_code, bool_interlink):
             how='vertical'
         )
 
-        pl_other_info = pl.concat(
-            [pl_other_info, tmp_other],
-            how='diagonal'
-        )
+        # pl_other_info = pl.concat(
+        #     [pl_other_info, tmp_other],
+        #     how='diagonal'
+        # )
 
     # print(pl_linked)
 
-    pl_name = pl_name.sort('index').drop('index')
+    pl_name = pl_name.sort('idx').drop('idx')
     pl_geometry = pl_geometry.sort('idx').drop('idx')
-    pl_other_info = pl_other_info.sort('idx').drop('idx')
-
-    print(pl_name.shape)
+    # pl_other_info = pl_other_info.sort('idx').drop('idx')
 
     df_tojson = pl.concat(
-        [pl_linked, pl_geometry, pl_name, pl_other_info],
+        [pl_linked, pl_geometry, pl_name],
         how='horizontal'
-    ).to_pandas()
+    ).drop_nulls(['idx']).to_pandas()
 
     print(df_tojson.columns)
 

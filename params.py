@@ -31,7 +31,7 @@ PATH_TMP_DIR = './temporary/'
 PATH_OUTPUT_DIR = './outputs/'
 
 INTRALINK_BOUNDARY = 0.05 # Units in kilometers
-INTERLINK_BUFFER = 15 # Units in meters
+INTERLINK_BUFFER = 5000 # Units in meters
 INTERLINK_OVERLAP = 1 # Units in meters squared
 
 THRESHOLD_SIMILARITY = 0.74

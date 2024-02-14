@@ -17,8 +17,6 @@ def location_based_linking(alias_code, bool_location):
 
     df_geom = pl_geom.to_pandas()
 
-    print(epsilon)
-
     gpd_geom = gpd.GeoDataFrame(
         df_geom, geometry=gpd.points_from_xy(df_geom['longitude'], df_geom['latitude'], crs='WGS84')
     ).to_crs(epsg=3857)

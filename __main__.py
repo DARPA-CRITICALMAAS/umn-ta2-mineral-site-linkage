@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 import logging
 # from torch.cuda import device_count
 
-from minelink.m0_load_input.load_data import load_dir, load_mss
+from minelink.m0_load_input.load_data import load_dir, load_mss, load_kg
 from minelink.m1_input_preprocessing.preprocess_input import preprocessing
 from minelink.m1_input_preprocessing.preprocess_schema import process_schema
 
@@ -17,34 +17,33 @@ def main(args):
     # logging.basicConfig(filename='minelink_run.log', format='%(levelname)s:%(message)s', level=logging.INFO)
 
     # list_code = load_dir(path_dir=args.data_dir, bool_dict=True)
-    list_code = []
+    # list_code = []
 
     # print(list_code)
     # # mss_code = load_mss(path_dir=args.mineral_site)
-    mss_code = 'mss'
-    process_schema('mss')
+    mss_code = load_kg()
+    process_schema(mss_code)
 
     # list_code = ['aa', 'ab', 'af', 'ag', 'ah', 'ai']
 
     # preprocessing(list_code, mss_code)
     
-    list_code.append(mss_code)
-    # list_code = ['ac', 'ad']
-    intralink(list_code, args.use_location_base)
+    # list_code.append(mss_code)
+    # # list_code = ['ac', 'ad']
+    intralink(['mss'], args.use_location_base)
 
     # list_code = ['ac', 'ad']]
     # list_code = ['aa', 'ab']
-    # list_code = ['ah', 'ai']
-    # interlink(list_code, args.use_location_base)
+    list_code = ['ah', 'ai', 'mss']
+    interlink_copy = list_code
+    interlink(interlink_copy, args.use_location_base)
 
-    # list_code = ['ac', 'ad]
-    # list_code = ['aa', 'ab', 'mss']               # MVT Zinc
 
     # df_linked = postprocessing(bool_interlink=True)
     # save_output_json(df_linked, 'Nickel')
 
-    # gdf_linked = postprocess_toGeoJSON(list_code, bool_interlink=True)
-    # save_output_geojson(gdf_linked, 'Nickel', ['./'])
+    gdf_linked = postprocess_toGeoJSON(list_code, bool_interlink=True)
+    save_output_geojson(gdf_linked, 'Nickel', ['./'])
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

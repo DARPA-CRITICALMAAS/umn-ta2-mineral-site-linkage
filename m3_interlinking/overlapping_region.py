@@ -15,8 +15,8 @@ def define_region(pl_data, alias_code, crs_code='WGS84'):
         GroupID = pl.Series(list(range(pl_data.shape[0], pl_data.shape[0] + length_individual)))
     ).select(
         idx = pl.col('idx'),
-        latitude = pl.col('latitude').cast(pl.Float64),
-        longitude = pl.col('longitude').cast(pl.Float64),
+        latitude = pl.col('latitude'),
+        longitude = pl.col('longitude'),
         GroupID = pl.col('GroupID').cast(pl.Int64)
     )
 
@@ -24,8 +24,8 @@ def define_region(pl_data, alias_code, crs_code='WGS84'):
         pl.col('GroupID') != -1
     ).select(
         idx = pl.col('idx'),
-        latitude = pl.col('latitude').cast(pl.Float64),
-        longitude = pl.col('longitude').cast(pl.Float64),
+        latitude = pl.col('latitude'),
+        longitude = pl.col('longitude'),
         GroupID = pl.col('GroupID').cast(pl.Int64)
     )
 
@@ -69,57 +69,59 @@ def find_max_area_group(struct: dict) -> int:
 def find_overlapping_region(gpd_poly1, gpd_poly2, base_col, selecting_col):
     gpd_overlapped = gpd.overlay(gpd_poly1, gpd_poly2, how='intersection', keep_geom_type=False)
 
-    gpd_overlapped = gpd_overlapped.to_crs({'proj': 'cea'}) # cylidrical equal area format preserve area measure
+    if gpd_overlapped.shape[0] != 0:
+        gpd_overlapped = gpd_overlapped.to_crs({'proj': 'cea'}) # cylidrical equal area format preserve area measure
 
-    gpd_overlapped['area'] = gpd_overlapped.area
+        gpd_overlapped['area'] = gpd_overlapped.area
 
-    df_overlapped = pd.DataFrame(gpd_overlapped).drop('geometry', axis=1)
-    pl_overlapped = pl.from_pandas(df_overlapped)
+        df_overlapped = pd.DataFrame(gpd_overlapped).drop('geometry', axis=1)
+        pl_overlapped = pl.from_pandas(df_overlapped)
 
-    pl_overlapped_threshold_area = pl_overlapped.filter(
-        pl.col('area') > INTERLINK_OVERLAP
-    )
-
-    pl_overlapped_threshold_area = pl_overlapped
-
-    if(pl_overlapped_threshold_area.shape[0] != 0):
-        pl_overlapped_gen = pl_overlapped_threshold_area.group_by(
-            base_col
-        ).agg(
-            [pl.all()]
-        ).with_columns(
-            count = pl.col(selecting_col).list.len()
+        pl_overlapped_threshold_area = pl_overlapped.filter(
+            pl.col('area') > INTERLINK_OVERLAP
         )
 
-        print(pl_overlapped_gen)
+        pl_overlapped_threshold_area = pl_overlapped
 
-        pl_overlapped_max = pl_overlapped_gen.filter(
-            pl.col('count') > 1
-        )
-
-        len_overlapped_max = pl_overlapped_max.shape[0]
-        
-        if len_overlapped_max != 0:
-            pl_overlapped_max = pl_overlapped_max.with_columns(
-                selected=pl.struct([selecting_col, 'area']).map_elements(find_max_area_group)
+        if(pl_overlapped_threshold_area.shape[0] != 0):
+            pl_overlapped_gen = pl_overlapped_threshold_area.group_by(
+                base_col
+            ).agg(
+                [pl.all()]
+            ).with_columns(
+                count = pl.col(selecting_col).list.len()
             )
 
-        pl_overlapped_one = pl_overlapped_gen.filter(
-            pl.col('count') == 1
-        ).with_columns(
-            selected=pl.col(selecting_col).list.first()
-        )
+            # print(pl_overlapped_gen)
 
-        if len_overlapped_max != 0:
-            pl_overlapped_max = pl.concat(
-                [pl_overlapped_max, pl_overlapped_one],
-                how='vertical'
+            pl_overlapped_max = pl_overlapped_gen.filter(
+                pl.col('count') > 1
             )
-        
-        else:
-            pl_overlapped_max = pl_overlapped_one
 
-        return pl_overlapped_max
+            len_overlapped_max = pl_overlapped_max.shape[0]
+
+            pl_overlapped_one = pl_overlapped_gen.filter(
+                pl.col('count') < 1.5
+            ).with_columns(
+                selected=pl.col(selecting_col).list.first()
+            )
+            
+            if len_overlapped_max != 0:
+                pl_overlapped_max = pl_overlapped_max.with_columns(
+                    selected=pl.struct([selecting_col, 'area']).map_elements(find_max_area_group)
+                )
+
+                pl_overlapped_max = pl.concat(
+                    [pl_overlapped_max, pl_overlapped_one],
+                    how='vertical'
+                )
+
+                # print("columns", pl_overlapped_max.columns)
+            
+            else:
+                pl_overlapped_max = pl_overlapped_one
+
+            return pl_overlapped_max
     
     return -1
 
@@ -140,103 +142,93 @@ def location_based_linking(seed_data, seed_poly, against_data, against_poly):
     if seed_data.shape[0] >= against_data.shape[0]:
         base_col = 'GroupAlias_2'
         selecting_col = 'GroupAlias_1'
+        seed_decision = 'selected'
+        against_decision = base_col
     elif seed_data.shape[0] < against_data.shape[0]:
         base_col = 'GroupAlias_1'
         selecting_col = 'GroupAlias_2'
+        seed_decision = base_col
+        against_decision = 'selected'
 
     pl_overlapped_max = find_overlapping_region(seed_poly, against_poly, base_col, selecting_col)
+
     pl_overlapped_max = pl_overlapped_max.with_columns(
         tmpGroup = pl.Series(list(range(pl_overlapped_max.shape[0])))
-    )
+    ).unique(subset=["selected"], maintain_order=True, keep="first") #TODO: cross determine
+
+    print("overlapping", pl_overlapped_max)
 
     seed_alias = pl_overlapped_max.select(
         pl.col('tmpGroup'),
-        GroupID = pl.col(base_col).str.split('_').list.get(2).cast(pl.Int64),
-    ).sort(
-        by='GroupID'
-    )
-    against_alias = pl_overlapped_max.select(
-        pl.col('tmpGroup'),
-        GroupID = pl.col('selected').str.split('_').list.get(2).cast(pl.Int64),
+        GroupID = pl.col(seed_decision).str.split('_').list.get(2).cast(pl.Int64),
     ).sort(
         by='GroupID'
     )
 
-    # Re-creating seed data
-    seed_group = pl_overlapped_max.select(
-        GroupID = pl.col(base_col).str.split('_').list.get(2).cast(pl.Int64)
-    ).to_series(0).to_list()
-    group_seed = seed_data.filter(
+    against_alias = pl_overlapped_max.select(
+        pl.col('tmpGroup'),
+        GroupID = pl.col(against_decision).str.split('_').list.get(2).cast(pl.Int64),
+    ).sort(
+        by='GroupID'
+    )
+
+    seed_group = seed_alias['GroupID'].to_list()
+    against_group = against_alias['GroupID'].to_list()
+
+    grouped_seed_data = seed_data.filter(
         pl.col('GroupID').is_in(seed_group)
-    )
-    
-    part_seed = group_seed.select(
-        pl.col('GroupID')
-    ).to_series(0).to_list()
-    seed_alias = seed_alias.filter(
-        pl.col('GroupID').is_in(part_seed)
-    ).unique(subset=['GroupID'], maintain_order=True)
-    
-    group_seed = group_seed.with_columns(
-        tmpGroup = seed_alias['tmpGroup']
-    )
-    seed_data = seed_data.filter(
+    ).sort('GroupID')
+    indiv_seed_data = seed_data.filter(
         ~pl.col('GroupID').is_in(seed_group)
     )
 
-    against_group = pl_overlapped_max.select(
-        GroupID = pl.col('selected').str.split('_').list.get(2).cast(pl.Int64)
-    ).to_series(0).to_list()
-    group_against = against_data.filter(
+    grouped_against_data = against_data.filter(
         pl.col('GroupID').is_in(against_group)
-    )
-    part_against = group_against.select(
-        pl.col('GroupID')
-    ).to_series(0).to_list()
-    against_alias = against_alias.filter(
-        pl.col('GroupID').is_in(part_against)
-    ).unique(subset=['GroupID'], maintain_order=True)
-
-
-    group_against = group_against.with_columns(
-        tmpGroup = against_alias['tmpGroup']
-    )
-    against_data = against_data.filter(
+    ).sort('GroupID')
+    indiv_against_data = against_data.filter(
         ~pl.col('GroupID').is_in(against_group)
     )
 
-    ungrouped_data = pl.concat(
-        [seed_data, against_data],
+    all_indiv = pl.concat(
+        [indiv_seed_data, indiv_against_data],
         how='vertical'
+    ).select(
+        pl.col(['idx', 'latitude', 'longitude'])
     )
-    grouped_data = pl.concat(
-        [group_seed, group_against],
+
+    print("seed_data", grouped_seed_data)
+    print("temporary group", seed_alias['tmpGroup'])
+
+    grouped_seed_data = grouped_seed_data.with_columns(
+        tmpGroup = seed_alias['tmpGroup']
+    )
+
+    grouped_against_data = grouped_against_data.with_columns(
+        tmpGroup = against_alias['tmpGroup']
+    )
+
+    all_grouped = pl.concat(
+        [grouped_seed_data, grouped_against_data],
         how='vertical'
-    ).drop(
-        'GroupID'
     ).group_by(
         'tmpGroup'
     ).agg(
         pl.all().explode()
-    ).rename(
-        {'tmpGroup':'GroupID'}
+    ).select(
+        pl.col(['idx', 'latitude', 'longitude'])
     )
-    
-    tmp_data = pl.concat(
-        [ungrouped_data, grouped_data],
+
+    new_full = pl.concat(
+        [all_grouped, all_indiv],
         how='vertical'
     )
 
-    length_tmp = tmp_data.shape[0]
+    length_full = new_full.shape[0]
 
-    tmp_data = tmp_data.drop(
-        ['GroupID', 'GroupAlias']
-    ).with_columns(
-        GroupID = pl.Series(list(range(length_tmp)))
+    tmp_data = new_full.with_columns(
+        GroupID = pl.Series(list(range(0, length_full)))
     ).explode(
         ['idx', 'latitude', 'longitude']
     )
-
-    # seed_data, seed_poly = define_region(tmp_data, 'seed')
 
     return define_region(tmp_data, 'seed')
