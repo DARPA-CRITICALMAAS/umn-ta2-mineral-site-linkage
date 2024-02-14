@@ -102,6 +102,8 @@ def get_cosine_similarity(dataset: dict) -> dict:
     commod_embedding_list = dataset['commodity_embedding']
     # other_embedding_list = dataset['other_embedding']
 
+    print("here")
+
     len_input = list(range(len(name_embedding_list)))
     list_cosine_similarity = []
 
@@ -149,16 +151,21 @@ def text_based_linking(pl_loclinked, alias_code:str, name_columns:list, commodit
     ).drop(
         'idx'
     )
+
+    print(pl_loclinked.shape)
+
     pl_embeddings = pl_embeddings.sort(
         'idx'
     )
+
+    print(pl_embeddings.shape)
 
     pl_total = pl.concat(
         [pl_embeddings, pl_loclinked],
         how='horizontal'
     ).explode(
         'name_embedding'
-    )
+    ).drop_nulls(['idx'])
 
     pl_individual = pl_total.filter(
         pl.col('GroupID') == -1
@@ -176,6 +183,8 @@ def text_based_linking(pl_loclinked, alias_code:str, name_columns:list, commodit
     ).agg(
         [pl.all()]
     )
+
+    print(pl_grouped)
 
     pl_grouped = pl_grouped.with_columns(
         tmp = pl.struct(['idx', 'name_embedding', 'commodity_embedding', 'GroupID']).map_elements(get_cosine_similarity)

@@ -66,7 +66,7 @@ def separate_long_lat(wkt_location):
     except:
         return [[p.x for p in wkt_location.geoms], [p.y for p in wkt_location.geoms]]
 
-def gpd_geometry(str_location, crs):
+def gpd_geometry(str_location, crs='WGS84'):
     try:
         geometry = shapely.wkt.loads(str_location)
     except:
@@ -127,13 +127,15 @@ def process_schema(mss_code):
               list_path=[PATH_TMP_DIR, 'mss'],
               file_name='same_as')
     
+    location_info_columns = set(['idx', 'location', 'crs', 'country', 'state_or_province'])
+    available_location_info = list(location_info_columns & set(list(pl_data.columns)))
     df_location  = pl_data.select(
-        pl.col(['idx', 'location', 'crs', 'country', 'state_or_province'])
+        pl.col(available_location_info)
     )
     df_geometry, dict_location_info = create_location_info(df_location)
 
-    df_tolink = df_info.select(
-        pl.col(['idx', 'name'])
+    df_tolink = pl_data.select(
+        pl.col(['idx', 'name', 'commodity'])
     )
 
     save_ckpt(data=df_geometry, 
