@@ -158,8 +158,6 @@ def text_based_linking(pl_loclinked, alias_code:str, name_columns:list, commodit
         'idx'
     )
 
-    print(pl_embeddings.shape)
-
     pl_total = pl.concat(
         [pl_embeddings, pl_loclinked],
         how='horizontal'
