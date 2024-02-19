@@ -8,19 +8,40 @@ pip install -r requirements.txt
 ```
 
 ## How to run
+### Run End-to-End
 Run the python file by entering the following code in the command line:
 ```
-python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
+python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for linking]
 ```
-The linked JSON output would be located under `./outputs`.
+The linked JSON output would be lcoated under `./outputs`.
 
-<!-- ### Testing
-```
-python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
-``` -->
+### Convert Model to MineralSiteSchema
+
+### Run Intralinking Model
+
+### Run Interlinking Model
 
 ## Directory Layout
 ```
+./
+|-- fusemine.py
+|
+|-- m0_loading_and_saving
+|   |-- loading_local_data.py               # Formats table data into the format of mineral site schema
+|
+|-- m1_preprocessing
+|
+|-- m2_intralinkingd
+|
+|-- m3_interlinking
+|
+|-- m4_postprocessing
+|
+|-- resource
+|   |-- crs.pkl                             # List of coordinate reference systems (CRS)
+
+```
+<!-- ```
 ./minelink
 |-- __init__.py
 |-- __main__.py
@@ -53,7 +74,7 @@ python -m minelink.tester -p path/to/ground_truth_file -c column_with_linking
 |   |-- save_output.py                      # Saves the output as a compiled JSON file (schema form) and GroupID appended GEOJSON file
 |
 |-- m6_testing
-```
+``` -->
 
 ### Parameters
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
