@@ -26,7 +26,8 @@ The linked JSON output would be lcoated under `./outputs`.
 ./
 |-- fusemine.py
 |
-|-- m0_
+|-- m0_loading_and_saving
+|   |-- loading_local_data.py               # Formats table data into the format of mineral site schema
 |
 |-- m1_preprocessing
 |
