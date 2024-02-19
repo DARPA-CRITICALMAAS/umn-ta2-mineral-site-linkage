@@ -10,7 +10,7 @@ pip install -r requirements.txt
 ## How to run
 Run the python file by entering the following code in the command line:
 ```
-python -m minelink -d path/to/data/directory [-l if only using geolocation for linking] -s path/to/schema/data/directory
+python -m minelink -d path/to/data/directory [-l if only using geolocation for linking]
 ```
 The linked JSON output would be located under `./outputs`.
 
