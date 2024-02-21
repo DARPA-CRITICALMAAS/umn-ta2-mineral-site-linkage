@@ -31,7 +31,9 @@ The linked JSON output would be lcoated under `./outputs`.
 |
 |-- m1_preprocessing
 |
-|-- m2_intralinkingd
+|-- m2_intralinking
+|   |-- location_based_intralinking.py
+|   |-- text_based_intralinking.py
 |
 |-- m3_interlinking
 |
