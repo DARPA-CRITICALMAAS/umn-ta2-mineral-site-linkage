@@ -38,8 +38,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ta1_ta2_pt')
-    parser.add_argument('--input_gpkg_path', type=str, default='./gpkg/', help='input file')
-    parser.add_argument('--output_dir', type=str, default='./ta1_output/', help='output file')
+    parser.add_argument('--input_gpkg_path', type=str, default='./gpkg/', help='input path for gpkg files')
+    parser.add_argument('--output_dir', type=str, default='./ta1_output/', help='output path')
 
     args = parser.parse_args()
     main(args)
