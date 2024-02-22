@@ -7,6 +7,7 @@ import polars as pl
 import pickle5 as pickle
 
 from m0_loading_and_saving.load_local_data import *
+from m0_loading_and_saving.save_to_json_output import *
 
 def identify_id_attribute():
     """
