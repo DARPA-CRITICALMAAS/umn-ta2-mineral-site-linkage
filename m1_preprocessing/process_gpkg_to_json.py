@@ -9,7 +9,6 @@ import pandas as pd
 import fiona
 from fiona.model import to_dict
 
-
 # TA4 gpkg schema 
 # https://github.com/DARPA-CRITICALMAAS/ta1-geopackage/blob/47f585a0386dd5db3e7a9d96cc53d1e1b4f2ce10/criticalmaas/ta1_geopackage/fixtures/03-tables.sql
 
