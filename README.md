@@ -13,11 +13,26 @@ Run the python file by entering the following code in the command line:
 ```
 python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for linking]
 ```
-The linked JSON output would be lcoated under `./outputs`.
 
-### Convert Model to MineralSiteSchema
+### Upload Raw Database to MinMod Knowledge Graph
+```
+cd m1_preprocessing
+python intralinking.py -d path/to/data/directory [-l if only using geolocation for linking]
+```
+
 
 ### Run Intralinking Model
+Use the following code if you are using mineral site data in local storage:
+```
+cd m2_intralinking
+python intralinking.py -d path/to/data/directory [-l if only using geolocation for linking]
+```
+
+Use the following code if you are using mineral site data on the knowledge graph:
+```
+cd m3_interlinking
+python intralinking.py [-l if only using geolocation for linking]
+```
 
 ### Run Interlinking Model
 
@@ -28,14 +43,22 @@ The linked JSON output would be lcoated under `./outputs`.
 |
 |-- m0_loading_and_saving
 |   |-- loading_local_data.py               # Formats table data into the format of mineral site schema
+|   |-- loading_kg_data.py
+|   |-- save_to_geojson_output.py
+|   |-- save_to_json_output.py
 |
 |-- m1_preprocessing
+|   |-- process_gpkg_to_json.py
+|   |-- process_rawdb_to_schema.py
 |
 |-- m2_intralinking
+|   |-- intralinking.py
 |   |-- location_based_intralinking.py
 |   |-- text_based_intralinking.py
 |
 |-- m3_interlinking
+|   |-- interlinking.py
+|   |-- location_based_intralinking.py
 |
 |-- m4_postprocessing
 |
@@ -43,40 +66,6 @@ The linked JSON output would be lcoated under `./outputs`.
 |   |-- crs.pkl                             # List of coordinate reference systems (CRS)
 
 ```
-<!-- ```
-./minelink
-|-- __init__.py
-|-- __main__.py
-|
-|-- m0_load_input
-|   |-- load_data.py                        # Load all mineral site databases that is present in the user-inputted directory
-|   |-- save_ckpt.py                        # Saves intermediate results (e.g. intralinking outputs, processed dictionaries) in the 'temporary' folder
-|
-|-- m1_input_preprocessing
-|   |-- identify_columns.py                 # Identifies necessary attributes (e.g. unique ID, name, lat/long) from each database
-|   |-- preprocess_dataframe.py             # Extracts parts required for the linking procedure from each database
-|   |-- preprocess_dictionary.py            # 
-|   |-- preprocess_input.py                 # Initiates the preprocessing step
-|
-|-- m2_intralinking
-|   |-- create_intra_representation.py      # Creates a location and text representation of the intragrouped results
-|   |-- intralink.py                        # Initiates intralinking
-|   |-- location_based.py                   # Completes linking based on geolocation
-|   |-- text_based.py                       # Completes linking based on textual attributes
-|
-|-- m3_interlinking
-|   |-- interlink.py                        # Initiates interlinking
-|   |-- overlapping_region.py               # Completes linking based on geolocation
-|
-|-- m4_postprocessing
-|   |-- postprocess_dataframe.py            # Formats the linked result into the format required by the schema
-|
-|-- m5_save_output
-|   |-- remove_ckpt.py                      # Removes all checkpoints that were made during itermediate processes
-|   |-- save_output.py                      # Saves the output as a compiled JSON file (schema form) and GroupID appended GEOJSON file
-|
-|-- m6_testing
-``` -->
 
 ### Parameters
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
