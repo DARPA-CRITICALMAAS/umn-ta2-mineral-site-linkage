@@ -67,7 +67,7 @@ python intralinking.py [-l if only using geolocation for linking]
 
 ```
 
-### Parameters
+<!-- ### Parameters
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
 
 | Name | Description | Value |
@@ -77,4 +77,4 @@ The following portion lists all the parameters that are used in the pipeline. Th
 | `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
 | `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 |
 | `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
-| `EMBEDDING_RATIO2` | Ratio of Commodity Embedding | 0.29 |
+| `EMBEDDING_RATIO2` | Ratio of Commodity Embedding | 0.29 | -->
