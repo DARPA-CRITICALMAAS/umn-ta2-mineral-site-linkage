@@ -42,10 +42,10 @@ python intralinking.py [-l if only using geolocation for linking]
 |-- fusemine.py
 |
 |-- m0_loading_and_saving
-|   |-- loading_local_data.py               # Formats table data into the format of mineral site schema
-|   |-- loading_kg_data.py
-|   |-- save_to_geojson_output.py
-|   |-- save_to_json_output.py
+|   |-- loading_local_data.py               # Loads the data available on the user local storage
+|   |-- loading_kg_data.py                  # Loads the data available on the knowledge graph
+|   |-- save_to_geojson_output.py           # Saves the output as a geojson file that can plotted on a GIS software
+|   |-- save_to_json_output.py              # Saves the output as a json file that can be loaded on the knowledge graph
 |
 |-- m1_preprocessing
 |   |-- process_gpkg_to_json.py
