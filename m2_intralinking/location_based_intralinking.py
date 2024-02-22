@@ -15,6 +15,8 @@ def geolocation_based_linking(pl_mineralsite):
     """
     Links records within a database based on the provided geolocation.
     """
+
+    # TODO: Need to check what the pl_mineralsite would look like and append the HDBSCAN portion
     epsilon = config['buffer.values']['INTRALINK_BUFFER']
 
     df_mineralsite = pl_mineralsite.to_pandas()
