@@ -67,14 +67,14 @@ python intralinking.py [-l if only using geolocation for linking]
 
 ```
 
-<!-- ### Parameters
-The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
+### Parameters
+The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.ini` file.
 
 | Name | Description | Value |
 | --- | --- | --- |
-| `INTRALINK_BOUNDARY` | Intralink Boundary | 0.05 (kilometers) |
+| `INTRALINK_BOUNDARY` | Intralink Boundary | 0.5 (kilometers) |
 | `INTERLINK_BUFFER` | Interlink Buffer | 15 (meters) |
 | `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
 | `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 |
-| `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
+<!-- | `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
 | `EMBEDDING_RATIO2` | Ratio of Commodity Embedding | 0.29 | -->
