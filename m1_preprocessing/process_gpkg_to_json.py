@@ -15,30 +15,34 @@ from fiona.model import to_dict
 def main(args):
     gpkg_files = glob.glob(os.path.join(args.input_gpkg_path, "*.gpkg"))
 
+    entire_df = pd.DataFrame()
     for gpkg_file in gpkg_files:
         point_geom_df = gpd.read_file(gpkg_file, layer='point_feature')
         point_type_df = gpd.read_file(gpkg_file, layer='point_type')
         point_type_df = point_type_df.rename(columns={'id': 'type_id'})
 
         merged_df = pd.merge(point_geom_df, point_type_df[['type_id','description']], how='left', left_on='type', right_on='type_id')
-
-        if not 'quarry' in merged_df['description'].unique():
+        merged_df = merged_df[merged_df['description'].isin(['quarry','mine_shaft','mine_tunnel'])]
+        
+        if merged_df.empty:
             continue
 
-        merged_df = merged_df[merged_df['description']=='quarry']
+        merged_df['id'] = merged_df['id'] + "_"+ merged_df['description']
         merged_df = merged_df[['map_id','id','geometry']]
-        merged_df = merged_df.rename(columns={'map_id': 'source_id','id': 'record_id','geometry':'location_info'})
-        merged_df['location_info'] = merged_df['location_info'].apply(lambda x: dict({'geometry': f'POINT ({x[0].x} {x[0].y})','crs':'EPSG:3857'}))
-        
-        out_dict = merged_df.to_dict(orient='records')
+        entire_df = pd.concat([entire_df, merged_df], ignore_index=True)
 
-        with open(os.path.join(args.output_dir, gpkg_file.split('/')[-1][:-5]+'.json'), 'w') as f:
-            json.dump({"MineralSite": out_dict}, f, indent=4, default=str)
+    entire_df = entire_df.rename(columns={'map_id': 'source_id','id': 'record_id','geometry':'location_info'})
+    entire_df['location_info'] = entire_df['location_info'].apply(lambda x: dict({'geometry': f'POINT ({x[0].x} {x[0].y})','crs':'EPSG:3857'}))
+    
+    out_dict = entire_df.to_dict(orient='records')
+
+    with open(os.path.join(args.output_path, 'ta1_point.json'), 'w') as f:
+        json.dump({"MineralSite": out_dict}, f, indent=4, default=str)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ta1_ta2_pt')
     parser.add_argument('--input_gpkg_path', type=str, default='./gpkg/', help='input path for gpkg files')
-    parser.add_argument('--output_dir', type=str, default='./ta1_output/', help='output path')
+    parser.add_argument('--output_path', type=str, default='./ta1_output/', help='output path')
 
     args = parser.parse_args()
     main(args)
