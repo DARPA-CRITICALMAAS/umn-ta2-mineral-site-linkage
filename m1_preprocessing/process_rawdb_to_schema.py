@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import argparse
+import configparser
 
 import pickle5 as pickle
 import regex as re
@@ -9,9 +10,12 @@ import polars as pl
 import polars.selectors as cs
 from sentence_transformers import SentenceTransformer, util
 
-from m0_loading_and_saving.load_local_data import *
+from m0_loading_and_saving.load_local_data import open_local_directory
 from m0_loading_and_saving.save_to_json_output import *
+from m0_loading_and_saving.save_to_geojson_output import save_mineralsite_output_geojson
 
+# Initializing logging file for preprocessing
+logging.basicConfig(filename='fusemine_preprocess.log', format='%(levelname)s:%(message)s', level=logging.INFO)
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def identify_id_attribute(pl_mineralsite):
@@ -19,7 +23,8 @@ def identify_id_attribute(pl_mineralsite):
     Identifies the attribute (column) that is representing the unique ID of the mineral site record.
     If there is no unique ID, it will provide a number for the mineral site
 
-    : params: pl_mineralsite
+    : param: pl_mineralsite = 
+    : return: 
     """
 
     # TODO: The site name is considered to be unique for USMIN. Possibly make it purely rely on attribute identification?
@@ -96,7 +101,11 @@ def identify_name_attribute(pl_mineralsite):
 
 def identify_geolocation_attribute(pl_mineralsite):
     """
-    
+    Identifies the attribute that is representing the latitude and longitude of the mineral site
+    If there is no attributes representing such, it will return a None item
+
+    : params: pl_mineralsite: polars dataframe of all the records from the mineral site data
+    : return: dict_text_loc: dictionary consisting
     """
 
     latitude_defintion = ""
@@ -107,7 +116,8 @@ def identify_textlocation_attribute(pl_mineralsite):
     """
     Identifies the attribute that is representing the country and/or state of the mineral site
 
-    : params: pl_mineralsite
+    : params: pl_mineralsite: polars dataframe of all the records from the mineral site data
+    : return: dict_text_loc: dictionary consisting
     """
     dict_text_loc = {}
 
@@ -127,13 +137,30 @@ def identify_commodity_attribute(pl_mineralsite):
     return 0
 
 def main(args):
-    # TODO: need to get all the comodities that are available on the minmod kg and compare that with the input  commodity
+    logging.info(f'Preprocessing started')
+
     if args.data_dir:
         print("read from the data directory and give an polars dataframe output with all the required characteristics")
+        open_local_directory()
 
     else:
         print("get the data that are on the knowledge graph")
     print(args.data_dir)
+
+    gdb_site_data = 0
+    file_name = args.commodity
+
+    json_file_location = ''
+    logging.info(f'\tSaving to JSON file at {json_file_location}')
+    print("save to json")
+
+    if args.save_as_geojson:
+        geojson_file_location = ''
+        logging.info(f'\tSaving to JSON file at {geojson_file_location}')
+
+        save_mineralsite_output_geojson(gdb_site_data, file_name, list_path=['./'])
+
+    logging.info(f'Preprocessing ended')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Converting raw database (e.g., MRDS, USMIN) to mineral site schema format')
@@ -141,5 +168,7 @@ if __name__ == '__main__':
                         help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
     parser.add_argument('--commodity', '-c',
                         help='mineral site commodity for which needs to be reconciled')
+    parser.add_argument('--save_as_geojson', '-g',
+                        help='save output as geojson too', action='store_true')
     
     main(parser.parse_args())

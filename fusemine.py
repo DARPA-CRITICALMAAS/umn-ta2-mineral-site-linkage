@@ -3,7 +3,7 @@ import time
 import logging
 import argparse
 
-logging.basicConfig(filename='fusemine.log', format='%(levelname)s:%(message)s', level=logging.INFO)
+# logging.basicConfig(filename='fusemine.log', format='%(levelname)s:%(message)s', level=logging.INFO)
 
 def main(args):
     print("main")

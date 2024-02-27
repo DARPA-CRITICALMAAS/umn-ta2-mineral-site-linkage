@@ -1,10 +1,4 @@
 import os
-import time
-import logging
-import argparse
-
-def open_local_directory():
-    return 0
 
 def open_local_files():
     return 0
@@ -23,16 +17,18 @@ def prompt_user_for_source_name():
 
     return 0
 
-prompt_user_for_source_name()
-
-# def main(args):
-#     print("main")
-
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
-#     parser.add_argument('--data_dir', '-d',
-#                         help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
-#     parser.add_argument('--auto-upload-to-kg', '-a',
-#                         help='automatically upload formatted local data to minmod knowledge graph', action='store_true')
+def open_local_directory(path_directory:str):
+    """
     
-#     main(parser.parse_args())
+    : param: path_directory = 
+    """
+    list_dir_items = os.listdir(path_directory)
+
+    for i in list_dir_items:
+        file_name, file_extension = os.path.splitext(i)
+
+        print(file_name, file_extension)
+        
+    return 0
+
+open_local_directory('/home/yaoyi/pyo00005/CriticalMAAS/src/data/raw')
