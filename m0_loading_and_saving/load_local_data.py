@@ -1,34 +1,130 @@
 import os
+import shutil
+import configparser
 
-def open_local_files():
-    return 0
+import regex as re
+import polars as pl
+import geopandas as gpd
+import pickle5 as pickle
 
-def prompt_user_for_source_name():
-    file_name = 'MRDS.csv'
-    name_estimate = 'MRDS'
+config = configparser.ConfigParser()
+config.read('../params.ini')
+path_params = config['directory.paths']
 
-    print(f'Is {name_estimate} an appropriate source name of {file_name}?')
-    source_name = input('Enter Y for yes, or a different source name: ').lower()
+def prompt_user_for_source_name(original_filename:str, estimated_source_name:str):
+    """
+    Prompts the user to check the source name of the input data
 
-    if source_name != 'y':
-        name_estiamte = source_name
+    : param: original_filename = original filename including its extension
+    : param: estimated_source_name = estimated source name (i.e., filename without the extension)
+    : return: actual_source_name = actual source name (either the estimated name or the newly inputted name of the source)
+    """
+    print(f'Is \'{estimated_source_name}\' an appropriate source name of \'{original_filename}\'?')
+    actual_source_name = input("Enter Y for yes, or a different source name: ").upper()
 
-    print(source_name)
+    if actual_source_name == 'Y':
+        actual_source_name = estimated_source_name
 
-    return 0
+    return actual_source_name
+
+def extract_definition_from_df(pl_original_dictionary):
+    """
+    Extracts the column representing the label and defintion from the data dictionary
+
+    : param: pl_dictionary = polars dataframe of the original data dictionary
+    : return: dict_dictionary = dictionary that maps the attribute label to the attribution defintion
+    """
+    dictionary_columns = pl_original_dictionary.columns
+
+    column_label = ''
+    column_definition = ''
+
+    for i in dictionary_columns:
+        if re.search('descri', i.lower()) or re.search('defin', i.lower()):
+            column_definition = i
+        elif re.search('label', i.lower()) or re.search('name', i.lower()):
+            column_label = i
+
+    pl_extracted_dictionary = pl_original_dictionary.select(
+        label = pl.col(column_label).str.strip_chars(),
+        definition = pl.col(column_definition).str.strip_chars(),
+    )
+
+    dict_dictionary = dict(zip(pl_extracted_dictionary['label'], pl_extracted_dictionary['definition']))
+
+    return dict_dictionary
+
+def open_local_files(path_directory:str, file_name:str, file_extension:str):
+    """
+    Reads the local file and converts it to a polars dataframe
+
+    : param: path_directory = directory where the raw data files are located in
+    : param: file_name = name of the raw data file
+    : param: file_extension = type/extension of the data file (e.g., .csv, .xlsx, .json)
+    : return: pl_data = polars dataframe of raw mineral site rec ord
+    """
+    path_file = os.path.join(path_directory, file_name+file_extension)
+
+    if file_extension == '.csv':
+        pl_data = pl.read_csv(path_file, encoding='utf8-lossy')
+    
+    elif file_extension == '.pkl':
+        with open(path_file, 'rb') as handle:
+            pl_data = pickle.load(handle)
+    
+    elif file_extension == '.xls' or file_extension == 'xlsx':
+        pl_data = pl.read_excel(
+            source=path_file,
+            engine='openpyxl',
+        )
+
+    elif file_extension == '.json':
+        pl_data = pl.read_json(path_file)
+
+    elif file_extension == '.gdb':
+        gpd_data = gpd.read_file(
+            path_file, 
+            driver="OpenFileGDB"
+        )
+        # TODO: compress down to a polars file by removing the geometry information
+        pl_data = gpd_data
+    
+    return pl_data
 
 def open_local_directory(path_directory:str):
     """
-    
-    : param: path_directory = 
-    """
-    list_dir_items = os.listdir(path_directory)
+    Opens the local directory that is passed in as part of the input and stores all the files as pickle file in the checkpoint directory
+    Location of the temporary directory can be controlled by modifying the 'PATH_CHECKPOINT_DIR' of the params file
 
-    for i in list_dir_items:
+    : param: path_directory = directory where the raw data files are located in
+    """
+    path_ckpt_directory = path_params['PATH_CHECKPOINT_DIR']
+
+    if not os.path.exists(path_ckpt_directory):
+        os.makedirs(path_ckpt_directory)
+
+    # list_unique_source_names = []       # TODO: Make it so that the pipeline can deal with multiple datasets that have the same source name
+    list_directory_items = os.listdir(path_directory)
+
+    for i in list_directory_items:
         file_name, file_extension = os.path.splitext(i)
 
-        print(file_name, file_extension)
-        
-    return 0
+        # TODO: Deal with case where there is nested directories
 
-open_local_directory('/home/yaoyi/pyo00005/CriticalMAAS/src/data/raw')
+        if re.search('dict', file_name):
+            source_name = re.sub('dict|[^A-Za-z0-9]', '', file_name)
+            file_name = 'dict_' + source_name
+
+            # If the term 'dict' is available in the file_name it is considered as a dictionary file and stored as a python dictionary type in the checkpoint folder
+            pl_dictionary = open_local_files(path_directory, file_name, file_extension)
+            dict_dictionary = extract_definition_from_df(pl_dictionary)
+
+            with open(os.path.join(path_ckpt_directory, file_name+file_extension), 'wb') as handle:
+                pickle.dump(dict_dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            continue
+        
+        pl_mineralsite = open_local_files(path_directory, file_name, file_extension)
+        source_name = prompt_user_for_source_name(file_name+file_extension, file_name)
+        
+        with open(os.path.join(path_ckpt_directory, source_name+file_extension), 'wb') as handle:
+            pickle.dump(pl_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)

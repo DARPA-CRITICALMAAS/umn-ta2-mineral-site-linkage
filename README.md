@@ -40,6 +40,7 @@ python intralinking.py [-l if only using geolocation for linking]
 ```
 ./
 |-- fusemine.py
+|-- params.ini
 |
 |-- m0_loading_and_saving
 |   |-- loading_local_data.py               # Loads the data available on the user local storage
@@ -49,18 +50,16 @@ python intralinking.py [-l if only using geolocation for linking]
 |
 |-- m1_preprocessing
 |   |-- process_gpkg_to_json.py
-|   |-- process_rawdb_to_schema.py
+|   |-- process_rawdb_to_schema.py          # Processes the raw database available in the local directory to a local schema format
 |
 |-- m2_intralinking
-|   |-- intralinking.py
-|   |-- location_based_intralinking.py
-|   |-- text_based_intralinking.py
+|   |-- intralinking.py                     # 
+|   |-- location_based_intralinking.py      #
+|   |-- text_based_intralinking.py          #
 |
 |-- m3_interlinking
-|   |-- interlinking.py
-|   |-- location_based_intralinking.py
-|
-|-- m4_postprocessing
+|   |-- interlinking.py                     #
+|   |-- location_based_intralinking.py      #
 |
 |-- resource
 |   |-- crs.pkl                             # List of coordinate reference systems (CRS)

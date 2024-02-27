@@ -15,7 +15,7 @@ from m0_loading_and_saving.save_to_json_output import *
 from m0_loading_and_saving.save_to_geojson_output import save_mineralsite_output_geojson
 
 # Initializing logging file for preprocessing
-logging.basicConfig(filename='fusemine_preprocess.log', format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(filename='fusemine_preprocess.log', format='%(asctime)s - %(levelname)s:%(message)s', level=logging.INFO)
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def identify_id_attribute(pl_mineralsite):
