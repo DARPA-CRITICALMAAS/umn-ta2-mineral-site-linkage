@@ -82,17 +82,11 @@ def load_kg():
         'ms'
     ).agg(
         [pl.all()]
-    ).drop(
-        'ms'
     ).select(
         pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
     )
 
-    length = pl_data.shape[0]
-    complete_list = range(1, length+1)
-
-    mss_total = pl_data.with_columns(
-        idx = 'mss_' + pl.Series(complete_list).cast(pl.Utf8),
+    pl_mineralsite = pl_data.with_columns(
         crs = pl.when(
             pl.col('crs') == 'null'
         ).then(
@@ -101,3 +95,5 @@ def load_kg():
             pl.col('crs')
         )
     )
+
+    return pl_mineralsite

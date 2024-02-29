@@ -32,7 +32,7 @@ def extract_definition_from_df(pl_original_dictionary):
     Extracts the column representing the label and defintion from the data dictionary
 
     : param: pl_dictionary = polars dataframe of the original data dictionary
-    : return: dict_dictionary = dictionary that maps the attribute label to the attribution defintion
+    : return: dict_attribute = dictionary that maps the attribute label to the attribution defintion
     """
     dictionary_columns = pl_original_dictionary.columns
 
@@ -50,9 +50,9 @@ def extract_definition_from_df(pl_original_dictionary):
         definition = pl.col(column_definition).str.strip_chars(),
     )
 
-    dict_dictionary = dict(zip(pl_extracted_dictionary['label'], pl_extracted_dictionary['definition']))
+    dict_attribute = dict(zip(pl_extracted_dictionary['label'], pl_extracted_dictionary['definition']))
 
-    return dict_dictionary
+    return dict_attribute
 
 def open_local_files(path_directory:str, file_name:str, file_extension:str):
     """
@@ -96,16 +96,18 @@ def open_local_directory(path_directory:str):
     Opens the local directory that is passed in as part of the input and stores all the files as pickle file in the checkpoint directory
     Location of the temporary directory can be controlled by modifying the 'PATH_CHECKPOINT_DIR' of the params file
 
-    : param: path_directory = directory where the raw data files are located in
+    : param: path_directory = directory where the raw data files are located
+    : return: list_mineralsite_sources = list of all the mineral site database sources
     """
-    path_ckpt_directory = path_params['PATH_CHECKPOINT_DIR']
-
-    if not os.path.exists(path_ckpt_directory):
-        os.makedirs(path_ckpt_directory)
+    # Create a subdirectory to store the raw databases
+    path_raw_data_directory = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'raw')
+    if not os.path.exists(path_raw_data_directory):
+        os.makedirs(path_raw_data_directory)
 
     # list_unique_source_names = []       # TODO: Make it so that the pipeline can deal with multiple datasets that have the same source name
     list_directory_items = os.listdir(path_directory)
 
+    list_mineralsite_sources = []
     for i in list_directory_items:
         file_name, file_extension = os.path.splitext(i)
 
@@ -117,14 +119,17 @@ def open_local_directory(path_directory:str):
 
             # If the term 'dict' is available in the file_name it is considered as a dictionary file and stored as a python dictionary type in the checkpoint folder
             pl_dictionary = open_local_files(path_directory, file_name, file_extension)
-            dict_dictionary = extract_definition_from_df(pl_dictionary)
+            dict_attribute = extract_definition_from_df(pl_dictionary)
 
-            with open(os.path.join(path_ckpt_directory, file_name+file_extension), 'wb') as handle:
-                pickle.dump(dict_dictionary, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            with open(os.path.join(path_raw_data_directory, file_name+file_extension), 'wb') as handle:
+                pickle.dump(dict_attribute, handle, protocol=pickle.HIGHEST_PROTOCOL)
             continue
         
         pl_mineralsite = open_local_files(path_directory, file_name, file_extension)
         source_name = prompt_user_for_source_name(file_name+file_extension, file_name)
+        list_mineralsite_sources.append(source_name)
         
-        with open(os.path.join(path_ckpt_directory, source_name+file_extension), 'wb') as handle:
+        with open(os.path.join(path_raw_data_directory, source_name+file_extension), 'wb') as handle:
             pickle.dump(pl_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return list_mineralsite_sources

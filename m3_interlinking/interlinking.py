@@ -3,13 +3,18 @@ import time
 import logging
 import argparse
 
+from m0_loading_and_saving import load_local_data, load_kg_data, save_to_geojson_output, save_to_json_output
+from m1_preprocessing import process_rawdb_to_schema
+from m2_intralinking import intralinking
+
 # Initializing logging file for preprocessing
 logging.basicConfig(filename='fusemine_interlinking.log', format='%(levelname)s:%(message)s', level=logging.INFO)
 
 def main(args):
     logging.info(f'Interlinking process started')
 
-    print(args)
+    if args.data_dir:
+        list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
 
     logging.info(f'Interlinking process ended')
 

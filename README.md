@@ -14,24 +14,22 @@ Run the python file by entering the following code in the command line:
 python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for linking]
 ```
 
-### Upload Raw Database to MinMod Knowledge Graph
+### Process Raw Database to Mineral Site Schema Format
 ```
-cd m1_preprocessing
-python intralinking.py -d path/to/data/directory [-l if only using geolocation for linking]
+python -m m1_preprocessing.process_rawdb_to_schema.py -d path/to/data/directory [-c commodity_name] [-g]
 ```
-
 
 ### Run Intralinking Model
 Use the following code if you are using mineral site data in local storage:
 ```
 cd m2_intralinking
-python intralinking.py -d path/to/data/directory [-l if only using geolocation for linking]
+python intralinking.py [-d path/to/data/directory] [-l if only using geolocation for linking] [-g if want to save file also as a geojson output]
 ```
 
 Use the following code if you are using mineral site data on the knowledge graph:
 ```
 cd m3_interlinking
-python intralinking.py [-l if only using geolocation for linking]
+python intralinking.py [-l if only using geolocation for linking] [-g if want to save file also as a geojson output]
 ```
 
 ### Run Interlinking Model

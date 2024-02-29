@@ -3,8 +3,7 @@ import time
 import logging
 import argparse
 
-from m0_loading_and_saving.load_local_data import *
-from m0_loading_and_saving.load_kg_data import *
+from m0_loading_and_saving import load_local_data, load_kg_data, save_to_geojson_output, save_to_json_output
 from m2_intralinking.location_based_intralinking import *
 from m2_intralinking.text_based_intralinking import *
 
@@ -15,7 +14,9 @@ def main(args):
     logging.info(f'Intralinking process started')
 
     if args.data_dir:
-        print("need to load local data")
+        list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
+        
+
         print("need to convert it into mineral site schema format of data and upload it to the knowledge graph. need to be stored in the format of the dataframe so that it can be used by us")
     print("need to load kg data")
 
