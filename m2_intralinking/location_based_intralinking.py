@@ -55,6 +55,8 @@ def location_based_linking(pl_mineralsite):
     """
     Decides which method to use for location_based_linking.
     If there is geolocation information available by default it will perform geolocation based linking. Otherwise, it will be deposit based linking
+
+    : param: pl_mineralsite = 
     """
     try:
         pl_mineralsite['location']

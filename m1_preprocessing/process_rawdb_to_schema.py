@@ -11,7 +11,7 @@ import polars as pl
 
 from m0_loading_and_saving import load_local_data, save_to_geojson_output, save_to_json_output
 
-from m1_preprocessing.extract_attributes_from_db import *
+from m1_preprocessing.extract_attributes_from_db import map_attribute_labels
 # from m0_loading_and_saving.save_to_json_output import *
 # from m0_loading_and_saving.save_to_geojson_output import save_mineralsite_output_geojson
 
@@ -67,14 +67,23 @@ def create_mineralsite_schema(pl_mineralsite, dict_attributes):
     return df_processed_mineralsite
 
 def preprocessing_rawdb(list_mineralsite_sources, bool_geojson):
+    """
+    
+    : param: list_mineralsite_sources = 
+    : param: bool_geojson = 
+    : return: list_preprocessed_mineralsites = 
+    """
     raw_db_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'raw')
     preprocessed_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'preprocessed')
+
+    list_preprocessed_mineralsites = []
 
     for source_name in list_mineralsite_sources:
         pl_mineralsite = load_local_data.open_local_files(raw_db_location, source_name, '.pkl')
         dict_attributes = load_local_data.open_local_files(raw_db_location, 'dict_'+source_name, '.pkl')
 
-        pl_processed_mineralsite = pl_mineralsite
+        pl_processed_mineralsite = map_attribute_labels(pl_mineralsite)
+        list_preprocessed_mineralsites.append(pl_processed_mineralsite)
 
         logging.info(f'\tSaving {source_name} data as JSON file to {preprocessed_location}')
         save_to_json_output.save_mineralsite_output_json(pl_processed_mineralsite, source_name, [preprocessed_location])
@@ -84,12 +93,12 @@ def preprocessing_rawdb(list_mineralsite_sources, bool_geojson):
             with open(os.path.join(preprocessed_location, source_name+'.pkl'), 'wb') as handle:
                 pickle.dump(pl_processed_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-def main(args):
-    path_rsrc_directory = path_params['PATH_RESOURCE_DIR']
+    return list_preprocessed_mineralsites
 
+def main(args):
     logging.info(f'Preprocessing started')
     list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
-    preprocessing_rawdb(list_mineralsite_sources, args.save_as_geojson)
+    list_preprocessed_mineralsites = preprocessing_rawdb(list_mineralsite_sources, args.save_as_geojson)
 
     logging.info(f'Preprocessing ended')
 

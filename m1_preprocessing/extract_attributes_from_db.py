@@ -1,17 +1,27 @@
+import configparser
+
 import regex as re
 import polars as pl
 import polars.selectors as cs
 from sentence_transformers import SentenceTransformer, util
 
+from m0_loading_and_saving.load_local_data import open_local_files
+
+config = configparser.ConfigParser()
+config.read('../params.ini')
+path_params = config['directory.paths']
+ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['threshold.values']['ATTRIBUTE_SIMILARITY_THRESHOLD'])
+
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def identify_id_attribute(pl_mineralsite):
+def identify_id_attribute(pl_mineralsite, known_mappings=None):
     """
     Identifies the attribute (column) that is representing the unique ID of the mineral site record.
     If there is no unique ID, it will provide a number for the mineral site
 
     : param: pl_mineralsite = 
-    : return: 
+    : param: known_mappings (default=None) = 
+    : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
 
     # TODO: The site name is considered to be unique for USMIN. Possibly make it purely rely on attribute identification?
@@ -34,15 +44,16 @@ def identify_id_attribute(pl_mineralsite):
         if 'id' in splitted_col_name:   # Select the attribute with the word 'id'
             return c
 
-    return False
+    return pl_mineralsite
 
-def identify_name_attribute(pl_mineralsite):
+def identify_name_attribute(pl_mineralsite, known_mappings=None):
     """
     Identifies the attribute that is representing the name and other name (i.e., name alias) of the mineral site
     If there are no name, it will be named 'Unknown'
 
     : param: pl_mineralsite
-    : return: 
+    : param: known_mappings (default=None) = 
+    : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
     name_definition = "Current name of the site"
     name_embedding = model.encode(name_definition)
@@ -83,15 +94,16 @@ def identify_name_attribute(pl_mineralsite):
 
     # col_match = np.array(name_against)[idx]
 
-    # return column_names
+    return pl_mineralsite
 
-def identify_geolocation_attribute(pl_mineralsite):
+def identify_geolocation_attribute(pl_mineralsite, dict_known_mappings=None):
     """
     Identifies the attribute that is representing the latitude and longitude of the mineral site
     If there is no attributes representing such, it will return a None item
 
     : param: pl_mineralsite: polars dataframe of all the records from the mineral site data
-    : return: dict_text_loc: dictionary consisting
+    : param: dict_known_mappings (default=None) = 
+    : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
 
     latitude_definition = "Latitude in decimal degree"
@@ -103,19 +115,22 @@ def identify_geolocation_attribute(pl_mineralsite):
     crs_definition = "Coordinate reference system"
     crs_embedding = model.encode(crs_definition)
 
-    # dict_geolocation_attributes = {
-    #     col_name: 'latitude',
-    #     col_name: 'longitude',
-    # }
+    dict_geolocation_attributes = {
+        col_name: 'latitude',
+        col_name: 'longitude',
+    }
 
-    return 0
+    dict_known_mappings.update(dict_geolocation_attributes)
 
-def identify_textlocation_attribute(pl_mineralsite):
+    return pl_mineralsite
+
+def identify_textlocation_attribute(pl_mineralsite, known_mappings=None):
     """
     Identifies the attribute that is representing the country and/or state of the mineral site
 
     : param: pl_mineralsite: polars dataframe of all the records from the mineral site data
-    : return: dict_text_loc: dictionary consisting
+    : param: known_mappings (default=None) = 
+    : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
     dict_textlocation_attributes = {}
 
@@ -125,15 +140,15 @@ def identify_textlocation_attribute(pl_mineralsite):
         elif re.search('state', i.lower()) or re.search('province', i.lower()):
             dict_textlocation_attributes[i] = 'state_or_province'
 
-    return dict_textlocation_attributes
+    return pl_mineralsite
 
-# NEEDS TO BE ADDED
-
-def identify_commodity_attribute(pl_mineralsite):
+# TODO: Update to include these three
+def identify_commodity_attribute(pl_mineralsite, known_mappings=None):
     """
     Identifies attribute(s) representing the commodity available at the mineral site
 
     : param: pl_mineralsite:
+    : param: known_mappings (default=None) = 
     : return: 
     """
     commodity_definition = "Commodities available at the mineral site"
@@ -141,14 +156,42 @@ def identify_commodity_attribute(pl_mineralsite):
 
     return 0
 
-def identify_operationtype_attribute(pl_mineralsite):
+def identify_operationtype_attribute(pl_mineralsite, known_mappings=None):
     """
     
     """
     return 0
 
-def identify_recordyear_attribute(pl_mineralsite):
+def identify_recordyear_attribute(pl_mineralsite, known_mappings=None):
     """
     
     """
     return 0
+
+####
+
+def map_attribute_labels(pl_mineralsite):
+    """
+    
+    """
+    dict_known_attribute_maps = open_local_files(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary', '.pkl')
+    known_attribute_label = list(dict_known_attribute_maps.keys())
+    known_attribute_map = list(dict_known_attribute_maps.values())
+
+    # map attribute label representing unique id as 'record_id'
+
+    # map attribute label reprepresenting site name as 'name'
+
+    # map attribut elabel representing other name as 'other_names'
+
+    # map attribute label representing longitude and latitude as 'location'
+
+    # identify available attribute labels representing textual location
+
+
+    pl_processed_mineralsite = pl_mineralsite
+    dict_attribute_map = {}
+
+    # Update the stored dictionary
+
+    return pl_processed_mineralsite
