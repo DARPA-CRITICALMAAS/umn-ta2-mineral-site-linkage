@@ -1,3 +1,5 @@
+import os
+import pickle
 import configparser
 
 import regex as re
@@ -14,13 +16,13 @@ ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['threshold.values']['ATTRIBUTE
 
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def identify_id_attribute(pl_mineralsite, known_mappings=None):
+def identify_id_attribute(pl_mineralsite, list_known_mappings:list):
     """
     Identifies the attribute (column) that is representing the unique ID of the mineral site record.
     If there is no unique ID, it will provide a number for the mineral site
 
-    : param: pl_mineralsite = 
-    : param: known_mappings (default=None) = 
+    : param: pl_mineralsite = polars dataframe of all the mineral site records
+    : param: dict_known_mappings (default=None) = dictionary consisting of previous column mapping to unique id
     : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
 
@@ -43,16 +45,21 @@ def identify_id_attribute(pl_mineralsite, known_mappings=None):
 
         if 'id' in splitted_col_name:   # Select the attribute with the word 'id'
             return c
+        
+    dict_uniqueid_attributes = {
+        col_name:' unique_id'
+    }
+    dict_known_mappings.update(dict_uniqueid_attributes)
 
-    return pl_mineralsite
+    return dict_known_mappings
 
-def identify_name_attribute(pl_mineralsite, known_mappings=None):
+def identify_name_attribute(pl_mineralsite, list_known_mappings:list):
     """
     Identifies the attribute that is representing the name and other name (i.e., name alias) of the mineral site
     If there are no name, it will be named 'Unknown'
 
     : param: pl_mineralsite
-    : param: known_mappings (default=None) = 
+    : param: dict_known_mappings (default=None) = 
     : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
     name_definition = "Current name of the site"
@@ -94,9 +101,14 @@ def identify_name_attribute(pl_mineralsite, known_mappings=None):
 
     # col_match = np.array(name_against)[idx]
 
-    return pl_mineralsite
+    dict_name_attributes = {
+        col_name:'name'
+    }
+    dict_known_mappings.update(dict_name_attributes)
 
-def identify_geolocation_attribute(pl_mineralsite, dict_known_mappings=None):
+    return dict_known_mappings
+
+def identify_geolocation_attribute(pl_mineralsite, list_known_mappings:list):
     """
     Identifies the attribute that is representing the latitude and longitude of the mineral site
     If there is no attributes representing such, it will return a None item
@@ -120,16 +132,17 @@ def identify_geolocation_attribute(pl_mineralsite, dict_known_mappings=None):
         col_name: 'longitude',
     }
 
+    # Update the stored dictionary
     dict_known_mappings.update(dict_geolocation_attributes)
 
     return pl_mineralsite
 
-def identify_textlocation_attribute(pl_mineralsite, known_mappings=None):
+def identify_textlocation_attribute(pl_mineralsite):
     """
     Identifies the attribute that is representing the country and/or state of the mineral site
 
     : param: pl_mineralsite: polars dataframe of all the records from the mineral site data
-    : param: known_mappings (default=None) = 
+    : param: dict_known_mappings (default=None) = 
     : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
     dict_textlocation_attributes = {}
@@ -140,58 +153,100 @@ def identify_textlocation_attribute(pl_mineralsite, known_mappings=None):
         elif re.search('state', i.lower()) or re.search('province', i.lower()):
             dict_textlocation_attributes[i] = 'state_or_province'
 
-    return pl_mineralsite
+    pl_mapped_mineralsite = pl_mineralsite.rename(
+        dict_textlocation_attributes
+    )
+
+    return pl_mapped_mineralsite
 
 # TODO: Update to include these three
-def identify_commodity_attribute(pl_mineralsite, known_mappings=None):
+def identify_commodity_attribute(pl_mineralsite, list_known_mappings:list):
     """
     Identifies attribute(s) representing the commodity available at the mineral site
 
     : param: pl_mineralsite:
-    : param: known_mappings (default=None) = 
+    : param: dict_known_mappings (default=None) = 
     : return: 
     """
     commodity_definition = "Commodities available at the mineral site"
     commodity_embedding = model.encode(commodity_definition)
 
-    return 0
+    dict_commodity_attributes = {
+        col_name:'commodity'
+    }
+    dict_known_mappings.update(dict_commodity_attributes)
 
-def identify_operationtype_attribute(pl_mineralsite, known_mappings=None):
+    return dict_known_mappings
+
+
+def identify_operationtype_attribute(pl_mineralsite, list_known_mappings:list):
     """
     
     """
-    return 0
+    operationtype_definition = "Current operation status of the mineral site."
+    operationtype_embedding = model.encode(operationtype_definition)
 
-def identify_recordyear_attribute(pl_mineralsite, known_mappings=None):
+    dict_operationtype_attributes = {
+        col_name:'operation_type'
+    }
+    dict_known_mappings.update(dict_operationtype_attributes)
+
+    return dict_known_mappings
+
+def identify_recordyear_attribute(pl_mineralsite, list_known_mappings:list):
     """
     
     """
-    return 0
+    recordyear_definition = "Year the mineral site record was taken"
+    recordyear_embedding = model.encode(recordyear_definition)
+
+    list_known_mappings['record_year'].append(col_name)
+
+    return list_known_mappings
 
 ####
 
-def map_attribute_labels(pl_mineralsite):
+def map_attribute_labels(pl_mineralsite, dict_attributes):
     """
     
+    : param: pl_mineralsite = polars dataframe of the mineralsite record
+    : param: dict_attributes = dictionary that gives label and its definition
+    : return: pl_processed_mineralsite = polars dataframe with the attribute label mapped to the ones we have defined
     """
     dict_known_attribute_maps = open_local_files(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary', '.pkl')
-    known_attribute_label = list(dict_known_attribute_maps.keys())
-    known_attribute_map = list(dict_known_attribute_maps.values())
 
     # map attribute label representing unique id as 'record_id'
+    list_known_recordid = dict_known_attribute_maps['record_id']
+    updated_list_known_recordid, pl_mineralsite = identify_id_attribute(pl_mineralsite, list_known_recordid)
 
-    # map attribute label reprepresenting site name as 'name'
+    # map attribute label reprepresenting site name as 'name', 'other_names'
+    list_known_name = dict_known_attribute_maps['names']
+    updated_list_known_name, pl_mineralsite = identify_name_attribute(pl_mineralsite, list_known_name)
 
-    # map attribut elabel representing other name as 'other_names'
+    # # map attribute label representing longitude and latitude as 'location'
+    # if 'location' in known_attribute_map:
+    #     print("make a list of name known mapping")
+    # identify_geolocation_attribute(pl_mineralsite, list_known_mappings:list)
 
-    # map attribute label representing longitude and latitude as 'location'
+    # # identify available attribute labels representing textual location
+    # if 'location' in known_attribute_map:
+    #     print("make a list of name known mapping")
+    # identify_textlocation_attribute(pl_mineralsite, list_known_mappings:list)
 
-    # identify available attribute labels representing textual location
+    # # identify available attribute labels representing textual location
+    # if 'operation_type' in known_attribute_map:
+    #     print("make a list of name known mapping")
+    # identify_operationtype_attribute(pl_mineralsite, list_known_mappings:list)
+
+    # if 'record_year' in known_attribute_map:
+    #     print("make a list of name known mapping")
+    # identify_recordyear_attribute(pl_mineralsite, list_known_mappings:list)
 
 
     pl_processed_mineralsite = pl_mineralsite
-    dict_attribute_map = {}
 
-    # Update the stored dictionary
+    # Storing the updated known attribute dictionary to the resource file
+    with open(os.path.join(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary.pkl'), 'wb') as handle:
+        pickle.dump(dict_known_attribute_maps, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return pl_processed_mineralsite

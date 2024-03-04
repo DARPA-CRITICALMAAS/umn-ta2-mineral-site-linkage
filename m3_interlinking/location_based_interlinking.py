@@ -16,6 +16,13 @@ def create_convex_hull_with_buffer(pl_intralinked_mineralsite):
     : param: pl_intralinked_mineralsite = 
     : return:
     """
+    # Create group name for each intralinked group
+    pl_intralinked_mineralsite = pl_intralinked_mineralsite.group_by(
+        'GroupID'
+    ).with_columns(
+        intralink_group = pl.col('source_id') + pl.lit('_g_') + pl.col('GroupID')
+    )
+
     df_intralinked_mineralsite = pl_intralinked_mineralsite.to_pandas()
     df_intralinked_mineralsite['location'] = df_intralinked_mineralsite['location'].apply(wkt.loads)
     
@@ -37,7 +44,7 @@ def create_convex_hull_with_buffer(pl_intralinked_mineralsite):
 
     return 0
 
-def compare_convex_hull_sizes():
+def compare_convex_hull_sizes(pl_mineralsite_w_convex_hull):
     return 0
 
 def location_based_linking(pl_intralinked_mineralsite):

@@ -82,9 +82,10 @@ def preprocessing_rawdb(list_mineralsite_sources, bool_geojson):
         pl_mineralsite = load_local_data.open_local_files(raw_db_location, source_name, '.pkl')
         dict_attributes = load_local_data.open_local_files(raw_db_location, 'dict_'+source_name, '.pkl')
 
-        pl_processed_mineralsite = map_attribute_labels(pl_mineralsite)
+        pl_processed_mineralsite = map_attribute_labels(pl_mineralsite, dict_attributes)
         list_preprocessed_mineralsites.append(pl_processed_mineralsite)
 
+        # Saving files to temporary (checkpoint) folder
         logging.info(f'\tSaving {source_name} data as JSON file to {preprocessed_location}')
         save_to_json_output.save_mineralsite_output_json(pl_processed_mineralsite, source_name, [preprocessed_location])
 
