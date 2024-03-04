@@ -10,3 +10,4 @@
 ### Later
 - [ ] Identify operation type
 - [ ] Identify record year
+- [ ] Change commodity to be commodity list (in MRDS) -> How?

@@ -22,10 +22,18 @@ def save_mineralsite_output_json(pl_processed_mineralsite, path_directory:str, f
     available_mineralsite_attributes = list(record_attributes & mineralsite_attributes)
     available_locationinfo_attributes = list(record_attributes & locationinfo_attributes)
 
-    df_filtered_mineralsite = pl_processed_mineralsite.select(
+    pl_filtered_mineralsite = pl_processed_mineralsite.select(
         pl.col(available_mineralsite_attributes),
         pl.struct(pl.col(available_locationinfo_attributes)),
-    ).to_pandas()
+    )
+    
+    try:
+        # If name attribute is available get the first item in the list
+        pl_filtered_mineralsite = pl_filtered_mineralsite.with_columns(
+            pl.col('name').list.get(0)
+        ).to_pandas()
+    except:
+        df_filtered_mineralsite = pl_filtered_mineralsite.to_pandas()
 
     dict_site_data = df_filtered_mineralsite.to_dict(orient='records')
     dict_site_data = {"MineralSite": dict_site_data}

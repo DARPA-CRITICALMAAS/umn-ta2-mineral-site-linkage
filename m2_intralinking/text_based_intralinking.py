@@ -1,11 +1,14 @@
 import polars as pl
 from scipy import spatial
 from itertools import combinations
+
+import torch
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+# rb_model = 
+st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def create_text_attribute_embedding():
+def create_text_attribute_embedding(struct_attributes: dict) -> list:
     return 0
 
 # def convert_to_embedding(mine_struct:dict) -> list:
