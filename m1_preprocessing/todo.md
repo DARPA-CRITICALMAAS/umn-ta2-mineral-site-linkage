@@ -2,7 +2,8 @@
 
 ### Immediate
 - [ ] Identify unique ID
-- [ ] Identify name
+- [ ] Identify name and other names
+    - [ ] Give updated mineralsite that combines these two into a list of names
 - [ ] Identify geolocation
 - [x] Identify text location
 - [ ] Identify commodity

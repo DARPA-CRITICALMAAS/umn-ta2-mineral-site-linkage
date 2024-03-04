@@ -31,6 +31,7 @@ def create_convex_hull_with_buffer(pl_intralinked_mineralsite):
         'intra_GroupID'
     ).convex_hull.buffer(interlink_params['INTERLINK_BUFFER'])
 
+    # TODO: 
     print('rename the buffer to polygon_geometry')
 
     return gpd_mineralsite
@@ -108,7 +109,17 @@ def compare_convex_hull_sizes(gpd_mineralsite_poly1, gpd_mineralsite_poly2):
 
         return pl.from_pandas(pd_interlinked_mineralsite)
 
-def location_based_linking(list_intralinked_mineralsite):
+def location_based_linking(pl_intralinked_mineralsite1, pl_intralinked_mineralsite2):
+    """
     
+    : param: pl_intralinked_mineralsite1 = 
+    : param: pl_intralinked_mineralsite2 = 
+    : return: pl_interlinked_mineralstie = 
+    """
+    gpd_mineralsite_poly1 = create_convex_hull_with_buffer(pl_intralinked_mineralsite1)
+    gpd_mineralsite_poly2 = create_convex_hull_with_buffer(pl_intralinked_mineralsite2)
 
-    return 0
+    pl_interlinked_mineralsite = compare_convex_hull_sizes(gpd_mineralsite_poly1, gpd_mineralsite_poly2)
+    del (gpd_mineralsite_poly1, gpd_mineralsite_poly2)
+
+    return pl_interlinked_mineralsite

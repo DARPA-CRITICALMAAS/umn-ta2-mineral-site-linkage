@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import pickle
 import argparse
 import configparser
 
@@ -9,36 +10,47 @@ from m1_preprocessing.process_rawdb_to_schema import preprocessing_rawdb
 from m2_intralinking.location_based_intralinking import *
 from m2_intralinking.text_based_intralinking import *
 
-# Initializing logging file for preprocessing
+# Initializing logging file for intralinking
 logging.basicConfig(filename='fusemine_intralinking.log', format='%(levelname)s:%(message)s', level=logging.INFO)
 
 config = configparser.ConfigParser()
 config.read('../params.ini')
 path_params = config['directory.paths']
 
-def intralinking(list_mineralsite_sources, bool_location_based):
+def intralinking(list_mineralsite_sources, bool_location_based, bool_geojson):
     preprocessed_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'preprocessed')
     intralinked_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'intralinked')
 
     for source_name in list_mineralsite_sources:
         pl_mineralsite = load_local_data.open_local_files(preprocessed_location, source_name, '.pkl')
 
+        if not bool_location_based:
+            print("text based linking")
+
+        pl_intralinked_mineralsite = pl_mineralsite
+
         logging.info(f'\tSaving intralinked {source_name} data as JSON file to {intralinked_location}')
+        save_to_json_output.save_mineralsite_output_json(pl_intralinked_mineralsite, intralinked_location, source_name)
+
+        if bool_geojson:
+            logging.info(f'\tSaving {source_name} data as GEOJSON file to {intralinked_location}')
+            save_to_geojson_output.save_mineralsite_output_geojson(pl_intralinked_mineralsite, intralinked_location, source_name)
+
     return 0
 
 def main(args):
     logging.info(f'Intralinking process started')
+    start_time = time.time()
 
     if args.data_dir:
         list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
         preprocessing_rawdb(list_mineralsite_sources, False)
 
-    print("need to load kg data")
+    # Need to load KG data somewhere here
 
-    if not args.use_location_base:
-        print("do text based linking")
+    intralinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson)
 
-    logging.info(f'Intralinking process ended')
+    logging.info(f'Intralinking process ended: Total run time: {time.time() - start_time}s')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
@@ -46,5 +58,7 @@ if __name__ == '__main__':
                         help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
     parser.add_argument('--use_location_base', '-l',
                         help='use location based method to link data', action='store_true')
+    parser.add_argument('--save_as_geojson', '-g',
+                        help='save output as geojson too', action='store_true')
     
     main(parser.parse_args())

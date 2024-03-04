@@ -232,3 +232,9 @@ def create_text_attribute_embedding(struct_attributes: dict) -> list:
 #     )
 
 #     return pl_total
+
+
+def text_based_linking(pl_locationlinked_mineralsites):
+    
+
+    return 0

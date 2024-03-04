@@ -16,13 +16,14 @@ ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['threshold.values']['ATTRIBUTE
 
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def identify_id_attribute(pl_mineralsite, list_known_mappings:list):
+def identify_id_attribute(pl_mineralsite, dict_attributes, list_known_mappings:list):
     """
     Identifies the attribute (column) that is representing the unique ID of the mineral site record.
     If there is no unique ID, it will provide a number for the mineral site
 
     : param: pl_mineralsite = polars dataframe of all the mineral site records
-    : param: dict_known_mappings (default=None) = dictionary consisting of previous column mapping to unique id
+    : param: dict_attributes = dictionary that gives label and its definition
+    : param: list_known_mappings = dictionary consisting of previous column mapping to unique id
     : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
 
@@ -53,13 +54,14 @@ def identify_id_attribute(pl_mineralsite, list_known_mappings:list):
 
     return dict_known_mappings
 
-def identify_name_attribute(pl_mineralsite, list_known_mappings:list):
+def identify_name_attribute(pl_mineralsite, dict_attributes, list_known_mappings:list):
     """
     Identifies the attribute that is representing the name and other name (i.e., name alias) of the mineral site
     If there are no name, it will be named 'Unknown'
 
     : param: pl_mineralsite
-    : param: dict_known_mappings (default=None) = 
+    : param: dict_attributes = dictionary that gives label and its definition
+    : param: list_known_mappings = 
     : return: pl_mineralsite: polars dataframe with modified attribute labels
     """
     name_definition = "Current name of the site"
@@ -69,7 +71,10 @@ def identify_name_attribute(pl_mineralsite, list_known_mappings:list):
     pl_string_data = pl_mineralsite.select(
         ~cs.by_dtype(pl.NUMERIC_DTYPES, pl.Boolean)
     )
-    list_string_based_attributes = pl_string_data.columns
+    set_string_based_attributes = set(list(pl_string_data.columns))
+
+    # Check if any of the attribute labels in pl_mineralsite matches ones in known mappings
+    list_attributes_known = list(set(list_known_mappings) & set_string_based_attributes)
 
 
     # pl_name = pl_data.select(
@@ -217,11 +222,11 @@ def map_attribute_labels(pl_mineralsite, dict_attributes):
 
     # map attribute label representing unique id as 'record_id'
     list_known_recordid = dict_known_attribute_maps['record_id']
-    updated_list_known_recordid, pl_mineralsite = identify_id_attribute(pl_mineralsite, list_known_recordid)
+    updated_list_known_recordid, pl_mineralsite = identify_id_attribute(pl_mineralsite, dict_attributes, list_known_recordid)
 
     # map attribute label reprepresenting site name as 'name', 'other_names'
     list_known_name = dict_known_attribute_maps['names']
-    updated_list_known_name, pl_mineralsite = identify_name_attribute(pl_mineralsite, list_known_name)
+    updated_list_known_name, pl_mineralsite = identify_name_attribute(pl_mineralsite, dict_attributes, list_known_name)
 
     # # map attribute label representing longitude and latitude as 'location'
     # if 'location' in known_attribute_map:
