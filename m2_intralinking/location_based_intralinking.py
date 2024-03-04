@@ -6,37 +6,33 @@ import configparser
 import pandas as pd
 import polars as pl
 import geopandas as gpd
+import wkt
 from sklearn.cluster import HDBSCAN, DBSCAN
 
 config = configparser.ConfigParser()
 config.read('../params.ini')
 
-def geolocation_based_linking(pl_mineralsite):
+def geolocation_based_linking(gpd_mineralsite):
     """
     Links records within a database based on the provided geolocation.
 
-    : param: pl_mineralsite = 
+    : param: gpd_mineralsite = 
     : return: pl_loc_linked_mineralsite = 
     """
-    logging.info(f'\tInterlinking process started')
-    start_time = time.time()
-
     # TODO: Need to check what the pl_mineralsite would look like and append the HDBSCAN portion
     epsilon = config['buffer.values']['INTRALINK_BUFFER']
 
-    df_mineralsite = pl_mineralsite.to_pandas()
+    gpd_mineralsite['longitude'] = gpd_mineralsite.location.x
+    gpd_mineralsite['latitude'] = gpd_mineralsite.location.x
 
-    gpd_geom = gpd.GeoDataFrame(
-        df_mineralsite, geometry = gpd.points_from_xy(
-            df_mineralsite['longitude'], 
-            df_mineralsite['latitude'], 
-            crs='WGS84')
-    ).to_crs(epsg=3857)
+    coords = gpd_mineralsite[['longitude', 'latitude']].to_numpy()
+    clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
+    list_cluster_labels = clusters.labels_
 
-    pl_loc_linked_mineralsite = df_mineralsite
-
-    # Time logging
-    logging.info(f'\tLocation based intralinking ended - Run Time: {time.time() - start_time}')
+    pd_mineralsite = pd.DataFrame(gpd_mineralsite)
+    pl_loc_linked_mineralsite = pl.from_pandas(pd_mineralsite).with_columns(
+        GroupID = pl.Series(list_cluster_labels).cast(pl.Int64)
+    )
 
     return pl_loc_linked_mineralsite
 
@@ -59,10 +55,19 @@ def location_based_linking(pl_preprocessed_mineralsite):
     : param: pl_mineralsite = 
     """
     try:
-        pl_preprocessed_mineralsite['location']
-        pl_loc_linked_mineralsite = geolocation_based_linking(pl_preprocessed_mineralsite)
+        df_preprocessed_mineralsite = pl_preprocessed_mineralsite.to_pandas()
+        df_preprocessed_mineralsite['location'] = df_preprocessed_mineralsite['location'].apply(wkt.loads)
+
+        gpd_mineralsite = gpd.GeoDataFrame(
+            df_preprocessed_mineralsite, 
+            geometry='location', 
+            crs='WGS84'
+        )
+
+        pl_loc_linked_mineralsite = geolocation_based_linking(gpd_mineralsite)
+
+
     except:
         pass
-
         # TODO: Will be available once deposit based linking function is completed
         # deposit_based_linking(pl_mineralsite)
