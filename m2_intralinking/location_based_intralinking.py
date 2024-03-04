@@ -23,7 +23,7 @@ def geolocation_based_linking(gpd_mineralsite):
     epsilon = config['buffer.values']['INTRALINK_BUFFER']
 
     gpd_mineralsite['longitude'] = gpd_mineralsite.location.x
-    gpd_mineralsite['latitude'] = gpd_mineralsite.location.x
+    gpd_mineralsite['latitude'] = gpd_mineralsite.location.y
 
     coords = gpd_mineralsite[['longitude', 'latitude']].to_numpy()
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)

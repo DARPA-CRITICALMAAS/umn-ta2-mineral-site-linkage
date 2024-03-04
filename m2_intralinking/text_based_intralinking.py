@@ -8,7 +8,38 @@ from sentence_transformers import SentenceTransformer
 # rb_model = 
 st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def create_text_attribute_embedding(struct_attributes: dict) -> list:
+def create_text_attribute_embedding(struct_attributes: dict) -> dict:
+    name_attributes = struct_attributes['name']
+    commodity_attributes = struct_attributes['commodities']
+
+    # name attributes is going to be a list of  names => output a list[list[f64]]
+    # commodities attributes is going to be concatenated string list[f64]
+
+    dict_attribute_embeddings = {
+        'names':st_model.encode(name_attributes),
+        'commodities':st_model.encode(commodity_attributes)
+    }
+
+    return dict_attribute_embeddings
+
+def compare_text_attribute_similarity(struct_attribute_embedding: dict) -> dict:
+    name_embdding = struct_attribute_embedding['name']
+    commodity_embedding = struct_attribute_embedding['commodities']
+
+    # TODO: name is a 3d list, convert it to series of 2d lists and compare all combinations within them
+
+    try:
+        print("compare name embeddings")
+    except:
+        pass
+
+    try:
+        print("compare commodity embedding")
+    except:
+        pass
+
+    # commodity_embdding just do commodity embedding comparison do it in try catch
+
     return 0
 
 # def convert_to_embedding(mine_struct:dict) -> list:
@@ -235,6 +266,18 @@ def create_text_attribute_embedding(struct_attributes: dict) -> list:
 
 
 def text_based_linking(pl_locationlinked_mineralsites):
-    
+    pl_locationlinked_mineralsites = pl_locationlinked_mineralsites.with_columns(
+        attribute_struct = pl.struct(pl.col(['name', 'commodity'])).map_elements(create_text_attribute_embedding)
+    ).drop(
+        'name', 'commodity'
+    )
+
+    pl_locationgrouped_mineralsite = pl_locationlinked_mineralsites.group_by(
+        'GroupID'
+    ).agg(
+        [pl.all()]
+    ).with_columns(
+        text_based_grouping = pl.col('attribute_struct').map_elements(compare_text_attribute_similarity)
+    )
 
     return 0
