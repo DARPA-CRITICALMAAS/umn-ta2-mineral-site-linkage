@@ -43,10 +43,10 @@ def preprocessing_rawdb(list_mineralsite_sources, bool_geojson):
         logging.info(f'\tSaving {source_name} data as JSON file to {preprocessed_location}')
         save_to_json_output.save_mineralsite_output_json(pl_processed_mineralsite, source_name, [preprocessed_location])
 
-        # if bool_geojson:
-        #     logging.info(f'\tSaving {source_name} data as GEOJSON file to {preprocessed_location}')
-        #     with open(os.path.join(preprocessed_location, source_name+'.pkl'), 'wb') as handle:
-        #         pickle.dump(pl_processed_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        if bool_geojson:
+            logging.info(f'\tSaving {source_name} data as GEOJSON file to {preprocessed_location}')
+            with open(os.path.join(preprocessed_location, source_name+'.pkl'), 'wb') as handle:
+                pickle.dump(pl_processed_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return list_preprocessed_mineralsites
 

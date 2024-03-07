@@ -16,7 +16,7 @@ python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for
 
 ### Process Raw Database to Mineral Site Schema Format
 ```
-python -m m1_preprocessing.process_rawdb_to_schema.py -d path/to/data/directory [-c commodity_name] [-g]
+python fusemine.py [-d path/to/data/directory]
 ```
 
 ### Run Intralinking Model

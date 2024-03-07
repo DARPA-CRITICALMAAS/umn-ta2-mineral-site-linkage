@@ -10,6 +10,7 @@ st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
 def create_text_attribute_embedding(struct_attributes: dict) -> dict:
     """
+    Converts the attribute value into textual embedding for every attribute that is available
 
     : param: struct_attributes = dictionary of extracted attributes for each mineral site record
     : return: dict_attribute_embeddings = dictionary of extracted attribute values converted into text embeddings
@@ -29,22 +30,23 @@ def compare_text_attribute_similarity(struct_attribute_embeddings: dict) -> dict
     # TODO: name is a 3d list, convert it to series of 2d lists and compare all combinations within them
 
     len_location_linked_groups = list(range(len(struct_attribute_embeddings[0])))
+    idx_combinations = combinations(len_location_linked_groups, 2)
 
     # for c in combinations(len_location_linked_groups, 2):
-        
-    try:
-        list_name_embedding = struct_attribute_embeddings['name']
-        print("compare name embeddings")
-    except:
-        pass
 
-    try:
-        list_commodity_embedding = struct_attribute_embeddings['commodities']
-        print("compare commodity embedding")
-    except:
-        pass
+    for attribute in struct_attribute_embeddings.keys():
+        list_attribute_embedding = struct_attribute_embeddings[attribute]
+        for c in idx_combinations:
+            attribute_similarity = 1 - spatial.distance.cosine(list_attribute_embedding[c[0]], list_attribute_embedding[c[1]])
 
-    return 0
+    mapping_dict = {}
+
+    list_intra_group = []
+    for i in list(mapping_dict.values()):
+        group_code = str(struct_attribute_embeddings['GroupID'] + '_' + str(i))
+        list_intra_group.append(group_code)
+
+    return {'intra_GroupID': list_intra_group}
 
 # def get_cosine_similarity(dataset: dict) -> dict:
 #     idx_list = dataset['idx']
