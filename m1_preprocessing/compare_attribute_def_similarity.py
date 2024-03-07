@@ -5,8 +5,8 @@ from sentence_transformers import SentenceTransformer, util
 from m0_loading_and_saving.load_local_data import open_local_files
 
 config = configparser.ConfigParser()
-config.read('../params.ini')
-ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['threshold.values']['ATTRIBUTE_SIMILARITY_THRESHOLD'])
+config.read('./params.ini')
+ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['preprocessing.params']['ATTRIBUTE_DEFINITION_THRESHOLD'])
 
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 

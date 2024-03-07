@@ -1,14 +1,13 @@
 import os
-import shutil
+import pickle
 import configparser
 
 import regex as re
 import polars as pl
 import geopandas as gpd
-import pickle5 as pickle
 
 config = configparser.ConfigParser()
-config.read('../params.ini')
+config.read('./params.ini')
 path_params = config['directory.paths']
 
 def prompt_user_for_source_name(original_filename:str, estimated_source_name:str):
@@ -40,7 +39,9 @@ def extract_definition_from_df(pl_original_dictionary):
     column_definition = ''
 
     for i in dictionary_columns:
-        if re.search('descri', i.lower()) or re.search('defin', i.lower()):
+        if re.search('short', i.lower()):
+            short_definition = i
+        elif re.search('descri', i.lower()) or re.search('defin', i.lower()):
             column_definition = i
         elif re.search('label', i.lower()) or re.search('name', i.lower()):
             column_label = i
@@ -121,7 +122,7 @@ def open_local_directory(path_directory:str):
             pl_dictionary = open_local_files(path_directory, file_name, file_extension)
             dict_attribute = extract_definition_from_df(pl_dictionary)
 
-            with open(os.path.join(path_raw_data_directory, file_name+file_extension), 'wb') as handle:
+            with open(os.path.join(path_raw_data_directory, file_name+'.pkl'), 'wb') as handle:
                 pickle.dump(dict_attribute, handle, protocol=pickle.HIGHEST_PROTOCOL)
             continue
         

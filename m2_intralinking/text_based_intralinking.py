@@ -9,38 +9,89 @@ from sentence_transformers import SentenceTransformer
 st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
 def create_text_attribute_embedding(struct_attributes: dict) -> dict:
-    name_attributes = struct_attributes['name']
-    commodity_attributes = struct_attributes['commodities']
+    """
 
-    # name attributes is going to be a list of  names => output a list[list[f64]]
-    # commodities attributes is going to be concatenated string list[f64]
-
-    dict_attribute_embeddings = {
-        'names':st_model.encode(name_attributes),
-        'commodities':st_model.encode(commodity_attributes)
-    }
+    : param: struct_attributes = dictionary of extracted attributes for each mineral site record
+    : return: dict_attribute_embeddings = dictionary of extracted attribute values converted into text embeddings
+    """
+    dict_attribute_embeddings = struct_attributes
+    for key, value in dict_attribute_embeddings.item():
+        dict_attribute_embeddings[key] = st_model.encode(value)
 
     return dict_attribute_embeddings
 
-def compare_text_attribute_similarity(struct_attribute_embedding: dict) -> dict:
-    name_embdding = struct_attribute_embedding['name']
-    commodity_embedding = struct_attribute_embedding['commodities']
-
+def compare_text_attribute_similarity(struct_attribute_embeddings: dict) -> dict:
+    """
+    
+    : param: struct_attribute_embeddings = dictionary of extracted attribute values converted into text embeddings
+    : return: dict_attribute_embeddings = 
+    """
     # TODO: name is a 3d list, convert it to series of 2d lists and compare all combinations within them
 
+    len_location_linked_groups = list(range(len(struct_attribute_embeddings[0])))
+
+    # for c in combinations(len_location_linked_groups, 2):
+        
     try:
+        list_name_embedding = struct_attribute_embeddings['name']
         print("compare name embeddings")
     except:
         pass
 
     try:
+        list_commodity_embedding = struct_attribute_embeddings['commodities']
         print("compare commodity embedding")
     except:
         pass
 
-    # commodity_embdding just do commodity embedding comparison do it in try catch
-
     return 0
+
+# def get_cosine_similarity(dataset: dict) -> dict:
+#     idx_list = dataset['idx']
+#     name_embedding_list = dataset['name_embedding']
+#     commod_embedding_list = dataset['commodity_embedding']
+#     # other_embedding_list = dataset['other_embedding']
+
+#     print("here")
+
+#     len_input = list(range(len(name_embedding_list)))
+#     list_cosine_similarity = []
+
+#     mapping_dict = {key: None for key in idx_list}
+#     cosine_dict = {key: 0 for key in idx_list}
+
+#     for c in combinations(len_input, 2):
+#         name_similarity = 1 - spatial.distance.cosine(name_embedding_list[c[0]], name_embedding_list[c[1]])
+#         if commod_embedding_list[c[0]]:
+#             commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
+
+#         # other_similarity = 1 - spatial.distance.cosine(other_embedding_list[c[0]], other_embedding_list[c[1]])
+
+#         # similarity = EMBEDDING_RATIO1 * name_similarity + (EMBEDDING_RATIO2) * commod_similarity + (1-EMBEDDING_RATIO1 - EMBEDDING_RATIO2) * other_similarity
+#             similarity = EMBEDDING_RATIO1 * name_similarity + (1-EMBEDDING_RATIO1) * commod_similarity
+#         else: 
+#             similarity = name_similarity
+#         list_cosine_similarity.append(similarity)
+
+#         idx_first = idx_list[c[0]]
+#         idx_second = idx_list[c[1]]
+
+#         if mapping_dict[idx_first] is None:
+#             mapping_dict[idx_first] = c[0]
+
+#         if(similarity > THRESHOLD_SIMILARITY):
+#             if(similarity > cosine_dict[idx_second]):
+#                 mapping_dict[idx_second] = mapping_dict[idx_first]
+#                 cosine_dict[idx_second] = similarity
+#         elif mapping_dict[idx_second] is None:
+#             mapping_dict[idx_second] = c[1]
+
+#     new_group = []
+#     for i in list(mapping_dict.values()):
+#         group_code = str(dataset['GroupID']) + '_' + str(i)
+#         new_group.append(group_code)
+
+#     return {'idx': list(mapping_dict.keys()), 'new_group': new_group}
 
 # def convert_to_embedding(mine_struct:dict) -> list:
 #     mine_name = mine_struct['input']
@@ -131,52 +182,7 @@ def compare_text_attribute_similarity(struct_attribute_embedding: dict) -> dict:
     
 #     return pl_embeddings
 
-# def get_cosine_similarity(dataset: dict) -> dict:
-#     idx_list = dataset['idx']
-#     name_embedding_list = dataset['name_embedding']
-#     commod_embedding_list = dataset['commodity_embedding']
-#     # other_embedding_list = dataset['other_embedding']
 
-#     print("here")
-
-#     len_input = list(range(len(name_embedding_list)))
-#     list_cosine_similarity = []
-
-#     mapping_dict = {key: None for key in idx_list}
-#     cosine_dict = {key: 0 for key in idx_list}
-
-#     for c in combinations(len_input, 2):
-#         name_similarity = 1 - spatial.distance.cosine(name_embedding_list[c[0]], name_embedding_list[c[1]])
-#         if commod_embedding_list[c[0]]:
-#             commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
-
-#         # other_similarity = 1 - spatial.distance.cosine(other_embedding_list[c[0]], other_embedding_list[c[1]])
-
-#         # similarity = EMBEDDING_RATIO1 * name_similarity + (EMBEDDING_RATIO2) * commod_similarity + (1-EMBEDDING_RATIO1 - EMBEDDING_RATIO2) * other_similarity
-#             similarity = EMBEDDING_RATIO1 * name_similarity + (1-EMBEDDING_RATIO1) * commod_similarity
-#         else: 
-#             similarity = name_similarity
-#         list_cosine_similarity.append(similarity)
-
-#         idx_first = idx_list[c[0]]
-#         idx_second = idx_list[c[1]]
-
-#         if mapping_dict[idx_first] is None:
-#             mapping_dict[idx_first] = c[0]
-
-#         if(similarity > THRESHOLD_SIMILARITY):
-#             if(similarity > cosine_dict[idx_second]):
-#                 mapping_dict[idx_second] = mapping_dict[idx_first]
-#                 cosine_dict[idx_second] = similarity
-#         elif mapping_dict[idx_second] is None:
-#             mapping_dict[idx_second] = c[1]
-
-#     new_group = []
-#     for i in list(mapping_dict.values()):
-#         group_code = str(dataset['GroupID']) + '_' + str(i)
-#         new_group.append(group_code)
-
-#     return {'idx': list(mapping_dict.keys()), 'new_group': new_group}
 
 # def text_based_linking(pl_loclinked, alias_code:str, name_columns:list, commodity_columns:list):
 #     pl_embeddings = create_relevant_embeddings(alias_code, name_columns, commodity_columns)
