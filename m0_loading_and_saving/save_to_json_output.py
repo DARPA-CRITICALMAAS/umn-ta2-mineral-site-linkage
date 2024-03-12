@@ -1,5 +1,6 @@
 import os
 from json import dump
+import pickle
 
 import polars as pl
 
@@ -13,6 +14,9 @@ def save_mineralsite_output_json(pl_processed_mineralsite, path_directory:str, f
     """
     if not os.path.exists(path_directory):
         os.makedirs(path_directory)
+
+    with open(os.path.join(path_directory, file_name+'.pkl'), 'wb') as handle:
+        pickle.dump(pl_processed_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # Filter out attributes that are not accepted by the mineral site schema
     mineralsite_attributes = set(['source_id', 'record_id', 'name'])

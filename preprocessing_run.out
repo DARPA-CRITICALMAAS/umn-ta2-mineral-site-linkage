@@ -1,22 +1,58 @@
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:01<00:00,  1.19s/it]Batches: 100%|██████████| 1/1 [00:01<00:00,  1.19s/it]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 109.68it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 143.66it/s]
-Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 43.23it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 145.06it/s]
-Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 44.47it/s]
-Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 138.86it/s]
-Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 44.40it/s]
-     OBJECTID MinReg_ID  ... source_id                     geometry
-0           1   Mr00082  ...     USMIN  POINT (-167.10300 65.53230)
-1           2   Mr00082  ...     USMIN  POINT (-167.16650 65.47650)
-2           3   Mr00013  ...     USMIN  POINT (-157.49980 59.22860)
-3           4   Mr00058  ...     USMIN  POINT (-165.31750 64.72480)
-4           5   Mr00059  ...     USMIN  POINT (-135.16200 58.75870)
-..        ...       ...  ...       ...                          ...
-97         98   Mr00177  ...     USMIN  POINT (-104.89290 31.43230)
-98         99   Mr00177  ...     USMIN  POINT (-104.88090 31.44180)
-99        100   Mr00138  ...     USMIN  POINT (-113.39660 39.18790)
-100       101   Mr00149  ...     USMIN  POINT (-118.10060 48.00820)
-101       102   Mr00149  ...     USMIN  POINT (-118.21260 48.02030)
-
-[102 rows x 21 columns]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.01it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.01it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 116.24it/s]
+[['Latitude', 'latitude', 'Lat_WGS84', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat', 'Approx_Lat'], ['Longitude', 'longitude', 'Lon_WGS84', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon', 'Approx_Lon']]
+['OBJECTID', 'MinReg_ID', 'record_id', 'Last_Updt', 'Commodity', 'Remarks', 'Approx_Lon', 'Approx_Lat', 'Loc_Pt', 'Loc_Poly', 'GeolMinOcc', 'Resources', 'Production', 'History', 'Dep_Model', 'Descr_Sum', 'name']
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 149.88it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 43.55it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 154.82it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 44.75it/s]
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 149.51it/s]
+Batches:   0%|          | 0/3 [00:00<?, ?it/s]Batches: 100%|██████████| 3/3 [00:00<00:00, 45.03it/s]
+shape: (102, 21)
+┌──────────┬───────────┬───────────┬────────────┬───┬────────────┬───────────┬───────────┬─────────┐
+│ OBJECTID ┆ MinReg_ID ┆ record_id ┆ Last_Updt  ┆ … ┆ location   ┆ commoditi ┆ source_id ┆ GroupID │
+│ ---      ┆ ---       ┆ ---       ┆ ---        ┆   ┆ ---        ┆ es        ┆ ---       ┆ ---     │
+│ i64      ┆ str       ┆ str       ┆ str        ┆   ┆ str        ┆ ---       ┆ str       ┆ i64     │
+│          ┆           ┆           ┆            ┆   ┆            ┆ str       ┆           ┆         │
+╞══════════╪═══════════╪═══════════╪════════════╪═══╪════════════╪═══════════╪═══════════╪═════════╡
+│ 1        ┆ Mr00082   ┆ AK00001   ┆ 2020-02-05 ┆ … ┆ POINT      ┆ beryllium ┆ USMIN     ┆ 3       │
+│          ┆           ┆           ┆            ┆   ┆ (-167.103  ┆ , fluorsp ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 65.5323)   ┆ ar, tin,  ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ tungs…    ┆           ┆         │
+│ 2        ┆ Mr00082   ┆ AK00005   ┆ 2020-07-24 ┆ … ┆ POINT      ┆ beryllium ┆ USMIN     ┆ 3       │
+│          ┆           ┆           ┆            ┆   ┆ (-167.1665 ┆ , fluorsp ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 65.4765)   ┆ ar, tin,  ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ tungs…    ┆           ┆         │
+│ 3        ┆ Mr00013   ┆ AK00011   ┆ 2020-02-03 ┆ … ┆ POINT      ┆ copper,   ┆ USMIN     ┆ 6       │
+│          ┆           ┆           ┆            ┆   ┆ (-157.4998 ┆ gold, mol ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 59.2286)   ┆ ybdenum,  ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ platin…   ┆           ┆         │
+│ 4        ┆ Mr00058   ┆ AK00014   ┆ 2020-02-05 ┆ … ┆ POINT      ┆ gold,     ┆ USMIN     ┆ 4       │
+│          ┆           ┆           ┆            ┆   ┆ (-165.3175 ┆ graphite, ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 64.7248)   ┆ tungsten  ┆           ┆         │
+│ 5        ┆ Mr00059   ┆ AK00015   ┆ 2020-02-03 ┆ … ┆ POINT      ┆ copper,   ┆ USMIN     ┆ 1       │
+│          ┆           ┆           ┆            ┆   ┆ (-135.162  ┆ gold,     ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 58.7587)   ┆ iron, pla ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ tinum,gro ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ …         ┆           ┆         │
+│ …        ┆ …         ┆ …         ┆ …          ┆ … ┆ …          ┆ …         ┆ …         ┆ …       │
+│ 98       ┆ Mr00177   ┆ TX00002   ┆ 2020-07-24 ┆ … ┆ POINT      ┆ copper,   ┆ USMIN     ┆ 12      │
+│          ┆           ┆           ┆            ┆   ┆ (-104.8929 ┆ molybdenu ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 31.4323)   ┆ m,        ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ niobium,  ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ tun…      ┆           ┆         │
+│ 99       ┆ Mr00177   ┆ TX00010   ┆ 2020-07-25 ┆ … ┆ POINT      ┆ copper,   ┆ USMIN     ┆ 12      │
+│          ┆           ┆           ┆            ┆   ┆ (-104.8809 ┆ molybdenu ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 31.4418)   ┆ m,        ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ niobium,  ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆            ┆ tun…      ┆           ┆         │
+│ 100      ┆ Mr00138   ┆ UT00002   ┆ 2020-02-05 ┆ … ┆ POINT      ┆ tungsten  ┆ USMIN     ┆ 23      │
+│          ┆           ┆           ┆            ┆   ┆ (-113.3966 ┆           ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 39.1879)   ┆           ┆           ┆         │
+│ 101      ┆ Mr00149   ┆ WA00007   ┆ 2020-07-29 ┆ … ┆ POINT      ┆ tungsten  ┆ USMIN     ┆ 2       │
+│          ┆           ┆           ┆            ┆   ┆ (-118.1006 ┆           ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 48.0082)   ┆           ┆           ┆         │
+│ 102      ┆ Mr00149   ┆ WA00010   ┆ 2020-02-05 ┆ … ┆ POINT      ┆ tungsten  ┆ USMIN     ┆ 2       │
+│          ┆           ┆           ┆            ┆   ┆ (-118.2126 ┆           ┆           ┆         │
+│          ┆           ┆           ┆            ┆   ┆ 48.0203)   ┆           ┆           ┆         │
+└──────────┴───────────┴───────────┴────────────┴───┴────────────┴───────────┴───────────┴─────────┘

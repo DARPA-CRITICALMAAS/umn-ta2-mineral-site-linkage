@@ -54,8 +54,6 @@ def preprocessing_rawdb(list_mineralsite_sources, bool_geojson):
             logging.info(f'\tSaving {source_name} data as GEOJSON file to {preprocessed_location}')
             save_to_geojson_output.save_mineralsite_output_geojson(pl_processed_mineralsite, preprocessed_location, source_name)
 
-    return list_preprocessed_mineralsites
-
 def main(args):
     logging.info(f'Preprocessing started')
     list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)

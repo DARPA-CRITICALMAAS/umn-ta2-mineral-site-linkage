@@ -27,12 +27,6 @@ cd m2_intralinking
 python intralinking.py [-d path/to/data/directory] [-l if only using geolocation for linking] [-g if want to save file also as a geojson output]
 ```
 
-Use the following code if you are using mineral site data on the knowledge graph:
-```
-cd m3_interlinking
-python intralinking.py [-l if only using geolocation for linking] [-g if want to save file also as a geojson output]
-```
-
 ### Run Interlinking Model
 
 ## Directory Layout

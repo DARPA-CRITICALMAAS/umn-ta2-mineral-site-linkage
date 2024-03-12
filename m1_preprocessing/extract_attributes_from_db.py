@@ -35,7 +35,7 @@ def identify_id_attribute(pl_mineralsite, list_known_mappings:list):
 
     if len(attributes_in_known_mappings) != 0:      # If there exists an attribute label previously mapped as record_id
         pl_updated_mineralsite = pl_mineralsite.rename(
-            {'record_id': attributes_in_known_mappings[0]}
+            {attributes_in_known_mappings[0]: 'record_id'}
         )
         return list_known_mappings, pl_updated_mineralsite
 
@@ -55,7 +55,7 @@ def identify_id_attribute(pl_mineralsite, list_known_mappings:list):
     
     elif len(list_potential_id) == 1:   # Caase where there is one column with all unique items
         pl_updated_mineralsite = pl_mineralsite.rename(
-            {'record_id': list_potential_id[0]}
+            {list_potential_id[0]: 'record_id'}
         )
         list_updated_known_mappings.extend(list_potential_id)
 
@@ -90,7 +90,6 @@ def identify_name_attribute(pl_mineralsite, dict_attributes, list_known_mappings
     : return: pl_updated_mineralsite: polars dataframe with modified attribute labels
     """
     attributes_in_known_mappings = list(set(list_known_mappings) & set(pl_mineralsite.columns))
-    list_updated_known_mappings = attributes_in_known_mappings
 
     # Selects columns that has 'string' type attribute
     pl_string_data = pl_mineralsite.select(
@@ -106,12 +105,12 @@ def identify_name_attribute(pl_mineralsite, dict_attributes, list_known_mappings
     dict_unknown_attributes = {key: dict_attributes[key] for key in set_string_unknown_attributes}
     set_potential_name_attribute = find_similar_attributes(name_definition, dict_unknown_attributes)
 
-    list_updated_known_mappings = list(set(attributes_in_known_mappings) | set_potential_name_attribute)
+    list_names = list(set(attributes_in_known_mappings) | set_potential_name_attribute)
 
     # Update the mineralsite dataframe to combine all possible names
     pl_updated_mineralsite = pl_mineralsite.with_columns(
         mapped_column = pl.concat_str(
-            pl.col(list_updated_known_mappings).fill_null(""),
+            pl.col(list_names).fill_null(""),
             separator=","
         ).str.replace_all(r"[^A-Za-z0-9\s]", ",").str.strip_chars().str.split(',')
     ).explode(
@@ -129,10 +128,13 @@ def identify_name_attribute(pl_mineralsite, dict_attributes, list_known_mappings
     ).agg(
         pl.col('mapped_column')
     ).drop(
-        list_updated_known_mappings
+        list_names
     ).rename(
         {'mapped_column': 'name'}
     )
+
+    list_updated_known_mappings = list_known_mappings
+    list_updated_known_mappings.extend(list_names)
 
     return list_updated_known_mappings, pl_updated_mineralsite
 
@@ -149,18 +151,21 @@ def identify_geolocation_attribute(pl_mineralsite, dict_attributes, list_known_m
     : return: pl_updated_mineralsite: polars dataframe with modified attribute labels
     """
 
+    print(list_known_mappings)
+    print(pl_mineralsite.columns)
+
     latitude_definition = "Latitude in decimal degree"
     set_potential_lat_attribute = find_similar_attributes(latitude_definition, dict_attributes)
-    list_updated_latitude_mappings = list((set(list_known_mappings[0]) | set_potential_lat_attribute) & set(pl_mineralsite.columns))
+    list_latitudes = list((set(list_known_mappings[0]) | set_potential_lat_attribute) & set(pl_mineralsite.columns))
 
     longitude_definition = "Longitude in decimal degree"
     set_potential_long_attribute = find_similar_attributes(longitude_definition, dict_attributes)
-    list_updated_longitude_mappings = list((set(list_known_mappings[1]) | set_potential_long_attribute) & set(pl_mineralsite.columns))
+    list_longitudes = list((set(list_known_mappings[1]) | set_potential_long_attribute) & set(pl_mineralsite.columns))
 
     list_possible_crs = open_local_files(path_params['PATH_RESOURCE_DIR'], 'crs', '.pkl')
 
     identified_crs = 'WGS84'
-    for col_lat in list_updated_latitude_mappings:
+    for col_lat in list_latitudes:
         try:
             identified_latitude_definition = dict_attributes[col_lat]
 
@@ -173,13 +178,13 @@ def identify_geolocation_attribute(pl_mineralsite, dict_attributes, list_known_m
             pass
 
     pl_updated_mineralsite = pl_mineralsite.with_columns(
-        mapped_latitude = pl.col(list_updated_latitude_mappings[0]),        # adding selected latitude column
-        mapped_longitude = pl.col(list_updated_longitude_mappings[0]),      # adding selected longitude column
+        mapped_latitude = pl.col(list_latitudes[0]),        # adding selected latitude column
+        mapped_longitude = pl.col(list_longitudes[0]),      # adding selected longitude column
         crs = pl.lit(identified_crs)                                        # adding crs column
     ).drop(
-        list_updated_latitude_mappings
+        list_latitudes
     ).drop(
-        list_updated_longitude_mappings
+        list_longitudes
     )
 
     df_updated_mineralsite = pl_updated_mineralsite.rename(
@@ -197,7 +202,11 @@ def identify_geolocation_attribute(pl_mineralsite, dict_attributes, list_known_m
     gdf_updated_mineralsite = gdf_updated_mineralsite.drop('geometry', axis=1)
     pl_updated_mineralsite = pl.from_pandas(gdf_updated_mineralsite)
 
-    return [list_updated_latitude_mappings, list_updated_longitude_mappings], pl_updated_mineralsite
+    list_updated_known_mappings = list_known_mappings
+    list_updated_known_mappings[0].extend(list_latitudes)
+    list_updated_known_mappings[1].extend(list_longitudes)
+
+    return list_updated_known_mappings, pl_updated_mineralsite
 
 def identify_textlocation_attribute(pl_mineralsite):
     """
@@ -232,18 +241,21 @@ def identify_commodity_attribute(pl_mineralsite, dict_attributes, list_known_map
     """
     commodity_definition = "Commodities available at the mineral site"
     set_potential_commodity_attribute = find_similar_attributes(commodity_definition, dict_attributes)
-    list_updated_known_mappings = list((set(list_known_mappings) | set_potential_commodity_attribute) & set(pl_mineralsite.columns))
+    list_commodities = list((set(list_known_mappings) | set_potential_commodity_attribute) & set(pl_mineralsite.columns))
 
     pl_updated_mineralsite = pl_mineralsite.with_columns(
         mapped_commodities = pl.concat_str(
-            pl.col(list_updated_known_mappings).fill_null(" "),
+            pl.col(list_commodities).fill_null(" "),
             separator=", "
         ).str.replace_all(r"[^A-Za-z0-9\s]", ",").str.strip()
     ).drop(
-        list_updated_known_mappings
+        list_commodities
     ).rename(
         {'mapped_commodities': 'commodities'}
     )
+
+    list_updated_known_mappings = list_known_mappings
+    list_updated_known_mappings.extend(list_commodities)
 
     return list_updated_known_mappings, pl_updated_mineralsite
 
@@ -298,6 +310,7 @@ def map_attribute_labels(pl_mineralsite, dict_attributes):
     list_known_commodity = dict_known_attribute_maps['commodities']
     updated_list_known_commodity, pl_mineralsite = identify_commodity_attribute(pl_mineralsite, dict_attributes, list_known_commodity)
     dict_known_attribute_maps['commodities'] = updated_list_known_commodity
+
 
     # Storing the updated known attribute dictionary to the resource file
     with open(os.path.join(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary.pkl'), 'wb') as handle:

@@ -9,7 +9,7 @@ import regex as re
 import pandas as pd
 import polars as pl
 import geopandas as gpd
-import pickle5 as pickle
+import pickle
 
 import warnings
 warnings.filterwarnings("ignore")
