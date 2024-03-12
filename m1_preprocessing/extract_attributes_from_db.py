@@ -299,8 +299,8 @@ def map_attribute_labels(pl_mineralsite, dict_attributes):
     updated_list_known_commodity, pl_mineralsite = identify_commodity_attribute(pl_mineralsite, dict_attributes, list_known_commodity)
     dict_known_attribute_maps['commodities'] = updated_list_known_commodity
 
-    # # Storing the updated known attribute dictionary to the resource file
-    # with open(os.path.join(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary.pkl'), 'wb') as handle:
-    #     pickle.dump(dict_known_attribute_maps, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # Storing the updated known attribute dictionary to the resource file
+    with open(os.path.join(path_params['PATH_RESOURCE_DIR'], 'attribute_dictionary.pkl'), 'wb') as handle:
+        pickle.dump(dict_known_attribute_maps, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return pl_mineralsite
