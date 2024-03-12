@@ -7,7 +7,7 @@ import polars as pl
 import geopandas as gpd
 
 config = configparser.ConfigParser()
-config.read('./params.ini')
+config.read('../params.ini')
 path_params = config['directory.paths']
 
 def prompt_user_for_source_name(original_filename:str, estimated_source_name:str):
@@ -127,10 +127,11 @@ def open_local_directory(path_directory:str):
             continue
         
         pl_mineralsite = open_local_files(path_directory, file_name, file_extension)
-        source_name = prompt_user_for_source_name(file_name+file_extension, file_name)
+        # source_name = prompt_user_for_source_name(file_name+file_extension, file_name)
+        source_name = file_name
         list_mineralsite_sources.append(source_name)
         
-        with open(os.path.join(path_raw_data_directory, source_name+file_extension), 'wb') as handle:
+        with open(os.path.join(path_raw_data_directory, source_name+'.pkl'), 'wb') as handle:
             pickle.dump(pl_mineralsite, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     return list_mineralsite_sources

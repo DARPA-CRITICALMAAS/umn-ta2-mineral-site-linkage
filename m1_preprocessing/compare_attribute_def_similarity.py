@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer, util
 from m0_loading_and_saving.load_local_data import open_local_files
 
 config = configparser.ConfigParser()
-config.read('./params.ini')
+config.read('../params.ini')
 ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['preprocessing.params']['ATTRIBUTE_DEFINITION_THRESHOLD'])
 
 model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
@@ -24,10 +24,10 @@ def find_similar_attributes(attribute_defintion, dict_attributes):
     potential_matching_attribute_embedding = model.encode(potential_matching_attribute_definition, convert_to_tensor=True)
 
     attribute_cosine_similarity = util.cos_sim(attribute_embedding, potential_matching_attribute_embedding)
-    attribute_cosine_similarity = np.array(attribute_cosine_similarity)
+    attribute_cosine_similarity = np.array(attribute_cosine_similarity.cpu())
 
     # Get the indexes where the attribute similarity score is over 0.45
-    idx = list(dict.fromkeys(np.where(attribute_cosine_similarity > ATTRIBUTE_DEF_SIMILARITY_THRESHOLD)))
+    idx = list(dict.fromkeys(np.where(attribute_cosine_similarity > ATTRIBUTE_DEF_SIMILARITY_THRESHOLD)[1]))
 
     set_potential_matching_attributes = set(np.array(label_potential_matching_attribute)[idx])
 

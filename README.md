@@ -16,7 +16,8 @@ python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for
 
 ### Process Raw Database to Mineral Site Schema Format
 ```
-python fusemine.py [-d path/to/data/directory]
+cd m1_preprocessing
+python process_rawdb_to_schema.py [-d path/to/data/directory]
 ```
 
 ### Run Intralinking Model
@@ -41,26 +42,30 @@ python intralinking.py [-l if only using geolocation for linking] [-g if want to
 |-- params.ini
 |
 |-- m0_loading_and_saving
-|   |-- loading_local_data.py               # Loads the data available on the user local storage
-|   |-- loading_kg_data.py                  # Loads the data available on the knowledge graph
-|   |-- save_to_geojson_output.py           # Saves the output as a geojson file that can plotted on a GIS software
-|   |-- save_to_json_output.py              # Saves the output as a json file that can be loaded on the knowledge graph
+|   |-- loading_local_data.py                   # Loads the data available on the user local storage
+|   |-- loading_kg_data.py                      # Loads the data available on the knowledge graph
+|   |-- save_sameas_output.py                   # Saves the reconciliation output as a two-column URI CSV output
+|   |-- save_to_geojson_output.py               # Saves the output as a geojson file that can plotted on a GIS software
+|   |-- save_to_json_output.py                  # Saves the output as a json file that can be loaded on the knowledge graph
 |
 |-- m1_preprocessing
+|   |-- compare_attribute_def_similarity.py     # 
+|   |-- extract_attributes_from_db.py           #
 |   |-- process_gpkg_to_json.py
-|   |-- process_rawdb_to_schema.py          # Processes the raw database available in the local directory to a local schema format
+|   |-- process_rawdb_to_schema.py              # Processes the raw database available in the local directory to a local schema format
 |
 |-- m2_intralinking
-|   |-- intralinking.py                     # 
-|   |-- location_based_intralinking.py      #
-|   |-- text_based_intralinking.py          #
+|   |-- intralinking.py                         # 
+|   |-- location_based_intralinking.py          #
+|   |-- text_based_intralinking.py              #
 |
 |-- m3_interlinking
-|   |-- interlinking.py                     #
-|   |-- location_based_intralinking.py      #
+|   |-- interlinking.py                         #
+|   |-- location_based_intralinking.py          #
 |
 |-- resource
-|   |-- crs.pkl                             # List of coordinate reference systems (CRS)
+|   |-- attribute_dictionary.pkl                # Previously identified attribute labels
+|   |-- crs.pkl                                 # List of coordinate reference systems (CRS)
 
 ```
 

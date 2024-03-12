@@ -16,7 +16,7 @@ def save_mineralsite_output_json(pl_processed_mineralsite, path_directory:str, f
 
     # Filter out attributes that are not accepted by the mineral site schema
     mineralsite_attributes = set(['source_id', 'record_id', 'name'])
-    locationinfo_attributes = set(['location_info', 'crs', 'country', 'state_or_province'])
+    locationinfo_attributes = set(['location', 'crs', 'country', 'state_or_province'])
     record_attributes = set(list(pl_processed_mineralsite.columns))
 
     available_mineralsite_attributes = list(record_attributes & mineralsite_attributes)
@@ -24,12 +24,12 @@ def save_mineralsite_output_json(pl_processed_mineralsite, path_directory:str, f
 
     pl_filtered_mineralsite = pl_processed_mineralsite.select(
         pl.col(available_mineralsite_attributes),
-        pl.struct(pl.col(available_locationinfo_attributes)),
+        location_info = pl.struct(pl.col(available_locationinfo_attributes)),
     )
     
     try:
         # If name attribute is available get the first item in the list
-        pl_filtered_mineralsite = pl_filtered_mineralsite.with_columns(
+        df_filtered_mineralsite = pl_filtered_mineralsite.with_columns(
             pl.col('name').list.get(0)
         ).to_pandas()
     except:

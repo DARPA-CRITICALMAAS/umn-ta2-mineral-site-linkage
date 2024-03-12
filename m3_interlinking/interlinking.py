@@ -1,11 +1,16 @@
 import os
+import sys
 import time
 import logging
 import pickle
 import argparse
 import configparser
 
-from m0_loading_and_saving import load_local_data, load_kg_data, save_to_geojson_output, save_to_json_output
+# System path configuration for relative imports
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from m0_loading_and_saving import load_local_data, load_kg_data, save_to_geojson_output, save_sameas_output
 from m1_preprocessing.process_rawdb_to_schema import preprocessing_rawdb
 from m2_intralinking.intralinking import intralinking
 from m3_interlinking.location_based_interlinking import location_based_linking
@@ -39,7 +44,7 @@ def interlinking(list_mineralsite_sources, bool_location_based, bool_geojson, ou
         del (pl_intralinked_mineralsite1, pl_intralinked_mineralsite2)
 
     logging.info(f'\tSaving interlinked data between {list_mineralsite_sources} as JSON file to {intralinked_location}')
-    save_to_json_output.save_mineralsite_output_json(pl_interlinked_mineralsite, interlinked_location, output_filename)
+    save_sameas_output.save_sameas_output_csv(pl_interlinked_mineralsite, intralinked_location, output_filename)
 
     if bool_geojson:
         logging.info(f'\tSaving interlinked data between {list_mineralsite_sources} as GEOJSON file to {intralinked_location}')

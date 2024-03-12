@@ -1,5 +1,6 @@
 import os
 import pickle
+import polars as pl
 import geopandas as gpd
 import shapely.wkt
 
@@ -15,6 +16,10 @@ def save_mineralsite_output_geojson(pl_processed_mineralsite, path_directory:str
     """
     if not os.path.exists(path_directory):
         os.makedirs(path_directory)
+
+    pl_processed_mineralsite = pl_processed_mineralsite.with_columns(
+        pl.col('name').list.join(", ")
+    )
 
     df_processed_mineralsite = pl_processed_mineralsite.to_pandas()
     gs_mineralsite = gpd.GeoSeries.from_wkt(df_processed_mineralsite['location'])
