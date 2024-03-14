@@ -15,7 +15,6 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from m0_loading_and_saving import load_local_data, load_mapped_dictionary, save_to_geojson_output, save_to_json_output
 from m1_preprocessing.extract_attributes_from_db import map_attribute_labels
-from m1_preprocessing.prompt_user_for_attribute_map import *
 
 config = configparser.ConfigParser()
 config.read('../params.ini')
@@ -39,10 +38,14 @@ def preprocessing_rawdb(list_mineralsite_sources:list, bool_geojson:bool, bool_d
     list_preprocessed_mineralsites = []
 
     for source_name in list_mineralsite_sources:
+        pl_mineralsite = load_local_data.open_local_files(raw_db_location, source_name, '.pkl')
+
         # if stated to use the mapped dictionary
         if bool_dictionary:
             dict_attribute_mapped = load_mapped_dictionary.load_mapped_dictionary(path_params['PATH_RESOURCE_DIR'], 'attribute_map')
             crs_value = dict_attribute_mapped.pop('crs')
+
+            dict_attribute_mapped = dict(zip(list(dict_attribute_mapped.values()), list(dict_attribute_mapped.keys())))
 
             pl_processed_mineralsite = pl_mineralsite.with_columns(
                 source_id = pl.lit(source_name),
@@ -54,7 +57,6 @@ def preprocessing_rawdb(list_mineralsite_sources:list, bool_geojson:bool, bool_d
             )
 
         else:
-            pl_mineralsite = load_local_data.open_local_files(raw_db_location, source_name, '.pkl')
             dict_attributes = load_local_data.open_local_files(raw_db_location, 'dict_'+source_name, '.pkl')
 
             pl_processed_mineralsite = map_attribute_labels(pl_mineralsite, dict_attributes).with_columns(

@@ -1,11 +1,11 @@
 import os
 from json import dump
 import pickle
-
+import regex as re
 import polars as pl
 
 def drop_null_attributes(dict_processed_attributes:dict, bool_list:bool) -> dict | list:
-    filtered_attribute_data = {key: value for key, value in dict_processed_attributes.items() if value}
+    filtered_attribute_data = {key: value for key, value in dict_processed_attributes.items() if value and value!=""}
 
     if bool_list and filtered_attribute_data:
         return [filtered_attribute_data]
@@ -39,8 +39,18 @@ def save_mineralsite_output_json(pl_processed_mineralsite, path_directory:str, f
 
     pl_filtered_mineralsite = pl_processed_mineralsite.select(
         pl.col(available_mineralsite_attributes),
+        pl.col(available_locationinfo_attributes),
+        pl.col(available_deposittype_attributes),
+    ).with_columns(
+        pl.all().str.strip_chars()
+    )
+
+    print(pl_filtered_mineralsite)
+
+    pl_filtered_mineralsite = pl_filtered_mineralsite.select(
+        pl.col(available_mineralsite_attributes),
         location_info = pl.struct(pl.col(available_locationinfo_attributes)),
-        deposit_type_candidate = pl.col(available_deposittype_attributes),
+        deposit_type_candidate = pl.struct(pl.col(available_deposittype_attributes)),
     )
 
     try:
