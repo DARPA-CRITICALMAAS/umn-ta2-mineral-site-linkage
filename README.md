@@ -17,7 +17,14 @@ python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for
 ### Process Raw Database to Mineral Site Schema Format
 ```
 cd m1_preprocessing
-python process_rawdb_to_schema.py [-d path/to/data/directory]
+python process_rawdb_to_schema.py [-d path/to/data/directory] [-u if want to use a predefined attribute mapping]
+```
+To define the corresponding attribute label, modify the `resource/attribute_map.csv`
+If using the predefined mapped attribute file, the items located under 'Matching Attributes in Database' must exist in the database that is being processed.
+
+```
+cd m1_preprocessing
+python process_rawdb_to_schema.py [-d path/to/data/directory] -u
 ```
 
 ### Run Intralinking Model
