@@ -11,21 +11,16 @@ pip install -r requirements.txt
 ### Run End-to-End
 Run the python file by entering the following code in the command line:
 ```
-python fusemine.py [-d path/to/data/directory] [-l if only using geolocation for linking]
+python -m fusemine [-d path/to/data/directory] [-l if only using geolocation for linking]
 ```
 
-### Process Raw Database to Mineral Site Schema Format
+<!-- ### Process Raw Database to Mineral Site Schema Format
 ```
 cd m1_preprocessing
 python process_rawdb_to_schema.py [-d path/to/data/directory] [-u if want to use a predefined attribute mapping]
 ```
 To define the corresponding attribute label, modify the `resource/attribute_map.csv`
 If using the predefined mapped attribute file, the items located under 'Matching Attributes in Database' must exist in the database that is being processed.
-
-```
-cd m1_preprocessing
-python process_rawdb_to_schema.py [-d path/to/data/directory] -u
-```
 
 ### Run Intralinking Model
 Use the following code if you are using mineral site data in local storage:
@@ -38,10 +33,10 @@ python intralinking.py [-d path/to/data/directory] [-l if only using geolocation
 ```
 cd m3_interlinking
 python interlinking.py [-d path/to/data/directory] [-l if only using geolocation for linking] [-g if want to save file also as a geojson output] [-o to state output file name; default='interlinked']
-```
+``` -->
 
-## Directory Layout
-```
+<!-- ## Directory Layout -->
+<!-- ```
 ./
 |-- fusemine.py
 |-- params.ini
@@ -71,11 +66,18 @@ python interlinking.py [-d path/to/data/directory] [-l if only using geolocation
 |-- resource
 |   |-- attribute_dictionary.pkl                # Previously identified attribute labels
 |   |-- crs.pkl                                 # List of coordinate reference systems (CRS)
+|
+|-- utils
+|   |-- loading
+|   |-- saving
+|   |-- geolocation
 
-```
+``` -->
+
+
 
 ### Parameters
-The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.ini` file.
+The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
 
 | Name | Description | Value |
 | --- | --- | --- |
