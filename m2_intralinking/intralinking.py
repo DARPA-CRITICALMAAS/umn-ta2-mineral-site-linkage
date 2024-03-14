@@ -22,35 +22,42 @@ config = configparser.ConfigParser()
 config.read('../params.ini')
 path_params = config['directory.paths']
 
-def intralinking(list_mineralsite_sources, bool_location_based, bool_geojson):
+def intralinking(list_mineralsite_sources: list, bool_location_based: bool, bool_geojson: bool):
+    """
+    
+    """
     preprocessed_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'preprocessed')
     intralinked_location = os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'intralinked')
 
     for source_name in list_mineralsite_sources:
         pl_mineralsite = load_local_data.open_local_files(preprocessed_location, source_name, '.pkl')
-        list_location_based_clustering = location_based_linking(pl_mineralsite)
+        pl_location_linked_mineralsite = location_based_linking(pl_mineralsite)
 
-        # if not bool_location_based:
-        #     pl_intralinked_mineralsite = text_based_linking(pl_intralinked_mineralsite)
+        if not bool_location_based:
+            pl_intralinked_mineralsite = text_based_linking(pl_location_linked_mineralsite)
+        else:
+            pl_intralinked_mineralsite = pl_location_linked_mineralsite
 
-        # logging.info(f'\tSaving linked {source_name} data as two column CSV file to {intralinked_location}')
-        # save_sameas_output.save_sameas_output_csv(pl_intralinked_mineralsite, intralinked_location, source_name)
+        logging.info(f'\tSaving linked {source_name} data as two column CSV file to {intralinked_location}')
+        save_sameas_output.save_sameas_output_csv(pl_intralinked_mineralsite, intralinked_location, source_name)
 
-        # if bool_geojson:
-        #     logging.info(f'\tSaving {source_name} data as GEOJSON file to {intralinked_location}')
-        #     save_to_geojson_output.save_mineralsite_output_geojson(pl_intralinked_mineralsite, intralinked_location, source_name)
+        if bool_geojson:
+            logging.info(f'\tSaving {source_name} data as GEOJSON file to {intralinked_location}')
+            save_to_geojson_output.save_mineralsite_output_geojson(pl_intralinked_mineralsite, intralinked_location, source_name)
 
 def main(args):
+    # load_kg_data.load_kg()
+    # print(pl_mineralsite)
     if args.data_dir:
         list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
         preprocessing_rawdb(list_mineralsite_sources, False)
 
-    # Need to load KG data somewhere here
+    # # Need to load KG data somewhere here
 
     logging.info(f'Intralinking process started')
     start_time = time.time()
 
-    intralinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson)
+    intralinking(['MRDS', 'USMIN'], args.use_location_base, args.save_as_geojson)
 
     logging.info(f'Intralinking process ended: Total run time: {time.time() - start_time}s')
 

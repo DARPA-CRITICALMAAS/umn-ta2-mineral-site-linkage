@@ -15,29 +15,33 @@ def save_sameas_output_csv(pl_linked_records, path_directory:str, file_name:str)
     if not os.path.exists(path_directory):
         os.makedirs(path_directory)
 
-    pl_linked_records = pl_linked_records.filter(
-        pl.col('GroupID') != -1         # Removing mineralsite records that do not have any link
-    ).select(
-        pl.col(['URI', 'GroupID'])      # Preserving the URI column and GroupID column
-    ).group_by(
-        'GroupID'
-    ).agg(
-        [pl.all()]
-    )
+    with open(os.path.join(path_directory, file_name+'.pkl'), 'wb') as handle:
+        pickle.dump(pl_linked_records, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    # Create a list where each item is a list is a cluster
-    list_record_clusters = pl_linked_records['URI'].to_list()
+    # TODO: Removing commenting once all raw data are loaded onto knowledge graph
+    # pl_linked_records = pl_linked_records.filter(
+    #     pl.col('GroupID') != -1         # Removing mineralsite records that do not have any link
+    # ).select(
+    #     pl.col(['URI', 'GroupID'])      # Preserving the URI column and GroupID column
+    # ).group_by(
+    #     'GroupID'
+    # ).agg(
+    #     [pl.all()]
+    # )
 
-    pl_sameas = pl.DataFrame(
-        {
-            'URI1': list_record_clusters
-        }
-    ).with_columns(
-        URI2 = pl.col('URI1').list.get(0)
-    ).explode(
-        'URI1'
-    ).filter(
-        pl.col('URI1') != pl.col('URI2')
-    )
+    # # Create a list where each item is a list is a cluster
+    # list_record_clusters = pl_linked_records['URI'].to_list()
 
-    pl_sameas.write_csv(os.path.join(path_directory, file_name+'.csv'))
+    # pl_sameas = pl.DataFrame(
+    #     {
+    #         'URI1': list_record_clusters
+    #     }
+    # ).with_columns(
+    #     URI2 = pl.col('URI1').list.get(0)
+    # ).explode(
+    #     'URI1'
+    # ).filter(
+    #     pl.col('URI1') != pl.col('URI2')
+    # )
+
+    # pl_sameas.write_csv(os.path.join(path_directory, file_name+'.csv'))

@@ -64,36 +64,47 @@ def run_minmod_query(query, values=False):
 def load_kg():
     query = ''' SELECT ?ms ?source_id ?record_id ?commodity ?name ?location ?crs ?country ?state_province
             WHERE {
-                ?ms a :MineralSite .
+                ?ms a :MineralSite.
                 ?ms :name ?name .
-                ?ms :mineral_inventory [ :commodity [ :name "Nickel"@en ] ] .
                 ?ms :mineral_inventory [ :commodity [ :name ?commodity ] ] .
                 ?ms :source_id ?source_id .
                 ?ms :record_id ?record_id . 
                 ?ms :location_info [ :location ?location ] .
                 OPTIONAL { ?ms :location_info [ :crs ?crs ] }.
-                ?ms :location_info [ :country ?country ] .
+                OPTIONAL { ?ms :location_info [ :country ?country ] }.
                 OPTIONAL { ?ms :location_info [ :state_or_province ?state_or_province ] }.
             } '''
 
     pl_data = run_minmod_query(query, values=True)
 
-    pl_data = pl_data.group_by(
-        'ms'
-    ).agg(
-        [pl.all()]
-    ).select(
-        pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
+    list_pl_mineralsite_data = pl_data.unique(
+        subset=['ms'],
+        keep='first',
+        maintain_order = True
+    ).rename(
+        {'ms': 'URI'}
+    ).partition_by(
+        'source_id'
     )
 
-    pl_mineralsite = pl_data.with_columns(
-        crs = pl.when(
-            pl.col('crs') == 'null'
-        ).then(
-            pl.lit('WGS84')
-        ).otherwise(
-            pl.col('crs')
-        )
-    )
+    print(list_pl_mineralsite_data)
 
-    return pl_mineralsite
+    # pl_data = pl_data.group_by(
+    #     'ms'
+    # ).agg(
+    #     [pl.all()]
+    # ).select(
+    #     pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
+    # )
+
+    # pl_mineralsite = pl_data.with_columns(
+    #     crs = pl.when(
+    #         pl.col('crs') == 'null'
+    #     ).then(
+    #         pl.lit('WGS84')
+    #     ).otherwise(
+    #         pl.col('crs')
+    #     )
+    # )
+
+    # return pl_mineralsite

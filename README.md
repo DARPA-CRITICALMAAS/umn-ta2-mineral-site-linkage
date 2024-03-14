@@ -28,6 +28,10 @@ python intralinking.py [-d path/to/data/directory] [-l if only using geolocation
 ```
 
 ### Run Interlinking Model
+```
+cd m3_interlinking
+python interlinking.py [-d path/to/data/directory] [-l if only using geolocation for linking] [-g if want to save file also as a geojson output] [-o to state output file name; default='interlinked']
+```
 
 ## Directory Layout
 ```

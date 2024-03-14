@@ -1,0 +1,8 @@
+,attribute,Matching Attributes in Database
+0,name,name
+1,latitude,latitude
+2,longitude,longitude
+3,crs,crs
+4,country,country
+5,state_or_province,state
+6,deposit_type,dep_type

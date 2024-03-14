@@ -8,7 +8,7 @@ config = configparser.ConfigParser()
 config.read('../params.ini')
 ATTRIBUTE_DEF_SIMILARITY_THRESHOLD = float(config['preprocessing.params']['ATTRIBUTE_DEFINITION_THRESHOLD'])
 
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def find_similar_attributes(attribute_defintion, dict_attributes):
     """

@@ -16,11 +16,11 @@ def geolocation_based_linking(gpd_mineralsite):
     """
     Links records within a database based on the provided geolocation.
 
-    : param: gpd_mineralsite = 
-    : return: pl_loc_linked_mineralsite = 
+    : param: gpd_mineralsite = geopandas dataframe of the mineral site record
+    : return: list_cluster_labels = list of Group(a.k.a. link) IDs
     """
     # TODO: Need to check what the pl_mineralsite would look like and append the HDBSCAN portion
-    epsilon = float(config['intralink.params']['INTRALINK_BUFFER'])
+    epsilon = float(config['intralink.params']['INTRALINK_BUFFER_unit_meter'])
 
     gpd_geolocationinfo = gpd.GeoDataFrame()
     gpd_geolocationinfo['longitude'] = gpd_mineralsite.location.x
@@ -32,16 +32,16 @@ def geolocation_based_linking(gpd_mineralsite):
 
     return list_cluster_labels
 
-# TODO
-def deposit_based_linking(pl_mineralsite):
-    """
-    Links records within a database based on the deposit type information
-    Runs iff geolocation is not available for the mineral site record
+# TODO: For the case where location based linking is not available
+# def deposit_based_linking(pl_mineralsite):
+#     """
+#     Links records within a database based on the deposit type information
+#     Runs iff geolocation is not available for the mineral site record
 
-    : params: pl_mineralsite: 
-    """
+#     : params: pl_mineralsite: 
+#     """
 
-    return -1
+#     return -1
 
 def location_based_linking(pl_preprocessed_mineralsite):
     """
@@ -51,22 +51,21 @@ def location_based_linking(pl_preprocessed_mineralsite):
     : param: pl_mineralsite = 
     """
     # try:
+    crs_value = pl_preprocessed_mineralsite.item(0, 'crs')
     df_preprocessed_mineralsite = pl_preprocessed_mineralsite.to_pandas()
     df_preprocessed_mineralsite['location'] = df_preprocessed_mineralsite['location'].apply(wkt.loads)
 
     gpd_mineralsite = gpd.GeoDataFrame(
         df_preprocessed_mineralsite, 
         geometry='location',
-        crs='WGS84'
-    )
+        crs=crs_value           # Whatever crs value is stored in the crs column of the mineral site database
+    ).to_crs(crs='EPSG:3857')   # Converting to meters
 
     list_cluster_labels = geolocation_based_linking(gpd_mineralsite)
 
     pl_location_linked_mineralsite = pl_preprocessed_mineralsite.with_columns(
         GroupID = pl.Series(list_cluster_labels).cast(pl.Int64)
     )
-
-    print(pl_location_linked_mineralsite)
 
     return pl_location_linked_mineralsite
 

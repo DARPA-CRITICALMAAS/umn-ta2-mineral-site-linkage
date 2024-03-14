@@ -22,7 +22,7 @@ config = configparser.ConfigParser()
 config.read('../params.ini')
 path_params = config['directory.paths']
 
-def interlinking(list_mineralsite_sources, bool_location_based, bool_geojson, output_filename='interlinked'):
+def interlinking(list_mineralsite_sources:list, bool_location_based:bool, bool_geojson:bool, output_filename:str):
     """
     
     : param: list_mineralsite_sources = 
@@ -39,12 +39,12 @@ def interlinking(list_mineralsite_sources, bool_location_based, bool_geojson, ou
         else:
             pl_intralinked_mineralsite1 = pl_interlinked_mineralsite
         pl_intralinked_mineralsite2 = load_local_data.open_local_files(intralinked_location, list_mineralsite_sources[idx], '.pkl')
-        
+
         pl_interlinked_mineralsite = location_based_linking(pl_intralinked_mineralsite1, pl_intralinked_mineralsite2)
         del (pl_intralinked_mineralsite1, pl_intralinked_mineralsite2)
 
     logging.info(f'\tSaving interlinked data between {list_mineralsite_sources} as JSON file to {intralinked_location}')
-    save_sameas_output.save_sameas_output_csv(pl_interlinked_mineralsite, intralinked_location, output_filename)
+    save_sameas_output.save_sameas_output_csv(pl_interlinked_mineralsite, interlinked_location, output_filename)
 
     if bool_geojson:
         logging.info(f'\tSaving interlinked data between {list_mineralsite_sources} as GEOJSON file to {intralinked_location}')
@@ -54,13 +54,19 @@ def main(args):
     if args.data_dir:
         list_mineralsite_sources = load_local_data.open_local_directory(args.data_dir)
         preprocessing_rawdb(list_mineralsite_sources, False)
-    intralinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson)
+
+    if not os.path.exists(os.path.join(path_params['PATH_CHECKPOINT_DIR'], 'intralinked')):
+        intralinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson)
 
     logging.info(f'Interlinking process started')
     start_time = time.time()
 
-    interlinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson, args.output_filename)
+    if args.output_filename:
+        output_filename = args.output_filename
+    else:
+        output_filename = 'interlinked'
 
+    interlinking(list_mineralsite_sources, args.use_location_base, args.save_as_geojson, output_filename)
     logging.info(f'Interlinking process ended. Total run time: {time.time() - start_time}s')
 
 if __name__ == '__main__':

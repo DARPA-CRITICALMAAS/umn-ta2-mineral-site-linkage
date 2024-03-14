@@ -16,8 +16,9 @@ def create_text_attribute_embedding(struct_attributes: dict) -> dict:
     : return: dict_attribute_embeddings = dictionary of extracted attribute values converted into text embeddings
     """
     dict_attribute_embeddings = struct_attributes
-    for key, value in dict_attribute_embeddings.item():
+    for key, value in dict_attribute_embeddings.items():
         dict_attribute_embeddings[key] = st_model.encode(value)
+        print(dict_attribute_embeddings[key])
 
     return dict_attribute_embeddings
 
@@ -27,34 +28,32 @@ def compare_text_attribute_similarity(struct_attribute_embeddings: dict) -> dict
     : param: struct_attribute_embeddings = dictionary of extracted attribute values converted into text embeddings
     : return: dict_attribute_embeddings = 
     """
-    # TODO: name is a 3d list, convert it to series of 2d lists and compare all combinations within them
+    # Getting the two required attributes
+    # list_name_embedding = struct_attribute_embeddings['name']
+    # list_commodity_embedding = struct_attribute_embeddings['commodities']
 
-    len_location_linked_groups = list(range(len(struct_attribute_embeddings[0])))
-    idx_combinations = combinations(len_location_linked_groups, 2)
+    # len_location_linked_groups = list(range(len(struct_attribute_embeddings[0])))
+    # idx_combinations = combinations(len_location_linked_groups, 2)
 
-    # for c in combinations(len_location_linked_groups, 2):
+    # for c in idx_combinations:
+    #     attribute_similarity = 1 - spatial.distance.cosine(list_attribute_embedding[c[0]], list_attribute_embedding[c[1]])
 
-    for attribute in struct_attribute_embeddings.keys():
-        list_attribute_embedding = struct_attribute_embeddings[attribute]
-        for c in idx_combinations:
-            attribute_similarity = 1 - spatial.distance.cosine(list_attribute_embedding[c[0]], list_attribute_embedding[c[1]])
+    # mapping_dict = {}
 
-    mapping_dict = {}
+    # list_intra_group = []
+    # for i in list(mapping_dict.values()):
+    #     group_code = str(struct_attribute_embeddings['GroupID'] + '_' + str(i))
+    #     list_intra_group.append(group_code)
 
-    list_intra_group = []
-    for i in list(mapping_dict.values()):
-        group_code = str(struct_attribute_embeddings['GroupID'] + '_' + str(i))
-        list_intra_group.append(group_code)
+    # return {'intra_GroupID': list_intra_group}
 
-    return {'intra_GroupID': list_intra_group}
+
+    
 
 # def get_cosine_similarity(dataset: dict) -> dict:
 #     idx_list = dataset['idx']
 #     name_embedding_list = dataset['name_embedding']
 #     commod_embedding_list = dataset['commodity_embedding']
-#     # other_embedding_list = dataset['other_embedding']
-
-#     print("here")
 
 #     len_input = list(range(len(name_embedding_list)))
 #     list_cosine_similarity = []
@@ -66,9 +65,6 @@ def compare_text_attribute_similarity(struct_attribute_embeddings: dict) -> dict
 #         name_similarity = 1 - spatial.distance.cosine(name_embedding_list[c[0]], name_embedding_list[c[1]])
 #         if commod_embedding_list[c[0]]:
 #             commod_similarity = 1 - spatial.distance.cosine(commod_embedding_list[c[0]], commod_embedding_list[c[1]])
-
-#         # other_similarity = 1 - spatial.distance.cosine(other_embedding_list[c[0]], other_embedding_list[c[1]])
-
 #         # similarity = EMBEDDING_RATIO1 * name_similarity + (EMBEDDING_RATIO2) * commod_similarity + (1-EMBEDDING_RATIO1 - EMBEDDING_RATIO2) * other_similarity
 #             similarity = EMBEDDING_RATIO1 * name_similarity + (1-EMBEDDING_RATIO1) * commod_similarity
 #         else: 
@@ -274,18 +270,24 @@ def compare_text_attribute_similarity(struct_attribute_embeddings: dict) -> dict
 
 
 def text_based_linking(pl_locationlinked_mineralsites):
+    pl_locationlinked_mineralsites = pl_locationlinked_mineralsites.head(10)
+
     pl_locationlinked_mineralsites = pl_locationlinked_mineralsites.with_columns(
-        attribute_struct = pl.struct(pl.col(['name', 'commodity'])).map_elements(create_text_attribute_embedding)
+        attribute_struct = pl.struct(pl.col(['name', 'commodities'])).map_elements(create_text_attribute_embedding)
     ).drop(
-        'name', 'commodity'
+        'name', 'commodities'
     )
 
-    pl_locationgrouped_mineralsite = pl_locationlinked_mineralsites.group_by(
-        'GroupID'
-    ).agg(
-        [pl.all()]
-    ).with_columns(
-        text_based_grouping = pl.col('attribute_struct').map_elements(compare_text_attribute_similarity)
-    )
+    print(pl_locationlinked_mineralsites)
+
+    # pl_locationgrouped_mineralsite = pl_locationlinked_mineralsites.group_by(
+    #     'GroupID'
+    # ).agg(
+    #     [pl.all()]
+    # ).with_columns(
+    #     text_based_grouping = pl.col('attribute_struct').map_elements(compare_text_attribute_similarity)
+    # ).unnest(
+    #     'attribute_struct'
+    # )
 
     return 0
