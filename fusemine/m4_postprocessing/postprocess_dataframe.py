@@ -36,7 +36,7 @@ def postprocessing(bool_interlink):
     module_start = perf_counter()
 
     if bool_interlink:
-        linked_file_name = 'pl_linkedNi'
+        linked_file_name = 'pl_interlinked'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:
@@ -77,6 +77,29 @@ def postprocessing(bool_interlink):
     df_linked[['name', 'source_id', 'record_id', 'location_info', 'same_as']] = df_output.apply(lambda x: get_info(x['source_alias'], x['idx'], split_keyword), axis=1, result_type="expand")
 
     module_end = perf_counter()
+
+    try:
+        pl_linked = df_linked[['source_id', 'record_id', 'same_as']]
+        pl_linked = pl.from_pandas(pl_linked)
+
+        pl_linked = pl_linked.with_columns(
+            source1 = pl.col('source_id') + '_' + pl.col('record_id')
+        ).drop(
+            ['source_id', 'record_id']
+        ).explode(
+            'same_as'
+        ).unnest(
+            'same_as'
+        ).with_columns(
+            source2 = pl.col('field_0') + '_' + pl.col('field_1')
+        ).drop(
+            ['field_0', 'field_1']
+        )
+
+        pl_linked.write_csv(os.path.join(PATH_OUTPUT_DIR, 'output.csv'))
+        
+    except:
+        pass
 
     # df_output = pl_output.to_pandas()
 
