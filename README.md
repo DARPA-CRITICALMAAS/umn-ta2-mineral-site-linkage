@@ -5,9 +5,9 @@ FuseMine is the pipeline for data reconciliation from multiple mineral site data
 ### Mineral Site Databases & Data Dictionaries
 FuseMine requires a data directory that consists of one or more mineral site database and their corresponding data dictionary (i.e., attribute name and description). 
 
-The following is an example of data directory layout
+The following is an example of data directory layout:
 ```
-data
+./fusemine/data
 |-- MRDS.csv
 |-- dict_MRDS.csv
 |-- USMIN.csv
