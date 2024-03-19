@@ -24,6 +24,7 @@ The following is an example of data directory layout:
 
 
 ### Libraries
+The code requires `python >= 3.8` and `pytorch >= 2.0`. `CUDA >= 11.7` is recommended when running FuseMine.
 Install the required package libraries by running the following code in the command line:
 ```
 pip install -r requirements.txt
