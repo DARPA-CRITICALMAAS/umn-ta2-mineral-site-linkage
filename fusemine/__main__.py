@@ -18,7 +18,6 @@ def main(args):
 
     process_schema(mss_code)
     preprocessing(list_code, mss_code)
-    list_code.append(mss_code)
     
     intralink(list_code, args.use_location_base)
     interlink(list_code, args.use_location_base)
