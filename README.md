@@ -103,7 +103,7 @@ python interlinking.py [-d path/to/data/directory] [-l if only using geolocation
 
 
 ### Parameters
-The following portion lists all the parameters that are used in the pipeline. These values can be modified in the `params.py` file.
+The following portion lists all the parameters that are used in the pipeline. These values can be modified in the [`params.py`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/params.py) file.
 
 | Name | Description | Value |
 | --- | --- | --- |
