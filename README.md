@@ -23,8 +23,11 @@ The following is an example of data directory layout:
     | latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
     * Data dictionaries are usually available inside the compressed zip data file (e.g., [MRDS](https://mrdata.usgs.gov/mrds/mrds-csv.zip)).
 
+* The description from the data dictionary is compared against our predefined target description of required attributes. These can be found in [`dictionary_target.pkl`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/src/dictionary_target.pkl) file.
+
 ### Libraries
-The code requires `python >= 3.8` and `pytorch >= 2.0`. `CUDA >= 11.7` is recommended when running FuseMine.
+The code requires `python >= 3.8` and `pytorch >= 2.0`. Installation instructions for pytorch can be found [here](https://pytorch.org/get-started/locally/). Installing with CUDA support is highly recommended but not required for running FuseMine.
+
 Install the required package libraries by running the following code in the command line:
 ```
 pip install -r requirements.txt
