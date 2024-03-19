@@ -21,7 +21,7 @@ The following is an example of data directory layout:
     | --- | --- | --- |
     | country | Country name | Name of the country in which the site is located. Textual values of no more than 20 characters. |
     | latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
-    * Data dictionaries are usually available inside the compressed zip data file (e.g., [MRDS](https://mrdata.usgs.gov/mrds/mrds-csv.zip)).
+    * Data dictionaries are usually available inside the compressed zip data file (e.g., [USMIN](https://www.sciencebase.gov/catalog/file/get/5ad623f2e4b0e2c2dd23f09e?name=USGS_Cobalt_US_CSV.zip)).
 
 * The description from the data dictionary is compared against our predefined target description of required attributes. These can be found in [`dictionary_target.pkl`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/src/dictionary_target.pkl) file.
 
