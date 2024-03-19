@@ -26,12 +26,12 @@ The following is an example of data directory layout:
 * The description from the data dictionary is compared against our predefined target description of required attributes. These can be found in [`dictionary_target.pkl`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/src/dictionary_target.pkl) file.
 
 ### Conda Environment Configurations
-The code requires `python >= 3.8` and `pytorch >= 2.0`. 
+The code requires `python >= 3.10` and `pytorch >= 2.0`. 
 
 The following is the example command line for creating a conda environment with `fusemine` name and `python=3.8`
 
 ```
-conda create -n fusemine python=3.8
+conda create -n fusemine python=3.10
 conda activate fusemine
 ```
 
