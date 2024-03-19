@@ -9,7 +9,6 @@ from fusemine.m0_load_input.save_ckpt import save_ckpt
 from fusemine.m3_interlinking.overlapping_region import *
 
 def interlink(list_code, bool_location):
-    print("interlinking started")
     seed_code = list_code.pop(0)
     pl_intra_linked = load_file([PATH_TMP_DIR, seed_code],
                                 'pl_intra_linked',
@@ -41,7 +40,7 @@ def interlink(list_code, bool_location):
 
         
         if not bool_location:
-            print(bool_location)
+            pass
 
     # print(inter_poly)
     
@@ -56,5 +55,3 @@ def interlink(list_code, bool_location):
     save_ckpt(data=inter_data,
               list_path=[PATH_TMP_DIR],
               file_name='pl_interlinked')
-    
-    print("interlinking ended")

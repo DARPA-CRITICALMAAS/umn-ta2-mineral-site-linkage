@@ -154,8 +154,6 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
     if len(potential_crs) != 0:
         col_crs = compare_description(dict_data, dict_target, potential_crs, ['crs'])
 
-    print(col_latitude, col_longitude, crs_value)
-
     if len(col_crs) != 0:
         rep_crs = col_crs[0]
         crs_value = pl_crs.select(
@@ -167,7 +165,6 @@ def identify_geo_location(pl_data, remaining_columns, dict_data, dict_target):
 
         def_latitude = dict_data[rep_latitude]
         crs_value = identify_crs(def_latitude)
-        print(crs_value)
 
     if dict_data == None:
         return col_latitude, col_longitude, crs_value

@@ -149,7 +149,6 @@ def location_based_linking(seed_data, seed_poly, against_data, against_poly):
         against_decision = 'selected'
 
     pl_overlapped_max = find_overlapping_region(seed_poly, against_poly, base_col, selecting_col)
-    print(pl_overlapped_max)
 
     pl_overlapped_max = pl_overlapped_max.with_columns(
         tmpGroup = pl.Series(list(range(pl_overlapped_max.shape[0])))
@@ -192,9 +191,6 @@ def location_based_linking(seed_data, seed_poly, against_data, against_poly):
     ).select(
         pl.col(['idx', 'latitude', 'longitude'])
     )
-
-    print("seed_data", grouped_seed_data)
-    print("temporary group", seed_alias['tmpGroup'])
 
     grouped_seed_data = grouped_seed_data.with_columns(
         tmpGroup = seed_alias['tmpGroup']

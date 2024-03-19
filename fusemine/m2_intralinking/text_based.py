@@ -24,7 +24,6 @@ def create_relevant_embeddings(alias_code:str, dict_known:dict):
     col_available = set(list(pl_tolink_org.columns))
     commodity_columns = list(set(dict_known['commodities']) & col_available)
     name_columns = list(set(dict_known['name']) & col_available)
-    print('name_columns available:', name_columns)
 
     pl_tolink_org = pl_tolink_org.sort('idx')
 
@@ -70,7 +69,6 @@ def create_relevant_embeddings(alias_code:str, dict_known:dict):
         )
 
     else:
-        print(pl_tolink)
         pl_name = pl_tolink.select(
             pl.col('idx'),
             all_names = pl.col(name_columns)
@@ -114,8 +112,6 @@ def get_cosine_similarity(dataset: dict) -> dict:
     name_embedding_list = dataset['name_embedding']
     commod_embedding_list = dataset['commodity_embedding']
     # other_embedding_list = dataset['other_embedding']
-
-    print("here")
 
     len_input = list(range(len(name_embedding_list)))
     list_cosine_similarity = []

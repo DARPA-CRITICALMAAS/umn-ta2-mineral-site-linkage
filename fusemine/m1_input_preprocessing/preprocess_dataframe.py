@@ -41,8 +41,6 @@ def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
     return gpd_geom, pl_geom
 
 def create_basic_info(pl_data, col_name):
-    print("create basic info input", pl_data)
-    print("name column input", col_name)
 
     df_info = pl_data.select(
         pl.col(['idx', 'source_id', 'record_id']),
@@ -74,8 +72,6 @@ def create_location_info(pl_data, dict_text_loc, crs_value, gpd_geom):
     ).rename(dict_text_loc).to_pandas()
 
     gpd_loc_info = pd.concat([gpd_geom, pl_textual_data], axis=1)
-
-    print(gpd_loc_info)
 
     dict_location_info = convert_df_to_dict(gpd_loc_info)
 
@@ -150,8 +146,6 @@ def process_dataframe(alias_code):
         source_id = pl.lit(alias_dict[alias_code]),
     )
 
-    print(pl_data)
-
     # if not bool_gdb:
     #     gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
     #     save_ckpt(data=pl_geom, 
@@ -162,9 +156,6 @@ def process_dataframe(alias_code):
     save_ckpt(data=pl_geom, 
             list_path=[PATH_TMP_DIR, alias_code],
             file_name='df_geometry')
-
-    print("dataframe", pl_data)
-    print("columns", col_name)
 
     dict_basic_info = create_basic_info(pl_data, col_name)
 
