@@ -36,7 +36,7 @@ def postprocessing(bool_interlink):
     module_start = perf_counter()
 
     if bool_interlink:
-        linked_file_name = 'pl_linkedNi'
+        linked_file_name = 'pl_interlinked'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:
@@ -84,7 +84,7 @@ def postprocessing(bool_interlink):
 
 def postprocess_toGeoJSON(bool_interlink):
     if bool_interlink:
-        linked_file_name = 'pl_linkedZn'
+        linked_file_name = 'pl_interlinked'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:
@@ -147,7 +147,7 @@ def postprocess_toGeoJSON(bool_interlink):
         # print("basic info", tmp_basicinfo)
         tmp_basicinfo = pl.from_pandas(tmp_basicinfo).select(
             idx = pl.col('index').cast(pl.Utf8),
-            name = pl.col('name').cast(pl.Utf8),
+            name = pl.col('site_name').cast(pl.Utf8),
             source = pl.col('source_id').cast(pl.Utf8),
             source_id = pl.col('record_id').cast(pl.Utf8),
         ).drop_nulls(['idx']).sort('idx')

@@ -55,6 +55,6 @@ def interlink(list_code, bool_location):
 
     save_ckpt(data=inter_data,
               list_path=[PATH_TMP_DIR],
-              file_name='pl_linkedZn')
+              file_name='pl_interlinked')
     
     print("interlinking ended")

@@ -11,7 +11,7 @@ import regex as re
 import pandas as pd
 import polars as pl
 import geopandas as gpd
-import pickle5 as pickle
+import pickle
 
 from fusemine.params import *
 from fusemine.m0_load_input.save_ckpt import *
@@ -117,7 +117,7 @@ def load_dir(path_dir, bool_dict=False):
 
     dict_code_alias = {}
     leading_char = 'a'
-    follow_char = 'g'
+    follow_char = 'a'
 
     for f in list_files:
         file_name, file_extension = os.path.splitext(f)

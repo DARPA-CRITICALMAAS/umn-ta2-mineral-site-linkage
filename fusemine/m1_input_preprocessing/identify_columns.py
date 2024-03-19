@@ -51,8 +51,6 @@ def identify_unique_id(pl_data, dict_data):
 
     potential_unique_id = [col.name for col in pl_count if col.all()]
 
-    print(potential_unique_id)
-
     if len(potential_unique_id) == 0:
         return False
     elif len(potential_unique_id) == 1:
@@ -77,6 +75,7 @@ def identify_unique_id(pl_data, dict_data):
     return False
 
 def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
+    remaining_columns = list(pl_data.columns)
     pl_name = pl_data.select(
         pl.col(remaining_columns)
     ).select(
@@ -85,14 +84,11 @@ def identify_site_name(pl_data, remaining_columns, dict_data, dict_target):
 
     potential_name = pl_name.columns
     col_match = compare_description(dict_data, dict_target, potential_name, ['name'])
-
-    print("name", col_match)
     
-    # Will be deleted
     potential = set(remaining_columns) & set(['Ftr_Name', 'Site_Name', 'site_name', 'Site'])
-    potential = set(col_match) | potential
+    potential = list(set(col_match) | potential)
     
-    return list(potential)[0]
+    return potential[0]
 
 def identify_textual_location(remaining_columns):
     dict_text_loc = {}
