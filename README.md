@@ -21,7 +21,7 @@ The following is an example of data directory layout:
     | --- | --- | --- |
     | country | Country name | Name of the country in which the site is located. Textual values of no more than 20 characters. |
     | latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
-
+    * Data dictionaries are usually available inside the compressed zip data file (e.g., [MRDS](https://mrdata.usgs.gov/mrds/mrds-csv.zip)).
 
 ### Libraries
 The code requires `python >= 3.8` and `pytorch >= 2.0`. `CUDA >= 11.7` is recommended when running FuseMine.
