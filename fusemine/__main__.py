@@ -9,7 +9,7 @@ from fusemine.m2_intralinking.intralink import intralink
 from fusemine.m2_intralinking.create_intra_representation import create_intra_rep
 from fusemine.m3_interlinking.interlink import interlink
 
-from fusemine.m4_postprocessing.postprocess_dataframe import postprocessing, postprocess_toGeoJSON
+from fusemine.m4_postprocessing.postprocess_dataframe import postprocessing
 from fusemine.m5_save_output.save_output import *
 
 def main(args):
@@ -24,10 +24,7 @@ def main(args):
     interlink(list_code, args.use_location_base)
 
     df_linked = postprocessing(bool_interlink=True)
-    save_output_json(df_linked, 'output')
-
-    gdf_linked = postprocess_toGeoJSON(bool_interlink=True)
-    save_output_geojson(gdf_linked, 'interlinked', ['./'])
+    save_output_csv(df_linked, 'output')
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')

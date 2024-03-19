@@ -78,36 +78,13 @@ def postprocessing(bool_interlink):
 
     module_end = perf_counter()
 
-    try:
-        pl_linked = df_linked[['source_id', 'record_id', 'same_as']]
-        pl_linked = pl.from_pandas(pl_linked)
-
-        pl_linked = pl_linked.with_columns(
-            source1 = pl.col('source_id') + '_' + pl.col('record_id')
-        ).drop(
-            ['source_id', 'record_id']
-        ).explode(
-            'same_as'
-        ).unnest(
-            'same_as'
-        ).with_columns(
-            source2 = pl.col('field_0') + '_' + pl.col('field_1')
-        ).drop(
-            ['field_0', 'field_1']
-        )
-
-        pl_linked.write_csv(os.path.join(PATH_OUTPUT_DIR, 'output.csv'))
-        
-    except:
-        pass
-
     # df_output = pl_output.to_pandas()
 
     return df_linked
 
 def postprocess_toGeoJSON(bool_interlink):
     if bool_interlink:
-        linked_file_name = 'pl_linkedZn'
+        linked_file_name = 'pl_interlinked'
         pl_linked = load_file([PATH_TMP_DIR], linked_file_name, '.pkl')
         split_keyword = '_'     # May need to be changed later
     else:
@@ -170,7 +147,7 @@ def postprocess_toGeoJSON(bool_interlink):
         # print("basic info", tmp_basicinfo)
         tmp_basicinfo = pl.from_pandas(tmp_basicinfo).select(
             idx = pl.col('index').cast(pl.Utf8),
-            name = pl.col('name').cast(pl.Utf8),
+            name = pl.col('site_name').cast(pl.Utf8),
             source = pl.col('source_id').cast(pl.Utf8),
             source_id = pl.col('record_id').cast(pl.Utf8),
         ).drop_nulls(['idx']).sort('idx')

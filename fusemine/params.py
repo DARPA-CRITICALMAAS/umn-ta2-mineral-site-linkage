@@ -9,10 +9,10 @@ ACCEPTABLE_INPUT_FILE = [
                         ]
 
 ACCEPTED_GEOMETRY_FORMAT = [
-                                'POINT\(.*\)', 
-                                'LINESTRING\(\[.*\]\)', 
-                                'POLYGON\(\[.*\]\)', 
-                                'MULTIPOINT\(\[\(.*\)+\]\)'
+                                'POINT(.*)', 
+                                'LINESTRING([.*])', 
+                                'POLYGON([.*])', 
+                                'MULTIPOINT([(.*)+])',
                             ]
 
 ATTRIBUTE_MINERAL_SITE = [
@@ -26,7 +26,7 @@ ATTRIBUTE_MINERAL_SITE = [
                             'state_or_province'
                           ]
 
-PATH_SRC_DIR = './minelink/src/'
+PATH_SRC_DIR = './fusemine/src/'
 PATH_TMP_DIR = './temporary/'
 PATH_OUTPUT_DIR = './outputs/'
 

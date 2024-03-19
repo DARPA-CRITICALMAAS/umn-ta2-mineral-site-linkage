@@ -115,8 +115,6 @@ def find_overlapping_region(gpd_poly1, gpd_poly2, base_col, selecting_col):
                     [pl_overlapped_max, pl_overlapped_one],
                     how='vertical'
                 )
-
-                # print("columns", pl_overlapped_max.columns)
             
             else:
                 pl_overlapped_max = pl_overlapped_one
@@ -151,12 +149,11 @@ def location_based_linking(seed_data, seed_poly, against_data, against_poly):
         against_decision = 'selected'
 
     pl_overlapped_max = find_overlapping_region(seed_poly, against_poly, base_col, selecting_col)
+    print(pl_overlapped_max)
 
     pl_overlapped_max = pl_overlapped_max.with_columns(
         tmpGroup = pl.Series(list(range(pl_overlapped_max.shape[0])))
     ).unique(subset=["selected"], maintain_order=True, keep="first") #TODO: cross determine
-
-    print("overlapping", pl_overlapped_max)
 
     seed_alias = pl_overlapped_max.select(
         pl.col('tmpGroup'),

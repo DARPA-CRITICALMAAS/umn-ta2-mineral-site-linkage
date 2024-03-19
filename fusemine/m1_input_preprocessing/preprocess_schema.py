@@ -1,7 +1,7 @@
 import polars as pl
 import pandas as pd
 import geopandas as gpd
-import pickle5 as pickle
+import pickle
 
 import regex as re
 import shapely.wkt

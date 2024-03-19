@@ -1,5 +1,5 @@
 import os
-import pickle5 as pickle
+import pickle
 
 from fusemine.params import *
 

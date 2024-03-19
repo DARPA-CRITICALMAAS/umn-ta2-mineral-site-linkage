@@ -16,8 +16,6 @@ def convert_df_to_dict(df_data):
     return dict_data
 
 def gdb_to_geometry_df(geometry_data, crs_value):
-    print(geometry_data)
-    print(crs_value)
     return 0
 
 def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
@@ -34,8 +32,6 @@ def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
         'location', inplace=False
     )
 
-    print(gpd_geom)
-
     pl_geom = pl_data.select(
         idx = pl.col('idx'),
         latitude = pl.col(rep_latitude),
@@ -45,12 +41,22 @@ def create_geometry_df(pl_data, col_latitude, col_longitude, crs_value):
     return gpd_geom, pl_geom
 
 def create_basic_info(pl_data, col_name):
+    print("create basic info input", pl_data)
+    print("name column input", col_name)
+
     df_info = pl_data.select(
         pl.col(['idx', 'source_id', 'record_id']),
-        name = pl.when(pl.col(col_name).str.strip_chars() == "")
-            .then("Unknown")
-            .otherwise(pl.col(col_name)).str.replace_all("[^\p{Ascii}]", ""),
+        pl.col(col_name)
     ).to_pandas()
+
+    # print("testing", df_info)
+
+    # df_info = pl_data.select(
+    #     pl.col(['idx', 'source_id', 'record_id']),
+    #     name = pl.when(pl.col(col_name).str.strip_chars() == "")
+    #         .then("Unknown")
+    #         .otherwise(pl.col(col_name)).str.replace_all("[^\p{Ascii}]", ""),
+    # ).to_pandas()
 
     dict_basic_info = convert_df_to_dict(df_info)
 
@@ -144,6 +150,8 @@ def process_dataframe(alias_code):
         source_id = pl.lit(alias_dict[alias_code]),
     )
 
+    print(pl_data)
+
     # if not bool_gdb:
     #     gpd_geom, pl_geom = create_geometry_df(pl_data, latitude, longitude, crs)
     #     save_ckpt(data=pl_geom, 
@@ -155,7 +163,11 @@ def process_dataframe(alias_code):
             list_path=[PATH_TMP_DIR, alias_code],
             file_name='df_geometry')
 
+    print("dataframe", pl_data)
+    print("columns", col_name)
+
     dict_basic_info = create_basic_info(pl_data, col_name)
+
     save_ckpt(data=dict_basic_info, 
               list_path=[PATH_TMP_DIR, alias_code],
               file_name='basic_info')

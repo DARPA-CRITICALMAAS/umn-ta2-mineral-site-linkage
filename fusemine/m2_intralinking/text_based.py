@@ -22,8 +22,9 @@ def create_relevant_embeddings(alias_code:str, dict_known:dict):
                           '.pkl')
     
     col_available = set(list(pl_tolink_org.columns))
-    commodity_columns = list(set(dict_known['commodity'] & col_available))
-    name_columns = list(set(dict_known['name'] & col_available))
+    commodity_columns = list(set(dict_known['commodities']) & col_available)
+    name_columns = list(set(dict_known['name']) & col_available)
+    print('name_columns available:', name_columns)
 
     pl_tolink_org = pl_tolink_org.sort('idx')
 
@@ -59,13 +60,21 @@ def create_relevant_embeddings(alias_code:str, dict_known:dict):
             pl.Series('commodity_embedding', [[]], dtype=pl.List)
         )
 
-    pl_name = pl_tolink.select(
-        pl.col('idx'),
-        all_names = pl.concat_str(
-            pl.col(name_columns),
-            separator = ', '
+    if len(name_columns) > 1:
+        pl_name = pl_tolink.select(
+            pl.col('idx'),
+            all_names = pl.concat_str(
+                pl.col(name_columns),
+                separator = ', '
+            )
         )
-    )
+
+    else:
+        print(pl_tolink)
+        pl_name = pl_tolink.select(
+            pl.col('idx'),
+            all_names = pl.col(name_columns)
+        )
 
     pl_name = pl_name.select(
         pl.col('idx'),
