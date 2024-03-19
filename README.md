@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ```
 
 ## How to run
-### Run End-to-End
+### Run FuseMine End-to-End
 Run the python file by entering the following code in the command line:
 ```
 python -m fusemine [-d path/to/data/directory] [-l if only using geolocation for linking]
