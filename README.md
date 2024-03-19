@@ -103,8 +103,8 @@ The following portion lists all the parameters that are used in the pipeline. Th
 
 | Name | Description | Value |
 | --- | --- | --- |
-| `INTRALINK_BOUNDARY` | Intralink Boundary | 0.5 (kilometers) |
-| `INTERLINK_BUFFER` | Interlink Buffer | 15 (meters) |
+| `INTRALINK_BOUNDARY` | Intralink Boundary | 500 (meters) |
+| `INTERLINK_BUFFER` | Interlink Buffer | 5000 (meters) |
 | `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
 | `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 |
 <!-- | `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
