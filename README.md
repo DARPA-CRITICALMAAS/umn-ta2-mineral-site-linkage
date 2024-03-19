@@ -15,7 +15,8 @@ data
 ```
 
 * The file name of the mineral site databases must be the source name (e.g., MRDS, USMIN, {DOI}), and the corresponding data dictionary file must have a file name of dict_{source name}. 
-* The data dictionary must consist of a description of the attribute label present in the database. The following is an example from the MRDS data dictionary
+* The data dictionary must consist of pairs of descriptions and attribute names in the database.
+  
     | attribute_label | short_description | attribute_definition |
     | --- | --- | --- |
     | country | Country name | Name of the country in which the site is located. Textual values of no more than 20 characters. |
