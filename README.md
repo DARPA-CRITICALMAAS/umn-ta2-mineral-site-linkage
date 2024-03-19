@@ -48,7 +48,8 @@ Run the python file by entering the following code in the command line:
 ```
 python -m fusemine [-d path/to/data/directory] [-l if only using geolocation for linking]
 ```
-The reconciled output in a two-column csv format would be located in `./outputs/`.
+The final output, formatted in a two-column CSV, will be found in the directory named `./outputs/`
+
 <!-- ### Process Raw Database to Mineral Site Schema Format
 ```
 cd m1_preprocessing
