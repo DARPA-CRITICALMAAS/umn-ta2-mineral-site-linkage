@@ -28,7 +28,7 @@ The following is an example of data directory layout:
 ### Conda Environment Configurations
 The code requires `python >= 3.10` and `pytorch >= 2.0`. 
 
-The following is the example command line for creating a conda environment with `fusemine` name and `python=3.8`
+The following is the example command line for creating a conda environment with `fusemine` name and `python=3.10`
 
 ```
 conda create -n fusemine python=3.10
