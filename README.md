@@ -1,25 +1,28 @@
-# UMN TA2 Mineral Site Linkage
-This repository is for the reconciliation of geospatial datasets (e.g., mineral site databases - MRDS, USMIN)
+# FuseMine (TA2 UMN)
+FuseMine is the pipeline for data reconciliation from multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from the reports (i.e., output from TA2 InferLink/USC).
 
-## Dataset Requirements
-Fusemine requires a data directory that consists of one or more mineral site database and their corresponding data dictionary. The file name of the mineral site database must be the source name (e.g., MRDS, USMIN, {DOI}) and the corresponding data dictionary file must have a file name of dict_{source name}. The following is an example of an acceptable data directory layout
+## Requirements
+### Mineral Site Databases & Data Dictionaries
+FuseMine requires a data directory that consists of one or more mineral site database and their corresponding data dictionary (i.e., attribute name and description). 
+
+The following is an example of data directory layout
 ```
-input_data_directory
+data
 |-- MRDS.csv
 |-- dict_MRDS.csv
 |-- USMIN.csv
 |-- dict_USMIN.csv
 ```
-In the case where a database and data dictionary match cannot be found (i.e., either the mineral site database is missing or the data dictionary is missing), the not-matched file will be ignored.
 
-### Data Dictionary Requirements
-The data dictionary must consist of a description of the attribute label present in the database. The following is an example from the MRDS data dictionary
-| attribute_label | short_description | attribute_definition |
-| --- | --- | --- |
-| country | Country name | Name of the country in which the site is located. Textual values of no more than 20 characters. |
-| latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
+* The file name of the mineral site databases must be the source name (e.g., MRDS, USMIN, {DOI}), and the corresponding data dictionary file must have a file name of dict_{source name}. 
+* The data dictionary must consist of a description of the attribute label present in the database. The following is an example from the MRDS data dictionary
+    | attribute_label | short_description | attribute_definition |
+    | --- | --- | --- |
+    | country | Country name | Name of the country in which the site is located. Textual values of no more than 20 characters. |
+    | latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
 
-## Requirements
+
+### Libraries
 Install the required package libraries by running the following code in the command line:
 ```
 pip install -r requirements.txt
