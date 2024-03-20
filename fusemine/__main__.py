@@ -24,7 +24,7 @@ def main(args):
 
     df_linked = postprocessing(bool_interlink=True)
 
-    output_filename = input('Output file name')
+    output_filename = input('Output file name: ')
     save_output_csv(df_linked, output_filename)
 
 if __name__ == '__main__':
