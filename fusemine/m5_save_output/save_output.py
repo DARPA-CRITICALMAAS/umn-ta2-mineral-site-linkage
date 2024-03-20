@@ -62,6 +62,8 @@ def save_output_csv(df_data, file_name, list_path=[PATH_OUTPUT_DIR]):
         pl.col('source1') != pl.col('source2')
     )
 
+    file_name = re.sub(' ', '_', file_name)
+    
     pl_sameas.write_csv(os.path.join(path_dir, file_name+'.csv'), separator=",")
 
 
