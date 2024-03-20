@@ -23,7 +23,9 @@ def main(args):
     interlink(list_code, args.use_location_base)
 
     df_linked = postprocessing(bool_interlink=True)
-    save_output_csv(df_linked, 'output')
+
+    output_filename = input('Output file name')
+    save_output_csv(df_linked, output_filename)
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Linking mineral site')
