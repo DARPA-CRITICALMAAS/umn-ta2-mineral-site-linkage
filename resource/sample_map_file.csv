@@ -1,0 +1,15 @@
+attribute_label,corresponding_attribute_label
+source_id,MRDS
+record_id,dep_id
+name,site_name
+commodity,commod1
+commodity,commod2
+commodity,commod3
+commodity,CODE_LIST
+latitude,latitude
+longitude,longitude
+crs,"EPSG:4326"
+country,country
+state_or_province,state
+deposit_type,dep_type
+uri,"https://mrdata.usgs.gov/mrds/"
