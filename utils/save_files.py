@@ -67,11 +67,15 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
             ['latitude', 'longitude']
         )
     
-    pl_data.write_csv('./tmp.csv')
+    # pl_data.write_csv('./tmp.csv')
 
     attribute_deposit_type_candidate = ['deposit_type']
     attribute_mineral_inventory = ['commodity', 'observed_commodity']
-    attribute_location_info = ['location', 'crs', 'country', 'state']
+    attribute_location_info = list(set(pl_data.column) & set(['location', 'crs', 'country', 'state']))
+
+    pl_data = pl_data.select(
+        location_info = pl.struct(pl.col(attribute_location_info))
+    )
 
     # str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
     # json_data = loads(str_data)

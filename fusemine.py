@@ -7,7 +7,7 @@ import configparser
 from utils.load_files import *
 from utils.load_kg_data import *
 from utils.save_files import *
-from utils.tabular_operations import *
+from utils.dataframe_operations import *
 from utils.compare_geolocation import *
 from utils.compare_text import *
 
@@ -48,27 +48,37 @@ def main(args):
 
     # TODO: Load data in CDR?
     # TODO: Check if a data dictionary exists for each source
+    # TODO: structure of data directory
 
     # One Stage
     if bool_onestage:
         if method_location:
             pl_data = compare_geolocation([pl_data], method_location)
         if item_text:
-            pl_data = compare_text([pl_data], item_text)
+            pl_data = compare_text(list_pl_data = [pl_data], 
+                                   items_to_compare=item_text,
+                                   orientation='row')
 
     # Two Stage (Intralink, Interlink)
+
+    # TODO: If data dictionary exists, try to find unidentified column names
 
     partitioned_pl_data = pl_data.partition_by('source_id')
     # Intralinking
     if bool_intralink:
         if method_location:
-            compare_geolocation(partitioned_pl_data, method_location)
+            pl_data = compare_geolocation(partitioned_pl_data, method_location)
         if item_text:
-            compare_text(partitioned_pl_data, item_text)
+            pl_data = compare_text(list_pl_data = partitioned_pl_data, # oRIGINAL
+                                   items_to_compare=item_text,
+                                   orientation='row')
 
+        # IF BOTH COMBINE
+            
     # Interlinking
     if bool_interlink:
         # TODO: laod intralinked temporary file or use the result from intralinking. if both do not exist, throw error and end program
+        # tAKE IN INTRALINKED DIRECTORY
         if method_location:
             compare_geolocation(pl_data, method_location, bool_select_max=True)
         if item_text:
@@ -91,7 +101,7 @@ if __name__ == '__main__':
 
     
     # parser.add_argument('--one_stage', nargs='+', choices = ['point', 'polygon', 'name', 'commodity'])
-    # parser.add_argument('--intralink', nargs='+', choices = ['point', 'polygon', 'name', 'commodity'])
+    # parser.add_argument('--intralink', nargs='+', choices = ['point', 'polygon'])
     # parser.add_argument('--interlink', nargs='+', choices = ['point', 'polygon', 'name', 'commodity'])
 
 

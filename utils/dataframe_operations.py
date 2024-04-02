@@ -86,9 +86,22 @@ def map_values(pl_rawdata, pl_value_map,
 
     return pl_rawdata
 
-def add_index_columns(pl_data, index_column_name:str):
-    list_indexes = list(range(pl_data.shape[0]))
+def add_index_columns(pl_data, index_column_name:str, group_by_col:str|None=None):
+    if group_by_col:
+        pl_data = pl_data.group_by(
+            group_by_col
+        ).agg(
+            [pl.all()]
+        ).drop(group_by_col)
 
-    return pl_data.with_columns(
+
+    list_indexes = list(range(pl_data.shape[0]))
+    
+    pl_data = pl_data.with_columns(
         pl.Series(list_indexes).alias(index_column_name)
     )
+
+    try:
+        return pl_data.explode(pl.exclude(index_column_name))
+    except:
+        return pl_data

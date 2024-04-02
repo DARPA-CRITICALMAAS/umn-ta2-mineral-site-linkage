@@ -11,6 +11,7 @@ from shapely import wkt
 from sklearn.cluster import HDBSCAN
 
 from utils.convert_dataframe import *
+from utils.dataframe_operations import *
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
@@ -45,17 +46,21 @@ def compare_by_point(gpd_data):
 
     gpd_data = gpd_data.to_crs(crs='EPSG:3857')
 
-    gpd_geolocationinfo = gpd.GeoDataFrame()
-    gpd_geolocationinfo['longitude'] = gpd_data.location.x
-    gpd_geolocationinfo['latitude'] = gpd_data.location.y
+    # gpd_geolocationinfo = gpd.GeoDataFrame()
+    # gpd_geolocationinfo['longitude'] = gpd_data.location.x
+    # gpd_geolocationinfo['latitude'] = gpd_data.location.y
 
-    coords = gpd_geolocationinfo[['longitude', 'latitude']].to_numpy()
+    # TODO: Need to check type and if polygon use centroid (or specify a point)
+    coords = [gpd_data.location.x, gpd_data.location.y].to_numpy()
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
     list_cluster_labels = clusters.labels_
 
     gpd_data['GroupID'] = list_cluster_labels
 
     return gpd_data
+
+def select_min_point_distance():
+    return 0
 
 def create_polygon_representation(gpd_data):
     gpd_data = gpd_data.to_crs(crs='EPSG:3857')
@@ -94,7 +99,7 @@ def compare_by_polygon(gpd_data, bool_select_max=False):
     )
 
     if bool_select_max:
-        pl_overlapped_data = select_max_overlapping_polygon(pl_overlapped_data)
+        pl_overlapped_data = select_max_overlapping_polygon(pl_overlapped_data) # TODO: Return as a polarws dataframe not a dictionary
     
     return dict(zip(pl_overlapped_data['GroupAlias_1'], pl_overlapped_data['GroupAlias_2']))
 
@@ -115,7 +120,13 @@ def compare_geolocation(list_pl_data, method:str|None=None, bool_select_max=Fals
     if not method:
         return list_pl_data
     
-    # TODO: append all output information the for loop
+    if bool_select_max and len(list_pl_data) > 1:
+        pl_data = pl.concat(
+            list_pl_data,
+            how='vertical'
+        )
+        list_pl_data = [pl_data]
+        del pl_data
 
     for pl_data in list_pl_data:
         gpd_data = to_geopandas(pl_data, 'pl', 'location')
@@ -130,5 +141,19 @@ def compare_geolocation(list_pl_data, method:str|None=None, bool_select_max=Fals
             case 'polygon':
                 if 'GroupID' in list(pl_data.columns):
                     gpd_data = create_polygon_representation(gpd_data)
-                dict_groups = compare_by_polygon(gpd_data, bool_select_max)
+                pl_group_map = compare_by_polygon(gpd_data, bool_select_max)
+
+                # map_values(pl_rawdata, pl_value_map, )
+                           
+            #    column_to_map: str, value_map_from: list|str, value_map_to: str, 
+            #    prefix: str|None=None, store_original_value: str|None=None):
+
+                pl_data = to_polars(gpd_data)
+                pl_data = map_values(pl_rawdata=pl_data, pl_value_map=pl_group_map,
+                                     column_to_map='GroupID', value_map_from='Group_Alias1', value_map_to='Group_Alias2',)
+
+                pl_data = add_index_columns(pl_data = pl_data,
+                                            index_column_name='GroupID',
+                                            group_by_col='GroupID')
+
                 # TODO: pass it through map values and add new index column
