@@ -19,8 +19,8 @@ config = configparser.ConfigParser()
 config.read('./params.ini')
 geo_params = config['geolocation.params']
 
-def compare_point_distance(gpd_data):
-    epsilon = float(geo_params['POINT_BUFFER_unit_meter'])
+def compare_point_distance(gpd_data, 
+                           epsilon=float(geo_params['POINT_BUFFER_unit_meter'])):
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
     coords = [gpd_data.location.x, gpd_data.location.y].to_numpy()
@@ -34,8 +34,8 @@ def compare_point_distance(gpd_data):
 
     return gpd_data
 
-def compare_buffer_overlap(gpd_data):
-    minimum_overlap_threshold = float(geo_params['POLYGON_AREA_OVERLAP_unit_sqmeter'])
+def compare_buffer_overlap(gpd_data, 
+                           minimum_overlap_threshold=float(geo_params['POLYGON_AREA_OVERLAP_unit_sqmeter'])):
 
     gpd_overlapped_data = gpd.overlay(
         gpd_data, gpd_data,

@@ -24,6 +24,8 @@ def main(args):
     bool_intralink = False
     bool_interlink = False
 
+    save_intralinked = True
+
     method_location = 'point'
     item_text = ['name', 'commodity']
     pl_data = None
@@ -31,7 +33,7 @@ def main(args):
     dictionary_file_directory = 'dictionary_directory'
     output_directory = 'output_directory'
     output_file = 'output_file'
-    path_intralinked = './path/'
+    intralinked_directory = './path/'
     ######################
 
     # Data processing to upload it to KG
@@ -52,7 +54,25 @@ def main(args):
 
     pl_data = load_kg()
     available_sourcenames = pl_data.unique(subset=['source_id'], keep='first')['source_id'].to_list()
-    list_attribute_dictionary = load_directory(path_intralinked, bool_asdict=True, list_target_filename=available_sourcenames)
+    dict_attribute_dictionary = load_directory(intralinked_directory, bool_asdict=True, list_target_filename=available_sourcenames)
+    # map attributes for those that have the attribute dictionary available
+    for source, dictionary_items in dict_attribute_dictionary.items():
+        pl_source = pl_data.filter(
+            pl.col('source_id') == source
+        )
+        pl_source = map_attribute_labels(pl_source, dictionary_items)
+
+        pl_remaining = pl_data.filter(
+            pl.col('source_id') != source
+        )
+
+        pl_data = pl.concat(
+            [pl_source, pl_remaining],
+            how='align'
+        )
+
+        del pl_source, pl_remaining
+
 
     # One Stage
     if bool_onestage:
@@ -87,12 +107,14 @@ def main(args):
                                    items_to_compare=item_text,
                                    orientation='row')
 
-    partitioned_pl_data
+    if save_intralinked:
+        # Saves intralinked data to the indicated intralinked directory
+        to_directory(partitioned_pl_data, intralinked_directory)
 
     # Interlinking
     if bool_interlink:
-        if path_intralinked:
-            partitioned_pl_data = load_directory(path_intralinked)
+        if intralinked_directory:
+            partitioned_pl_data = load_directory(intralinked_directory)
 
         pl_data = pl.concat(
             partitioned_pl_data,

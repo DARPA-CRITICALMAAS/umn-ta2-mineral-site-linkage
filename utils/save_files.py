@@ -120,4 +120,9 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
 
     # del str_data, json_data, cleaned_json_data
 
-# def to_directory(list_pl_data, output_directory:str):
+def to_directory(list_pl_data, output_directory:str):
+    for pl_data in list_pl_data:
+        output_file_name = pl_data.item(0, 'source_id').replace('/', '_')
+        output_file_location = os.path.join(output_directory, output_file_name+'.pkl')
+
+        as_pkl(pl_data, output_file_location)

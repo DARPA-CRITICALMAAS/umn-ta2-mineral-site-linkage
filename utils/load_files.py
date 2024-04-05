@@ -35,19 +35,23 @@ def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value
         case '.json':
             input_data = pl.read_json(input_filename)
 
+        case _:
+            input_data = initiate_load(input_filename+'dictionary.csv', bool_asdict=True, key_column='label', value_column='definition')
+
     if bool_asdict:
         return as_dictionary(input_data, key_column, value_column)
 
     return input_data
 
-def load_directory(input_directory:str, bool_asdict=False, list_target_filename:list|None=None):
+def load_directory(input_directory:str, list_target_filename:list|None=None):
     files_in_directory = os.listdir(input_directory)
 
-    list_loaded_file = []
+    loaded_files = {}
+
     for file in files_in_directory:
-        loaded_data = initiate_load(file, bool_asdict=bool_asdict, list_target_filename=list_target_filename)
+        loaded_data = initiate_load(os.path.join(input_directory, file), list_target_filename=list_target_filename)
 
         if loaded_data:
-            list_loaded_file.append(loaded_data)
+            loaded_files[file] = loaded_data
 
-    return list_loaded_file
+    return loaded_files
