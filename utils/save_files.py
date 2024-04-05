@@ -30,6 +30,10 @@ def clean_nones(input_object: dict | list) -> dict | list:
     else:
         return input_object
 
+def as_pkl(pl_data, output_file_location:str) -> int:
+    with open(output_file_location, 'wb') as handle:
+        pickle.dump(handle, pl_data, protocol=pickle.HIGHEST_PROTOCOL)
+
 def as_csv(pl_data, output_directory: str, output_file_name: str):
     # Filtering out with GroupID -1 (i.e, no group info) and those that are length 1
     pl_data = pl_data.filter(
@@ -111,3 +115,5 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
     #     dump(cleaned_json_data, f, indent=4, default=str)
 
     # del str_data, json_data, cleaned_json_data
+
+def to_directory(list_pl_data, output_directory:str):

@@ -50,6 +50,7 @@ def main(args):
 
     pl_data = load_kg()
     available_sourcenames = pl_data.unique(subset=['source_id'], keep='first')['source_id'].to_list()
+    list_attribute_dictionary = load_directory(path_intralinked, bool_asdict=True, list_target_filename=available_sourcenames)
 
     # One Stage
     if bool_onestage:
@@ -78,7 +79,9 @@ def main(args):
             partitioned_pl_data = compare_text_value_embedding(list_pl_data = partitioned_pl_data,
                                    items_to_compare=item_text,
                                    orientation='row')
-            
+
+    partitioned_pl_data
+
     # Interlinking
     if bool_interlink:
         if path_intralinked:
