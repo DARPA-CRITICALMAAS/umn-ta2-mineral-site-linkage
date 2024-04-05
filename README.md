@@ -1,4 +1,4 @@
-# TA2 UMN - FuseMine (UPDATE RCURRENTLY IN PROGRESS)
+# TA2 UMN - FuseMine (UPDATE CURRENTLY IN PROGRESS)
 FuseMine is the pipeline for data reconciliation from multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from the reports (i.e., output from TA2 InferLink/USC).
 
 ## Requirements
