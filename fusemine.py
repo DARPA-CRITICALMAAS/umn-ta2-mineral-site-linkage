@@ -26,6 +26,11 @@ def main(args):
     method_location = 'point'
     item_text = ['name', 'commodity']
     pl_data = None
+
+    dictionary_file_directory = 'dictionary_directory'
+    output_directory = 'output_directory'
+    output_file = 'output_file'
+    path_intralinked = './path/'
     ######################
 
     if bool_data_process:
@@ -46,47 +51,51 @@ def main(args):
     pl_data = load_kg()
     available_sourcenames = pl_data.unique(subset=['source_id'], keep='first')['source_id'].to_list()
 
-    # TODO: Load data in CDR?
-    # TODO: Check if a data dictionary exists for each source
-    # TODO: structure of data directory
-
     # One Stage
     if bool_onestage:
         if method_location:
             pl_data = compare_geolocation([pl_data], method_location)
         if item_text:
-            pl_data = compare_text(list_pl_data = [pl_data], 
-                                   items_to_compare=item_text,
-                                   orientation='row')
+            pl_data = compare_text_value_embedding(list_pl_data = [pl_data], 
+                                                   items_to_compare=item_text,
+                                                   orientation='row')
 
     # Two Stage (Intralink, Interlink)
-
-    # TODO: If data dictionary exists, try to find unidentified column names
+    # TODO: Load data in CDR?
+    # TODO: Check if a data dictionary exists for each source
+    # TODO: structure of data directory
+    # target_attribute_dictionary = 
+    # list_attribute_dictionary = load_directory(path_intralinked, bool_asdict=True, list_target_filename=available_sourcenames)
+    # for db_attribute_dictionary in list_attribute_dictionary:
+    #     compare_attribute_embedding(target_attribute_dictionary, db_attribute_dictionary:dict)
 
     partitioned_pl_data = pl_data.partition_by('source_id')
     # Intralinking
     if bool_intralink:
         if method_location:
-            pl_data = compare_geolocation(partitioned_pl_data, method_location)
+            partitioned_pl_data = compare_geolocation(partitioned_pl_data, method_location)
         if item_text:
-            pl_data = compare_text(list_pl_data = partitioned_pl_data, # oRIGINAL
+            partitioned_pl_data = compare_text_value_embedding(list_pl_data = partitioned_pl_data,
                                    items_to_compare=item_text,
                                    orientation='row')
-
-        # IF BOTH COMBINE
             
     # Interlinking
     if bool_interlink:
-        # TODO: laod intralinked temporary file or use the result from intralinking. if both do not exist, throw error and end program
-        # tAKE IN INTRALINKED DIRECTORY
+        if path_intralinked:
+            partitioned_pl_data = load_directory(path_intralinked)
+
+        pl_data = pl.concat(
+            partitioned_pl_data,
+            how='vertical_relaxed'
+        )
+
         if method_location:
-            compare_geolocation(pl_data, method_location, bool_select_max=True)
+            partitioned_pl_data = compare_geolocation([pl_data], method_location, bool_select_max=True)
         if item_text:
-            compare_text(pl_data, item_text)
+            partitioned_pl_data = compare_text_value_embedding([pl_data], item_text)
 
     # Saving linked results
-
-    return 0
+    as_csv(partitioned_pl_data[0], output_directory, output_file)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')

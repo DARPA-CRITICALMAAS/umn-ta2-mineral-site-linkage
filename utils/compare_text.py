@@ -9,61 +9,62 @@ from typing import Literal
 from scipy import spatial
 from itertools import combinations, product
 
-import torch
-from sentence_transformers import SentenceTransformer
-
 from utils.dataframe_operations import *
+from utils.create_textinfo_representation import *
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
 text_params = config['text.params']
 
-st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
-
-def form_text_embeddings(input_str:str):
-    return st_model.encode(input_str)
-
-def measure_cosine_similarity(embedding1:str|list, embedding2:str|list, threshold_value:float, embedding_ratio:list|None=None) -> bool:
-    if isinstance(embedding1, list):
-        cosine_similarity = 1 - spatial.distance.cosine(form_text_embeddings(embedding1[0]), form_text_embeddings(embedding2[0]))
-        # TODO: Need to deal with all components in embedding1
-
-    cosine_similarity = 1 - spatial.distance.cosine(form_text_embeddings(embedding1), form_text_embeddings(embedding2))
+def measure_cosine_similarity(embedding1:list, embedding2:list, threshold_value:float) -> bool:
+    cosine_similarity = 1 - spatial.distance.cosine(embedding1, embedding2)
 
     if cosine_similarity > threshold_value:
         return True
     return False
 
-def compare_attribute_embedding():
-    return 0
+def compare_attribute_embedding(target_attribute_dictionary:dict, db_attribute_dictionary:dict) -> dict:
+    target_attribute_dictionary = {k: text_embedding(v) for k, v in target_attribute_dictionary.items}
+    db_attribute_dictionary = {k: text_embedding(v) for k, v in db_attribute_dictionary.items}
 
-# Separate out the map element portion
+    list_target_attributes = list(target_attribute_dictionary.keys())
+    list_db_attributes = list(db_attribute_dictionary.keys())
 
-def compare_text_embedding(list_pl_data, items_to_compare: list|None=None):
+    combinations_to_compare = product(list_target_attributes, list_db_attributes)
+
+    identified_attribute = {}
+    for i in combinations_to_compare:
+        def_target_attribute = target_attribute_dictionary[i[0]]
+        def_db_attribute = db_attribute_dictionary[i[1]]
+
+        if measure_cosine_similarity(def_target_attribute, def_db_attribute, text_params['ATTRIBUTE_DEFINITION_THRESHOLD']):
+            identified_attribute[i[1]] = i[0]
+
+    return identified_attribute
+
+def compare_text_value_embedding(list_pl_data, items_to_compare:list|None=None):
+    # No text based comparison
     if not items_to_compare:
-        return pl_data
+        return list_pl_data
 
-    list_indexes = list(range(pl_data.shape[0]))
+    for pl_data in list_pl_data:
+        pl_data = pl_data.with_columns(
+            pl.col(items_to_compare).map_elements(lambda x: text_embedding(x))
+        )
+        pl_data = add_index_columns(pl_data, 'GroupID')
 
-    pl_data = pl_data.with_columns(
-        pl.col(items_to_compare).map_elements(form_text_embeddings),
-    )
-    pl_data = add_index_columns(pl_data, 'tmp_index')
+        # Create combinations of index of every row
+        list_indexes = list(range(pl_data.shape[0]))
+        idx_combinations = combinations(list_indexes, 2)
+        threshold_value = float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])
 
-    # match orientation:
-    #     case 'row':
-            idx_combinations = combinations(list_indexes, 2)
-            threshold_value = float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])
-            embedding_ratio = ast.literal_eval(text_params['ATTRIBUTE_VALUE_RATIO'])
+        for tuple_combination in idx_combinations:
+            str1 = pl_data.item(items_to_compare[0], tuple_combination[0])
+            str2 = pl_data.item(items_to_compare[1], tuple_combination[1])
 
-        # case 'column':
-        #     idx_combinations = product(list_indexes, repeat=2)
-        #     threshold_value = float(text_params['ATTRIBUTE_DEFINITION_THRESHOLD'])
+            if measure_cosine_similarity(str1, str2, threshold_value):
+                pl_data[tuple_combination[0], 'GroupID'] = pl_data[tuple_combination[1], 'GroupID']
 
-    # TODO: need to take into consideration where items to compare is more than 2
-    list_bool_threshold = []
-    for i in idx_combinations:
-        str1 = pl_data.item(items_to_compare[0], i[0])
-        str2 = pl_data.item(items_to_compare[1], i[1])
+        pl_data = pl_data.group_by('GroupID').agg([pl.all()])
 
-        list_bool_threshold.append(measure_cosine_similarity(str1, str2, threshold_value))
+    return list_pl_data

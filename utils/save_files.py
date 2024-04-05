@@ -30,8 +30,30 @@ def clean_nones(input_object: dict | list) -> dict | list:
     else:
         return input_object
 
-def as_csv(pl_data):
-    return 0
+def as_csv(pl_data, output_directory: str, output_file_name: str):
+    # Filtering out with GroupID -1 (i.e, no group info) and those that are length 1
+    pl_data = pl_data.filter(
+        pl.col('GroupID') != -1
+    ).with_columns(
+        linked_count = pl.col('URI').list.len()
+    ).filter(
+        pl.col('linked_count') > 1
+    )
+    
+    # Converting data to two column csv
+    pl_data = pl_data.select(
+        URI_1 = pl.col('URI')
+    ).with_columns(
+        URI_2 = pl.col('URI_1').list.get(0)
+    ).explode(
+        'URI_1'
+    ).filter(
+        pl.col('URI_1') != pl.col('URI_2')
+    )
+
+    # Saving to {output_directory}/{output_file_name}
+    output_file_location = os.path.join(output_directory, output_file_name+'.csv')
+    pl_data.write_csv(output_file_location)
 
 def as_geojson(pl_data, output_directory: str, output_file_name: str):
     pl_processed_mineralsite = pl_processed_mineralsite.with_columns(

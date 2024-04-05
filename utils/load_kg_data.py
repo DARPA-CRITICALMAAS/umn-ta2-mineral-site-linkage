@@ -75,6 +75,8 @@ def load_kg():
                 OPTIONAL { ?ms :location_info [ :state_or_province ?state_or_province ] }.
             } '''
 
+    # TODO: Also querty for deposit type
+
     pl_data = run_minmod_query(query, values=True)
 
     pl_mineralsite_data = pl_data.unique(
@@ -84,23 +86,5 @@ def load_kg():
     ).rename(
         {'ms': 'URI'}
     )
-
-    # pl_data = pl_data.group_by(
-    #     'ms'
-    # ).agg(
-    #     [pl.all()]
-    # ).select(
-    #     pl.all().list.unique().cast(pl.List(pl.Utf8)).list.join(", ") 
-    # )
-
-    # pl_mineralsite = pl_data.with_columns(
-    #     crs = pl.when(
-    #         pl.col('crs') == 'null'
-    #     ).then(
-    #         pl.lit('WGS84')
-    #     ).otherwise(
-    #         pl.col('crs')
-    #     )
-    # )
 
     return pl_mineralsite_data
