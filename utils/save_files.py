@@ -120,4 +120,4 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
 
     # del str_data, json_data, cleaned_json_data
 
-def to_directory(list_pl_data, output_directory:str):
+# def to_directory(list_pl_data, output_directory:str):
