@@ -8,6 +8,7 @@ from utils.load_files import *
 from utils.load_kg_data import *
 from utils.save_files import *
 from utils.dataframe_operations import *
+from utils.combine_grouping_results import * 
 from utils.compare_geolocation import *
 from utils.compare_text import *
 
@@ -17,7 +18,7 @@ path_params = config['directory.paths']
 prefixes = config['mapping.prefix']
 
 def main(args):
-    ##### PLACEHOLDER #####
+    ##### args statement #####
     bool_data_process = True
     bool_onestage = True
     bool_intralink = False
@@ -33,9 +34,10 @@ def main(args):
     path_intralinked = './path/'
     ######################
 
+    # Data processing to upload it to KG
     if bool_data_process:
         pl_rawdata = initiate_load(args.raw_data, False)
-        dict_attribute_map = initiate_load(args.map_file, True, 'corresponding_attribute_label', 'attribute_label')    
+        dict_attribute_map = initiate_load(args.map_file, True, 'corresponding_attribute_label', 'attribute_label')
         pl_mapped_data = map_attribute_labels(pl_rawdata, dict_attribute_map)
 
         pl_value_map = initiate_load(path_params['PATH_COMMODITY_MAP_FILE'], False)
@@ -46,7 +48,7 @@ def main(args):
                                     value_map_from=['CommodityinMRDS', 'CodeinMRDS'], 
                                     value_map_to='minmod_id',
                                     prefix=prefixes['MINMOD_PREFIX'])
-        # as_json(pl_mapped_data, './', 'output')
+        as_json(pl_mapped_data, './', 'output')
 
     pl_data = load_kg()
     available_sourcenames = pl_data.unique(subset=['source_id'], keep='first')['source_id'].to_list()
@@ -54,12 +56,17 @@ def main(args):
 
     # One Stage
     if bool_onestage:
+        list_pl_linked = []
         if method_location:
-            pl_data = compare_geolocation([pl_data], method_location)
+            list_pl_linked.append(compare_geolocation([pl_data], method_location))
         if item_text:
-            pl_data = compare_text_value_embedding(list_pl_data = [pl_data], 
-                                                   items_to_compare=item_text,
-                                                   orientation='row')
+            list_pl_linked.append(compare_text_value_embedding(list_pl_data = [pl_data], 
+                                                               items_to_compare=item_text))
+
+        if list_pl_linked > 1:
+            pl_data = merge_grouping_results(list_pl_linked[0], list_pl_linked[1])
+        else:
+            pl_data = list_pl_linked[0]
 
     # Two Stage (Intralink, Interlink)
     # TODO: Load data in CDR?

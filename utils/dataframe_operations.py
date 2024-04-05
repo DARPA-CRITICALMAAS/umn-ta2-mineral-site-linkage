@@ -3,14 +3,6 @@ import polars as pl
 
 from utils.load_files import as_dictionary
 
-def unify_crs():
-    return 0
-
-def clean_values(input_string:str, prefix:str|None=None, store_original_value:str|None=None):
-    print(input_string, store_original_value)
-
-    return 0
-
 def map_attribute_labels(pl_rawdata, dict_attribute_map: dict):
     attr_in_rawdata = set(pl_rawdata.columns)
     attr_in_dictionary = set(dict_attribute_map.keys())
@@ -80,12 +72,6 @@ def map_values(pl_rawdata, pl_value_map,
                 pl_rawdata = pl_rawdata.with_columns(
                     pl.col(column_to_map).str.replace(old, new)
                 )
-
-    # pl_rawdata = pl_rawdata.with_columns(
-    #     pl.col(column_to_map).map_elements(clean_values, prefix, store_original_value)
-    # )
-
-    print(pl_rawdata)
 
     return pl_rawdata
 
