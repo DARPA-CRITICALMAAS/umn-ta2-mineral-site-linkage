@@ -1,3 +1,4 @@
-test.py
 run.sh
 full_MRDS.csv
+.ta2/
+epsg_sql_db.csv

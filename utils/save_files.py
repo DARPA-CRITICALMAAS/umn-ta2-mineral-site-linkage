@@ -7,6 +7,8 @@ import geopandas as gpd
 from shapely import wkt
 from json import loads, dump
 
+from utils.unify_coordinate_system import *
+
 def clean_nones(input_object: dict | list) -> dict | list:
     """
     Recursively remove all None values from either a dictionary or a list, and returns a new dictionary or list without the None values
@@ -79,7 +81,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
     : param: output_file_name = 
     """
     if 'latitude' in list(pl_data.columns) or 'longitude' in list(pl_data.columns):
-        crs_value = pl_data.item(0, 'crs')
+        crs_value = get_epsg(pl_data.item(0, 'crs'))    # Convert CRS to EPSG value
         geometry = gpd.points_from_xy(pl_data['longitude'], pl_data['latitude'], crs=crs_value)
         list_geometry = [wkt.dumps(g, trim=True) for g in geometry.tolist()]
 
@@ -89,25 +91,27 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
             ['latitude', 'longitude']
         )
     
-    # pl_data.write_csv('./tmp.csv')
-
+    attribute_record_identifiers = list(set(pl_data.column) & set(['source_id', 'record_id', 'name']))
     attribute_deposit_type_candidate = ['deposit_type']
     attribute_mineral_inventory = ['commodity', 'observed_commodity']
     attribute_location_info = list(set(pl_data.column) & set(['location', 'crs', 'country', 'state']))
 
     pl_data = pl_data.select(
-        location_info = pl.struct(pl.col(attribute_location_info))
+        pl.col(attribute_record_identifiers),
+        observed_name = pl.col(attribute_deposit_type_candidate),
+        mineral_inventory = pl.struct(pl.col(attribute_mineral_inventory)),
+        location_info = pl.struct(pl.col(attribute_location_info)),
     )
 
-    # str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
-    # json_data = loads(str_data)
-    # cleaned_json_data = clean_nones(json_data)
+    str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
+    json_data = loads(str_data)
+    cleaned_json_data = clean_nones(json_data)
 
-    # if not os.path.exists(output_directory):
-    #     os.makedirs(output_directory)
-    # output_file_location = os.path.join(output_directory, output_file_name+'.json')
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+    output_file_location = os.path.join(output_directory, output_file_name+'.json')
 
-    # with open(output_file_location, 'w') as f:
-    #     dump(cleaned_json_data, f, indent=4, default=str)
+    with open(output_file_location, 'w') as f:
+        dump(cleaned_json_data, f, indent=4, default=str)
 
     # del str_data, json_data, cleaned_json_data

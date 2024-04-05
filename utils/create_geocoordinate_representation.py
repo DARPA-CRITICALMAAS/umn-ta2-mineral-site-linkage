@@ -13,25 +13,6 @@ config = configparser.ConfigParser()
 config.read('./params.ini')
 geo_params = config['geolocation.params']
 
-def unify_crs(pl_data, crs_column=str):
-    list_crs_separated_data = pl_data.partition_by(
-        crs_column
-    )
-
-    for d in list_crs_separated_data:
-        if d.item(0, 'crs') == geo_params['DEFAULT_CRS_SYSTEM']:
-            continue
-
-        gpd_data = to_geopandas(d, 'pl', 'location').to_crs(geo_params['DEFAULT_CRS_SYSTEM'])
-        d = to_polars(gpd_data, 'gpd')
-
-    pl_data = pl.concat(
-        list_crs_separated_data,
-        how='vertical_relaxed'
-    )
-
-    return pl_data
-
 def create_coordinate_point_representation(gpd_data):
     # Convert geometry to single point by finding centroid if the geometry is not a point
     gpd_data['geometry'] = gpd_data['geometry'].apply(lambda x: x.centroid if x.type!='Point' else x)
