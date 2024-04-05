@@ -1,0 +1,9 @@
+attribute_label,corresponding_attribute_label
+name,"Current name of the site"
+other_name,"Other possible names of the site"
+latitude,"latitude of the site in decimal degrees"
+longitude,"longitude of the site in decimal degrees"
+crs,"coordinate reference system of the latitude longitude value"
+commodity,"commodities that can be found at the site".
+country,
+state_or_province,
