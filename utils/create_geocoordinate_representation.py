@@ -15,6 +15,7 @@ geo_params = config['geolocation.params']
 
 def create_coordinate_point_representation(gpd_data):
     # Convert geometry to single point by finding centroid if the geometry is not a point
+    # TODO: check that it is a centroid
     gpd_data['geometry'] = gpd_data['geometry'].apply(lambda x: x.centroid if x.type!='Point' else x)
 
     # Create a longitude, latitude column

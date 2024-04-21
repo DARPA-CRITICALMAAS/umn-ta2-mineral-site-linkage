@@ -11,6 +11,7 @@ from utils.dataframe_operations import *
 from utils.combine_grouping_results import * 
 from utils.compare_geolocation import *
 from utils.compare_text import *
+from utils.mapping_commodities_to_commodity_code import *
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
@@ -19,6 +20,7 @@ prefixes = config['mapping.prefix']
 
 def main(args):
     ##### args statement #####
+    bool_update_commodity_code = True
     bool_data_process = True
     bool_onestage = True
     bool_intralink = False
@@ -35,6 +37,9 @@ def main(args):
     output_file = 'output_file'
     intralinked_directory = './path/'
     ######################
+    # Update MRDS commodity code mapping
+    if bool_update_commodity_code:
+        map_commodities_to_code()
 
     # Data processing to upload it to KG
     if bool_data_process:
@@ -73,20 +78,13 @@ def main(args):
 
         del pl_source, pl_remaining
 
-
-    # One Stage
     if bool_onestage:
-        list_pl_linked = []
         if method_location:
-            list_pl_linked.append(compare_geolocation([pl_data], method_location))
+            df_linked = compare_geolocation([pl_data], method_location)
         if item_text:
-            list_pl_linked.append(compare_text_value_embedding(list_pl_data = [pl_data], 
-                                                               items_to_compare=item_text))
+            df_linked = compare_text_value_embedding(list_pl_data = [pl_data], items_to_compare=item_text)
 
-        if list_pl_linked > 1:
-            pl_data = merge_grouping_results(list_pl_linked[0], list_pl_linked[1])
-        else:
-            pl_data = list_pl_linked[0]
+        df_linked = merge_grouping_results(df_linked)
 
     # Two Stage (Intralink, Interlink)
     # TODO: Load data in CDR?

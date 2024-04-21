@@ -3,23 +3,24 @@ import polars as pl
 
 from utils.dataframe_operations import *
 
-def merge_grouping_results(pl_grouped1, pl_grouped2):
-    # Rename groupid
-    pl_grouped1 = pl_grouped1.rename(
-        {'GroupID': 'GroupID1'}
-    )
-    pl_grouped2 = pl_grouped2.rename(
-        {'GroupID': 'GroupID2'}
-    )
+def merge_grouping_results(pl_grouped):
+    possible_columns = set(['GroupID_location', 'GroupdID_text'])
+    columns_in_dataframe = set(list(pl_grouped.columns))
 
-    # Group by combination of two GroupIDs
-    pl_combined = pl.concat(
-        [pl_grouped1, pl_grouped2],
-        how='align'
-    ).group_by(
-        ['GroupID1', 'GroupID2']
-    ).agg([pl.all()]).drop(
-        ['GroupID1', 'GroupID2']
-    )
+    column_overlap = list(possible_columns & columns_in_dataframe)
 
-    return add_index_columns(pl_combined, 'GroupID')
+    match len(column_overlap):
+        case 0:
+            return pl_grouped
+        
+        case 1:
+            return pl_grouped.rename(
+                {column_overlap[0]: 'GroupID'}
+            )
+        
+        case _:
+            pl_grouped = pl_grouped.group_by(
+                column_overlap
+            ).agg([pl.all()]).drop(column_overlap)
+
+            return add_index_columns(pl_grouped, 'GroupID')

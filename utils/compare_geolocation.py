@@ -13,12 +13,13 @@ from sklearn.cluster import HDBSCAN
 from utils.convert_dataframe import *
 from utils.dataframe_operations import *
 from utils.create_geocoordinate_representation import *
-from unify_coordinate_system import *
+from utils.unify_coordinate_system import *
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
 geo_params = config['geolocation.params']
 
+# TODO: function name so that it sounds like
 def compare_point_distance(gpd_data, 
                            epsilon=float(geo_params['POINT_BUFFER_unit_meter'])):
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
@@ -81,7 +82,7 @@ def compare_buffer_overlap(gpd_data,
 
 #     return pl_polygon_region_data
 
-def compare_geolocation(list_pl_data, method:str|None=None):
+def archive_compare_geolocation(list_pl_data, method:str|None=None):
     if not method:
         return list_pl_data
     
@@ -109,6 +110,32 @@ def compare_geolocation(list_pl_data, method:str|None=None):
         #                             index_column_name='GroupID',
         #                             group_by_col='GroupID')
         
-        pl_data = pl_data.group_by('GroupID').agg([pl.all()])
+        pl_data = pl_data.group_by('GroupID').agg([pl.all()]).rename({'GroupID': 'GroupID_location'})
 
     return list_pl_data
+
+def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
+    if not method:
+        return pl_data
+    
+    if not source_id:
+        source_id = 'ALL'
+
+    pl_data = unify_crs(pl_data, crs_column='crs')
+    gpd_data = to_geopandas(pl_data, 'pl', 'location')
+
+    print('done\n')
+
+    # if 'loc_GroupID' not in list(pl_data.columns):
+    #     pl_data = add_index_columns(pl_data = pl_data,
+    #                                 index_column_name = 'loc_GroupID')
+        
+    # match method:
+    #     case 'distance':
+    #         gpd_data = create_coordinate_point_representation(gpd_data)
+    #         gpd_data = compare_point_distance(gpd_data)
+
+    # pl_data = to_polars(gpd_data)
+    # print(pl_data)
+
+    return pl_data

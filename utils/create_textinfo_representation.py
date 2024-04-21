@@ -23,9 +23,14 @@ def text_embedding(input_str:str|list):
 
     return embedded_string
 
-def create_text_attribute_representation(pl_data):
-    return 0
-
 def get_sentbert_embeddings(input_str:str):
     return st_model.encode(input_str)
 
+def create_text_attribute_representation(pl_data):
+    return 0
+
+def row_to_json_string(pl_data):
+    return 0
+
+def row_to_doc_string(pl_data):
+    return 0

@@ -1,0 +1,13 @@
+attribute_label,corresponding_attribute_label,file_name
+source_id,"https://doi.org/10.3133/ofr20111058",
+record_id,rec_id,main
+name,depname,main
+commodity,"cobalt,nickel",
+commodity,value,minerals
+latitude,latitude,main
+longitude,longitude,main
+crs,"WGS84",
+country,country,main
+state_or_province,stprov,main
+deposit_type,deptype,main
+uri,"https://mrdata.usgs.gov/laterite/",

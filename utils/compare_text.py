@@ -18,6 +18,7 @@ text_params = config['text.params']
 
 def measure_cosine_similarity(embedding1:list, embedding2:list, threshold_value:float) -> bool:
     cosine_similarity = 1 - spatial.distance.cosine(embedding1, embedding2)
+    # TODO: dimension reduction
 
     if cosine_similarity > threshold_value:
         return True
@@ -65,6 +66,6 @@ def compare_text_value_embedding(list_pl_data, items_to_compare:list|None=None):
             if measure_cosine_similarity(str1, str2, threshold_value):
                 pl_data[tuple_combination[0], 'GroupID'] = pl_data[tuple_combination[1], 'GroupID']
 
-        pl_data = pl_data.group_by('GroupID').agg([pl.all()])
+        pl_data = pl_data.group_by('GroupID').agg([pl.all()]).rename({'GroupID': 'GroupID_text'})
 
     return list_pl_data

@@ -30,6 +30,8 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column: list|str)
     pd_input = to_pandas(df_input, input_dataframe_type)
     crs_value = pd_input['crs'][0]      # TODO: Check
 
+    print('to_geopandas', crs_value)
+
     if isinstance(geometry_column, list):
         return gpd.GeoDataFrame(
             pd_input,
@@ -37,7 +39,8 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column: list|str)
         )
     
     else:
-        pd_input['location'] = pd_input['location'].apply(wkt.loads)
+        print(pd_input[geometry_column])
+        pd_input[geometry_column] = gpd.GeoSeries.from_wkt(pd_input[geometry_column])
 
         return gpd.GeoDataFrame(
             pd_input,

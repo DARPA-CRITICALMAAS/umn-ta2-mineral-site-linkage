@@ -19,14 +19,14 @@ def clean_nones(input_object: dict | list) -> dict | list:
 
     # List case
     if isinstance(input_object, list):
-        return [clean_nones(x) for x in input_object if x is not None]
+        return [clean_nones(x) for x in input_object if x is not None and x != ""]
     
     # Dictionary case
     elif isinstance(input_object, dict):
         return {
             key: clean_nones(value)
             for key, value in input_object.items()
-            if value is not None
+            if value is not None and value != ""
         }
 
     else:
@@ -36,29 +36,36 @@ def as_pkl(pl_data, output_file_location:str) -> int:
     with open(output_file_location, 'wb') as handle:
         pickle.dump(handle, pl_data, protocol=pickle.HIGHEST_PROTOCOL)
 
-def as_csv(pl_data, output_directory: str, output_file_name: str):
-    # Filtering out with GroupID -1 (i.e, no group info) and those that are length 1
-    pl_data = pl_data.filter(
-        pl.col('GroupID') != -1
-    ).with_columns(
-        linked_count = pl.col('URI').list.len()
-    ).filter(
-        pl.col('linked_count') > 1
-    )
-    
-    # Converting data to two column csv
-    pl_data = pl_data.select(
-        URI_1 = pl.col('URI')
-    ).with_columns(
-        URI_2 = pl.col('URI_1').list.get(0)
-    ).explode(
-        'URI_1'
-    ).filter(
-        pl.col('URI_1') != pl.col('URI_2')
-    )
+def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: bool):
+    if bool_sameas:
+        # Filtering out with GroupID -1 (i.e, no group info) and those that are length 1
+        pl_data = pl_data.filter(
+            pl.col('GroupID') != -1
+        ).with_columns(
+            linked_count = pl.col('URI').list.len()
+        ).filter(
+            pl.col('linked_count') > 1
+        )
+        
+        # Converting data to two column csv
+        pl_data = pl_data.select(
+            URI_1 = pl.col('URI')
+        ).with_columns(
+            URI_2 = pl.col('URI_1').list.get(0)
+        ).explode(
+            'URI_1'
+        ).filter(
+            pl.col('URI_1') != pl.col('URI_2')
+        )
 
     # Saving to {output_directory}/{output_file_name}
-    output_file_location = os.path.join(output_directory, output_file_name+'.csv')
+    _, file_extension = os.path.splitext(output_file_name)
+
+    if file_extension:
+        output_file_location = os.path.join(output_directory, output_file_name)
+    else:
+        output_file_location = os.path.join(output_directory, output_file_name+'.csv')
+                                            
     pl_data.write_csv(output_file_location)
 
 def as_geojson(pl_data, output_directory: str, output_file_name: str):
@@ -89,21 +96,22 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         geometry = gpd.points_from_xy(pl_data['longitude'], pl_data['latitude'], crs=crs_value)
         list_geometry = [wkt.dumps(g, trim=True) for g in geometry.tolist()]
 
-        pl_data = pl_data.with_columns(
-            location = pl.Series(list_geometry)
-        ).drop(
-            ['latitude', 'longitude']
+        pl_data = pl_data.drop(
+            ['latitude', 'longitude', 'crs']
+        ).with_columns(
+            location = pl.Series(list_geometry),
+            crs = pl.lit(crs_value)
         )
     
-    attribute_record_identifiers = list(set(pl_data.column) & set(['source_id', 'record_id', 'name']))
-    attribute_deposit_type_candidate = ['deposit_type']
-    attribute_mineral_inventory = ['commodity', 'observed_commodity']
-    attribute_location_info = list(set(pl_data.column) & set(['location', 'crs', 'country', 'state']))
+    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'mineral_inventory', 'deposit_type_candidate']))
+    # attribute_deposit_type_candidate = ['deposit_type_candidate']
+    # attribute_mineral_inventory = ['mineral_inventory']
+    attribute_location_info = list(set(pl_data.columns) & set(['location', 'crs', 'country', 'state_or_province']))
 
     pl_data = pl_data.select(
         pl.col(attribute_record_identifiers),
-        observed_name = pl.col(attribute_deposit_type_candidate),
-        mineral_inventory = pl.struct(pl.col(attribute_mineral_inventory)),
+        # observed_name = pl.col(attribute_deposit_type_candidate),
+        # mineral_inventory = pl.struct(pl.col(attribute_mineral_inventory)),
         location_info = pl.struct(pl.col(attribute_location_info)),
     )
 

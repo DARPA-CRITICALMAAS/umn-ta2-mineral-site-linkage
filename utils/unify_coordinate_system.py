@@ -25,17 +25,27 @@ def get_epsg(search_epsg:str) -> str:
         if a_object.text.strip() == search_epsg:
             return 'EPSG:' + a_object['href'].strip().lstrip('/')
         
-def unify_crs(pl_data, crs_column=str):
+def unify_crs(pl_data, crs_column:str):
     list_crs_separated_data = pl_data.partition_by(
         crs_column
     )
+    list_data = []
 
     for d in list_crs_separated_data:
+        # If no 'crs' information given, going to infer as 4326
+        print(d.item(0,'crs'))
+        if not d.item(0, 'crs'):
+            print('ideally null case')
+            d = d.drop('crs').with_columns(
+                crs = pl.lit(geo_params['DEFAULT_CRS_SYSTEM'])
+            )
+
         if d.item(0, 'crs') == geo_params['DEFAULT_CRS_SYSTEM']:
             continue
 
         gpd_data = to_geopandas(d, 'pl', 'location').to_crs(geo_params['DEFAULT_CRS_SYSTEM'])
         d = to_polars(gpd_data, 'gpd')
+        list_data.append(d)
 
     pl_data = pl.concat(
         list_crs_separated_data,

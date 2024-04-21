@@ -5,5 +5,5 @@ latitude,"latitude of the site in decimal degrees"
 longitude,"longitude of the site in decimal degrees"
 crs,"coordinate reference system of the latitude longitude value"
 commodity,"commodities that can be found at the site".
-country,
-state_or_province,
+country,"country in which the site is reported to be located"
+state_or_province,"state where the site is reported to be located"
