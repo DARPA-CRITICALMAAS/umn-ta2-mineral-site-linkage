@@ -1,0 +1,48 @@
+2024-04-30 22:20:35,639: Loading MinMod knowledge graph data for cobalt
+2024-04-30 22:20:53,953: 1671 records loaded - Elapsed Time: 18.314128160476685s
+2024-04-30 22:20:53,954: Intralinking...
+2024-04-30 22:20:53,954: 	MRDS
+2024-04-30 22:20:53,964: 		location linking with: distance
+2024-04-30 22:20:54,070: 		text linking with: site_name, commodity
+2024-04-30 22:21:37,634: 	USMIN
+2024-04-30 22:21:37,640: 		location linking with: distance
+2024-04-30 22:21:37,657: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,244: 	https://w3id.org/usgs/z/4530692/JR5I3IAM
+2024-04-30 22:21:38,245: 	Skipping due to missing or incorrect geolocation information
+2024-04-30 22:21:38,246: 	https://w3id.org/usgs/z/4530692/4V4QQ6MN
+2024-04-30 22:21:38,249: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,266: 	https://w3id.org/usgs/z/4530692/GE3JUAJD
+2024-04-30 22:21:38,270: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,287: 	https://w3id.org/usgs/z/4530692/RWPS34U2
+2024-04-30 22:21:38,290: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,307: 	https://w3id.org/usgs/z/4530692/B46ZZMET
+2024-04-30 22:21:38,311: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,328: 	https://w3id.org/usgs/z/4530692/64679KK8
+2024-04-30 22:21:38,331: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,348: 	https://w3id.org/usgs/z/4530692/KQZWBGCP
+2024-04-30 22:21:38,352: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,369: 	https://w3id.org/usgs/z/4530692/BM6TDHXV
+2024-04-30 22:21:38,372: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,389: 	https://pubs.usgs.gov/of/2008/1155/
+2024-04-30 22:21:38,393: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,409: 	https://w3id.org/usgs/z/4530692/5PGHWDVA
+2024-04-30 22:21:38,413: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,430: 	https://w3id.org/usgs/z/4530692/CHRAAE56
+2024-04-30 22:21:38,432: 	Skipping due to missing or incorrect geolocation information
+2024-04-30 22:21:38,432: 	https://w3id.org/usgs/z/4530692/TBXZBP7A
+2024-04-30 22:21:38,435: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,453: 	https://w3id.org/usgs/z/4530692/8IWIAAHF
+2024-04-30 22:21:38,457: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,474: 	https://w3id.org/usgs/z/4530692/7RVNPM2V
+2024-04-30 22:21:38,477: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,494: 	https://w3id.org/usgs/z/4530692/SZRWIP5V
+2024-04-30 22:21:38,498: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,514: 	https://w3id.org/usgs/z/4530692/68WKV5VX
+2024-04-30 22:21:38,518: 		text linking with: site_name, commodity
+2024-04-30 22:21:38,535: Intralinking on 16 sources completed - Elapsed Time: 44.58093214035034s
+2024-04-30 22:21:38,535: Interlinking...
+2024-04-30 22:21:38,541: 		location linking with: area
+2024-04-30 22:21:40,776: Interlinking completed - Elapsed Time: 2.240868091583252s
+2024-04-30 22:21:40,776: Saving same_as data to /home/yaoyi/pyo00005/CriticalMAAS/src/ta2-minmod-data/data/umn/sameas/cobalt_results
+2024-04-30 22:21:40,777: 	1669 mineral records
+2024-04-30 22:21:40,778: 	1415 grouped sites

@@ -3,8 +3,8 @@ import polars as pl
 
 from utils.dataframe_operations import *
 
-def merge_grouping_results(pl_grouped):
-    possible_columns = set(['GroupID_location', 'GroupdID_text'])
+def merge_grouping_results(pl_grouped, source_id:str):
+    possible_columns = set(['GroupID_location', 'GroupID_text'])
     columns_in_dataframe = set(list(pl_grouped.columns))
 
     column_overlap = list(possible_columns & columns_in_dataframe)
@@ -23,4 +23,9 @@ def merge_grouping_results(pl_grouped):
                 column_overlap
             ).agg([pl.all()]).drop(column_overlap)
 
-            return add_index_columns(pl_grouped, 'GroupID')
+            pl_grouped = add_index_columns(pl_grouped, 'tmpID')
+            pl_grouped = pl_grouped.with_columns(
+                GroupID = pl.lit(source_id) + pl.col('tmpID').cast(pl.Utf8)
+            ).drop('tmpID')
+
+            return pl_grouped

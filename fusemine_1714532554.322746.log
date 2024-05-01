@@ -1,0 +1,43 @@
+2024-04-30 22:02:34,332: Loading MinMod knowledge graph data for cobalt
+2024-04-30 22:02:49,568: 1671 records loaded - Elapsed Time: 15.235264778137207s
+2024-04-30 22:02:49,572: Intralinking...
+2024-04-30 22:02:49,572: 	MRDS
+2024-04-30 22:02:49,595: 		location linking with: distance
+2024-04-30 22:02:49,711: 		text linking with: site_name, commodity
+2024-04-30 22:03:44,676: 	USMIN
+2024-04-30 22:03:44,683: 		location linking with: distance
+2024-04-30 22:03:44,703: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,318: 	https://w3id.org/usgs/z/4530692/8IWIAAHF
+2024-04-30 22:03:45,324: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,351: 	https://pubs.usgs.gov/of/2008/1155/
+2024-04-30 22:03:45,356: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,381: 	https://w3id.org/usgs/z/4530692/TBXZBP7A
+2024-04-30 22:03:45,385: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,409: 	https://w3id.org/usgs/z/4530692/CHRAAE56
+2024-04-30 22:03:45,428: 	https://w3id.org/usgs/z/4530692/KQZWBGCP
+2024-04-30 22:03:45,432: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,459: 	https://w3id.org/usgs/z/4530692/B46ZZMET
+2024-04-30 22:03:45,464: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,490: 	https://w3id.org/usgs/z/4530692/GE3JUAJD
+2024-04-30 22:03:45,496: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,523: 	https://w3id.org/usgs/z/4530692/68WKV5VX
+2024-04-30 22:03:45,528: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,562: 	https://w3id.org/usgs/z/4530692/7RVNPM2V
+2024-04-30 22:03:45,567: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,592: 	https://w3id.org/usgs/z/4530692/64679KK8
+2024-04-30 22:03:45,596: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,619: 	https://w3id.org/usgs/z/4530692/JR5I3IAM
+2024-04-30 22:03:45,621: 	https://w3id.org/usgs/z/4530692/SZRWIP5V
+2024-04-30 22:03:45,625: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,681: 	https://w3id.org/usgs/z/4530692/RWPS34U2
+2024-04-30 22:03:45,685: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,711: 	https://w3id.org/usgs/z/4530692/BM6TDHXV
+2024-04-30 22:03:45,715: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,738: 	https://w3id.org/usgs/z/4530692/5PGHWDVA
+2024-04-30 22:03:45,743: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,768: 	https://w3id.org/usgs/z/4530692/4V4QQ6MN
+2024-04-30 22:03:45,773: 		text linking with: site_name, commodity
+2024-04-30 22:03:45,798: Intralinking on 18 sources completed - Elapsed Time: 56.22590136528015s
+2024-04-30 22:03:45,798: Interlinking...
+2024-04-30 22:03:45,805: 		location linking with: area
+2024-04-30 22:03:50,029: Interlinking completed - Elapsed Time: 4.230704307556152s

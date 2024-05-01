@@ -39,23 +39,33 @@ def as_pkl(pl_data, output_file_location:str) -> int:
 def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: bool):
     if bool_sameas:
         # Filtering out with GroupID -1 (i.e, no group info) and those that are length 1
-        pl_data = pl_data.filter(
-            pl.col('GroupID') != -1
+        logging.info(f'Saving same_as data to {os.path.join(output_directory, output_file_name)}')
+
+        pl_data = pl_data.select(
+            pl.col(['ms_uri', 'GroupID'])
         ).with_columns(
-            linked_count = pl.col('URI').list.len()
-        ).filter(
-            pl.col('linked_count') > 1
+            pl.col('ms_uri').str.split(',')
+        ).explode(
+            'ms_uri'
         )
+        logging.info(f'\t{pl_data.shape[0]} mineral records')
+        
+        pl_data = pl_data.group_by(
+            'GroupID'
+        ).agg(
+            [pl.all()]
+        ).with_columns(
+            linked_count = pl.col('ms_uri').list.len()
+        )
+        logging.info(f'\t{pl_data.shape[0]} grouped sites')
         
         # Converting data to two column csv
         pl_data = pl_data.select(
-            URI_1 = pl.col('URI')
+            ms_uri_1 = pl.col('ms_uri')
         ).with_columns(
-            URI_2 = pl.col('URI_1').list.get(0)
+            ms_uri_2 = pl.col('ms_uri_1').list.get(0)
         ).explode(
-            'URI_1'
-        ).filter(
-            pl.col('URI_1') != pl.col('URI_2')
+            'ms_uri_1'
         )
 
     # Saving to {output_directory}/{output_file_name}
@@ -69,13 +79,15 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
     pl_data.write_csv(output_file_location)
 
 def as_geojson(pl_data, output_directory: str, output_file_name: str):
-    pl_processed_mineralsite = pl_processed_mineralsite.with_columns(
-        pl.col('name').list.join(", ")
-    )
+    # pl_processed_mineralsite = pl_processed_mineralsite.with_columns(
+    #     pl.col('name').list.join(", ")
+    # )
 
-    df_processed_mineralsite = pl_processed_mineralsite.to_pandas()
-    gs_mineralsite = gpd.GeoSeries.from_wkt(df_processed_mineralsite['location'])
-    gdb_mineralsite = gpd.GeoDataFrame(df_processed_mineralsite, geometry=gs_mineralsite, crs='EPSG:4326')
+    df_processed_mineralsite = pl_data.to_pandas()
+    # gs_mineralsite = gpd.GeoSeries.from_wkt(df_processed_mineralsite['location'])
+    gdb_mineralsite = gpd.GeoDataFrame(df_processed_mineralsite, 
+                                       geometry=gpd.points_from_xy(df_processed_mineralsite.longitude, df_processed_mineralsite.latitude), 
+                                       crs='EPSG:4326')
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)

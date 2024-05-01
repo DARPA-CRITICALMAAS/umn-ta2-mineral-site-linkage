@@ -33,7 +33,6 @@ def unify_crs(pl_data, crs_column:str):
 
     for d in list_crs_separated_data:
         # If no 'crs' information given, going to infer as 4326
-        print(d.item(0,'crs'))
         if not d.item(0, 'crs'):
             print('ideally null case')
             d = d.drop('crs').with_columns(

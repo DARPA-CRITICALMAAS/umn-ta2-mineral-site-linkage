@@ -1,0 +1,6 @@
+2024-04-30 20:31:02,661: Loading MinMod knowledge graph data for copper
+2024-04-30 20:31:43,745: 47528 records loaded - Elapsed Time: 41.084134101867676s
+2024-04-30 20:31:43,749: Intralinking...
+2024-04-30 20:31:43,749: 	MRDS
+2024-04-30 20:31:43,824: 		location linking with: distance
+2024-04-30 20:31:56,870: 		text linking with: site_name, commodity

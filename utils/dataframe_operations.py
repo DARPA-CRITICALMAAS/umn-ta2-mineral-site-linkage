@@ -101,7 +101,7 @@ def map_to_nodes(struct_input:dict, target_column:str, column_as:str, pl_map, va
     return []
 
 def map_values(pl_rawdata, pl_value_map, 
-               column_to_map:str, map_column_as:str, value_map_from:list|str, value_map_to:list|str,
+               column_to_map:str, value_map_from:list|str, value_map_to:list|str,
                prefix:str|None=None, store_original_value:str|None=None):
     
     if isinstance(value_map_to, list):
@@ -204,4 +204,10 @@ def split_str_column(pl_data, column_name:str|None=None, bool_replace_numbers=Fa
             )
 
     return pl_data
+
+def identify_list_items_overlap(struct_items:dict, target_list:list):
+    values = list(struct_items.values())
+    overlapping = list(set(values) & set(target_list))[0]
+
+    return overlapping
 

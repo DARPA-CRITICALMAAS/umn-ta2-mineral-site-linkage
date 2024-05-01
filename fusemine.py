@@ -1,162 +1,129 @@
 import os
-import time
-import logging
-import argparse
-import configparser
+import regex as re
+import polars as pl
 
-from utils.load_files import *
 from utils.load_kg_data import *
-from utils.save_files import *
-from utils.dataframe_operations import *
-from utils.combine_grouping_results import * 
-from utils.compare_geolocation import *
-from utils.compare_text import *
-from utils.mapping_commodities_to_commodity_code import *
 
-config = configparser.ConfigParser()
-config.read('./params.ini')
-path_params = config['directory.paths']
-prefixes = config['mapping.prefix']
+def load_file(file_name_full:str):
+    pl_data = pl.read_csv(file_name_full, ignore_errors=True, truncate_ragged_lines=True)
 
-def main(args):
-    ##### args statement #####
-    bool_update_commodity_code = True
-    bool_data_process = True
-    bool_onestage = True
-    bool_intralink = False
-    bool_interlink = False
+    return pl_data
 
-    save_intralinked = True
+def load_directory(directory_path:str, file_exclude:list|None=None):
+    files_in_directory = os.listdir(directory_path)
 
-    method_location = 'point'
-    item_text = ['name', 'commodity']
-    pl_data = None
+    pl_data_whole = pl.DataFrame()
+    for file in files_in_directory:
+        file_basename = os.path.splitext(os.path.basename(file))[0]
+        file_name, file_extension = os.path.splitext(file)
 
-    dictionary_file_directory = 'dictionary_directory'
-    output_directory = 'output_directory'
-    output_file = 'output_file'
-    intralinked_directory = './path/'
-    ######################
-    # Update MRDS commodity code mapping
-    if bool_update_commodity_code:
-        map_commodities_to_code()
+        if file_exclude and file_name in file_exclude:
+            continue
 
-    # Data processing to upload it to KG
-    if bool_data_process:
-        pl_rawdata = initiate_load(args.raw_data, False)
-        dict_attribute_map = initiate_load(args.map_file, True, 'corresponding_attribute_label', 'attribute_label')
-        pl_mapped_data = map_attribute_labels(pl_rawdata, dict_attribute_map)
+        if not file_extension:
+            load_directory(os.path.join(directory_path, file_name))
+        else:
+            pl_data = load_file(os.path.join(directory_path, file))
 
-        pl_value_map = initiate_load(path_params['PATH_COMMODITY_MAP_FILE'], False)
-        pl_mapped_data = map_values(pl_rawdata=pl_mapped_data, 
-                                    pl_value_map=pl_value_map, 
-                                    column_to_map='commodity', 
-                                    store_original_value = 'observed_commodity',
-                                    value_map_from=['CommodityinMRDS', 'CodeinMRDS'], 
-                                    value_map_to='minmod_id',
-                                    prefix=prefixes['MINMOD_PREFIX'])
-        as_json(pl_mapped_data, './', 'output')
+            if pl_data_whole.is_empty():
+                pl_data_whole = pl_data
+            
+            else:
+                try:
+                    pl_data_whole = pl.concat(
+                        [pl_data_whole, pl_data],
+                        how='align'
+                    )
+                except:
+                    pass
 
-    pl_data = load_kg()
-    available_sourcenames = pl_data.unique(subset=['source_id'], keep='first')['source_id'].to_list()
-    dict_attribute_dictionary = load_directory(intralinked_directory, bool_asdict=True, list_target_filename=available_sourcenames)
-    # map attributes for those that have the attribute dictionary available
-    for source, dictionary_items in dict_attribute_dictionary.items():
-        pl_source = pl_data.filter(
-            pl.col('source_id') == source
+    return pl_data_whole
+
+def list_raw_data_sources(raw_data_path:str):
+    items_in_directory = os.listdir(raw_data_path)
+    data_directories = {}
+
+    for i in items_in_directory:
+        directory_path = os.path.join(raw_data_path, i)
+
+        cleaned_items = re.sub('[^A-Za-z0-9]', '',  i).lower()
+        data_directories[cleaned_items] = directory_path
+   
+    return data_directories
+
+def load_original_data(data_directories:dict, source_name:str) -> str:
+    list_directories = list(data_directories.keys())
+
+    try:
+        subbed_source_name = re.sub('[^A-Za-z0-9]', '', source_name).lower()
+
+        if subbed_source_name in list_directories:
+            raw_data_path = data_directories[subbed_source_name]
+            
+    except:
+        pass
+
+def string_match_identify_columns(pl_data, item:str):
+    item = re.sub('[^A-Za-z0-9]', '', item)
+
+    pl_data = pl_data.with_columns(
+        pl.col(pl.Utf8).str.strip_chars()
+    ).with_columns(
+        all_combined = pl.concat_str(
+            pl.all().fill_null('').str.replace_all("[^A-Za-z0-9]", "")           
         )
-        pl_source = map_attribute_labels(pl_source, dictionary_items)
+    ).filter(
+        pl.col('all_combined').str.contains(rf'(?i){item}')
+    )
 
-        pl_remaining = pl_data.filter(
-            pl.col('source_id') != source
-        )
+    return pl_data
 
-        pl_data = pl.concat(
-            [pl_source, pl_remaining],
-            how='align'
-        )
+def load_file_from_directory(data_directory:str, file_name:str, file_type:str) -> str:
+    file_name_full = os.path.join(data_directory, file_name+file_type)
+    pl_file = load_file(file_name_full)
 
-        del pl_source, pl_remaining
+    return pl_file
 
-    if bool_onestage:
-        if method_location:
-            df_linked = compare_geolocation([pl_data], method_location)
-        if item_text:
-            df_linked = compare_text_value_embedding(list_pl_data = [pl_data], items_to_compare=item_text)
+# pl_data = load_minmod_kg('cobalt')
 
-        df_linked = merge_grouping_results(df_linked)
+def get_header_value(dict_value:dict, target_list:list):
+    dict_values = list(dict_value.values())
+    overlapping = list(set(dict_values) & set(target_list))
 
-    # Two Stage (Intralink, Interlink)
-    # TODO: Load data in CDR?
-    # TODO: Check if a data dictionary exists for each source
-    # TODO: structure of data directory
-    # target_attribute_dictionary = 
-    # list_attribute_dictionary = load_directory(path_intralinked, bool_asdict=True, list_target_filename=available_sourcenames)
-    # for db_attribute_dictionary in list_attribute_dictionary:
-    #     compare_attribute_embedding(target_attribute_dictionary, db_attribute_dictionary:dict)
+    return overlapping[0]
 
-    partitioned_pl_data = pl_data.partition_by('source_id')
-    # Intralinking
-    if bool_intralink:
-        if method_location:
-            partitioned_pl_data = compare_geolocation(partitioned_pl_data, method_location)
-        if item_text:
-            partitioned_pl_data = compare_text_value_embedding(list_pl_data = partitioned_pl_data,
-                                   items_to_compare=item_text,
-                                   orientation='row')
+# data_directories = list_raw_data_sources('/home/yaoyi/pyo00005/CriticalMAAS/src/MINMOD_DATA')
 
-    if save_intralinked:
-        # Saves intralinked data to the indicated intralinked directory
-        to_directory(partitioned_pl_data, intralinked_directory)
+# pl_data = pl.read_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/minmod_cobalt.csv')
+# pl_data_sources = pl_data.unique('source_id')['source_id'].to_list()
 
-    # Interlinking
-    if bool_interlink:
-        if intralinked_directory:
-            partitioned_pl_data = load_directory(intralinked_directory)
+# for i in pl_data_sources:
+#     raw_data_path = load_original_data(data_directories, i)
 
-        pl_data = pl.concat(
-            partitioned_pl_data,
-            how='vertical_relaxed'
-        )
+#     if raw_data_path:
+#         data_dictionary = load_file_from_directory(raw_data_path, 'dictionary', '.csv')
+#         remaining = string_match_identify_columns(data_dictionary, 'other name')
 
-        if method_location:
-            partitioned_pl_data = compare_geolocation([pl_data], method_location, bool_select_max=True)
-        if item_text:
-            partitioned_pl_data = compare_text_value_embedding([pl_data], item_text)
+#         pl_data_whole = load_directory(raw_data_path, ['dictionary'])
+#         column_name_of_full = list(pl_data_whole.columns)
 
-    # Saving linked results
-    as_csv(partitioned_pl_data[0], output_directory, output_file)
+#         remaining = remaining.with_columns(
+#             correct = pl.struct(pl.all()).map_elements(lambda x: get_header_value(x, column_name_of_full), skip_nulls=False)
+#         ).item(0, 'correct')
+        
+#         print(remaining)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
-    subparsers = parser.add_subparsers(dest='subcommand')
-    subparsers.required = True  # required since 3.7
+# pl_data = load_minmod_kg('tungsten').filter(
+#     (pl.col('source_id') == 'USMIN') | (pl.col('source_id') == 'MRDS')
+# )
 
-    parser_dataprocess = subparsers.add_parser('data_process')
-    parser_dataprocess.add_argument('--raw_data', '-d',
-                                    help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
-    parser_dataprocess.add_argument('--map_file', '-m',
-                                    help='CSV file where the mapping information is stored')
+# print(pl_data)
+# pl_data.write_csv('./minmod_tungsten.csv')
 
-    
-    # parser.add_argument('--one_stage', nargs='+', choices = ['point', 'polygon', 'name', 'commodity'])
-    # parser.add_argument('--intralink', nargs='+', choices = ['point', 'polygon'])
-    # parser.add_argument('--interlink', nargs='+', choices = ['point', 'polygon', 'name', 'commodity'])
+# pl_data.write_csv('./tmp.csv')
 
+# .filter(
+#     pl.col('record_id').is_in(pl_mrds)
+# )
 
-    # parser_link = subparsers.add_parser('link')
-    # parser_link.add_argument('stage_choice', choices=['one_stage', 'intralink', 'interlink'])
-
-    # parser.add_argument('--raw_data', '-d',
-    #                     help='directory in which the data files(.gdb, .csv, .geojson, .pkl, .json) and data dictionaries are saved')
-    # parser.add_argument('--map_file', '-f',
-    #                     help='CSV file where the mapping information is stored')
-    
-    parser.add_argument('--output_filename', '-o',
-                        help='final output filename of the interlinked result')
-    # parser.add_argument('--use_location_base', '-l',
-    #                     help='use location based method to link data', action='store_true')
-    parser.add_argument('--save_as_geojson', '-g',
-                        help='save output as geojson too', action='store_true')
-    
-    main(parser.parse_args())
+# pl_data.write_csv('minmod_tungsten_partial.csv')

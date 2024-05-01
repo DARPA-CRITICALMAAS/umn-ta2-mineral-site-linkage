@@ -2,6 +2,7 @@ import os
 import logging
 
 import pickle
+import regex as re
 import pandas as pd
 import polars as pl
 import polars.selectors as cs
@@ -10,11 +11,11 @@ import geopandas as gpd
 def as_dictionary(input_data, key_column:str, value_column: str) -> dict:
     return dict(zip(input_data[key_column], input_data[value_column]))
 
-def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value_column=None, list_target_filename:str|None=None):
+def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value_column=None, list_target_filename:str|None=None, list_exclude_filename:list|None=None):
     file_basename = os.path.splitext(os.path.basename(input_filename))[0]
     file_name, file_extension = os.path.splitext(input_filename)
 
-    if list_target_filename and file_basename not in list_target_filename:
+    if (list_target_filename and file_basename not in list_target_filename) or (list_exclude_filename and file_basename in list_exclude_filename):
         return pl.DataFrame()
 
     input_data = pl.DataFrame()
@@ -46,17 +47,6 @@ def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value
     return input_data
 
 def custom_aggregate(input_list:list):
-    # filtered_list = list(filter(lambda item: item is not None, input_list))
-
-    # if len(filtered_list) < 2:
-    #     return filtered_list
-
-    # if isinstance(filtered_list[0], str):
-    #     print(",".join(filtered_list))
-    #     return ",".join(filtered_list)
-    
-    # else:
-    #     return filtered_list[0]
     try:
         return ','.join(input_list)
     except:
@@ -65,20 +55,25 @@ def custom_aggregate(input_list:list):
         except:
             return input_list
 
-def load_directory(input_directory:str, list_target_filename:list|None=None, group_by_col:str|None=None):
+def load_directory(input_directory:str, list_target_filename:list|None=None, list_exclude_filename:list|None=None, group_by_col:str|None=None):
     files_in_directory = os.listdir(input_directory)
 
-    list_data = []
+    pl_data = pl.DataFrame()
     for file in files_in_directory:
         loaded_data = initiate_load(os.path.join(input_directory, file), list_target_filename=list_target_filename)
         
         if not loaded_data.is_empty():
-            list_data.append(loaded_data)
+            if pl_data.is_empty():
+                pl_data = loaded_data
 
-    pl_data = pl.concat(
-        list_data,
-        how='align'
-    )
+            else:
+                try:
+                    pl_data = pl.concat(
+                        [pl_data, loaded_data],
+                        how='align'
+                    )
+                except:
+                    pass
 
     if group_by_col:
         pl_data = pl_data.group_by(
@@ -90,3 +85,15 @@ def load_directory(input_directory:str, list_target_filename:list|None=None, gro
         )
 
     return pl_data
+
+def load_directory_names(raw_data_path:str):
+    items_in_directory = os.listdir(raw_data_path)
+    data_directories = {}
+
+    for i in items_in_directory:
+        directory_path = os.path.join(raw_data_path, i)
+
+        cleaned_items = re.sub('[^A-Za-z0-9]', '',  i).lower()
+        data_directories[cleaned_items] = directory_path
+   
+    return data_directories

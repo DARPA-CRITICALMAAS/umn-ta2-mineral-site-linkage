@@ -3,6 +3,7 @@ import time
 import logging
 import configparser
 
+import random
 import polars as pl
 import pandas as pd
 
@@ -19,18 +20,46 @@ def text_embedding(input_str:str|list):
     if isinstance(input_str, list):
         input_str = ",".join(input_str)
 
-    embedded_string = get_sentbert_embeddings(input_str)
-
-    return embedded_string
-
-def get_sentbert_embeddings(input_str:str):
-    return st_model.encode(input_str)
+    return get_sentbert_embeddings(input_str)
 
 def create_text_attribute_representation(pl_data):
     return 0
 
-def row_to_json_string(pl_data):
-    return 0
+def row_to_json_string(struct_input:dict, bool_shuffle:bool):
+    list_headers = list(struct_input.keys())
 
-def row_to_doc_string(pl_data):
-    return 0
+    # If set to true, shuffle the order of the tabular text
+    if bool_shuffle:
+        random.shuffle(list_headers)
+
+    json_formatted_str = '{'
+    for h in list_headers:
+        if struct_input[h] != '':
+            json_formatted_str += f'{h}: {struct_input[h]}, '
+
+    # Remove trailing comma and close brackets
+    json_formatted_str = json_formatted_str.rstrip(', ')
+    json_formatted_str += '}'
+
+    print(json_formatted_str)
+
+    return get_sentbert_embeddings(json_formatted_str)
+
+def row_to_doc_string(struct_input:dict, bool_shuffle:bool):
+    list_headers = list(struct_input.keys())
+
+    # If set to true, shuffle the order of the tabular text
+    if bool_shuffle:
+        random.shuffle(list_headers)
+
+    doc_formatted_str = ''
+    for h in list_headers:
+        if struct_input[h] != '':
+            doc_formatted_str += f'{h} is {struct_input[h]}. '
+
+    print(doc_formatted_str)
+
+    return get_sentbert_embeddings(doc_formatted_str)
+
+def get_sentbert_embeddings(input_str:str):
+    return st_model.encode(input_str)

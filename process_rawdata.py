@@ -2,7 +2,7 @@ from utils.load_files import *
 from utils.save_files import *
 from utils.dataframe_operations import *
 
-def main(path_rawdata:str, path_attribute_map:str, path_output_dir:str, path_filename:str):
+def process_rawdata(path_rawdata:str, path_attribute_map:str, path_output_dir:str, path_filename:str):
     pl_attribute_map = initiate_load(path_attribute_map)
     pl_attribute_map = pl_attribute_map.drop_nulls(subset=['corresponding_attribute_label'])
 
@@ -53,21 +53,4 @@ def main(path_rawdata:str, path_attribute_map:str, path_output_dir:str, path_fil
     except:
         pass
 
-    # print(pl_data)
-    # individual_length = int((pl_data.shape[0])/12)
-
-    # start_point = 0
-    # for i in range(individual_length):
-    #     pl_tmp = pl_data[start_point:start_point+individual_length]
-    #     print(pl_tmp)
-    #     as_json(pl_tmp, path_output_dir, f'{path_filename}_{str(i+1)}')
-
-    #     start_point += individual_length
-
     as_json(pl_data, path_output_dir, path_filename)
-
-# list_commodity = ['Gallium', 'Germanium', 'Graphite', 'Indium', 'Niobium', 'Rhenium', 'Sn', 'Tantalum', 'Tungsten']
-list_commodity = ['Cobalt', 'Lithium', 'REE', 'Tellurium']
-
-for commodity in list_commodity:
-    main(f'/home/yaoyi/pyo00005/CriticalMAAS/src/MINMOD_DATA/usmin/USGS_{commodity}_US_CSV', '/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/USMIN_mapfile.csv', '/home/yaoyi/pyo00005/CriticalMAAS/src/outputs', f'USMIN_{commodity}')

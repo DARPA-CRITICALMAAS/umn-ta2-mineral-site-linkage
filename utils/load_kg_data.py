@@ -56,53 +56,139 @@ def run_minmod_query(query, values=False):
 def run_geokb_query(query, values=False):
     return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
 
+def minmod_kg_check(source_name:str, record_id:str):
+    # Check if record id exists
+    if record_id:
+        query = '''
+        SELECT ?ms
+        WHERE {
+            ?ms rdfs:label|:record_id ?record_id . FILTER(STR(?record_id) == "%s")
+        }
+        ''' % (source_name)
+        query_resp_df = run_minmod_query(query, values=True)
+        
+        return query_resp_df
+
+    if source_name:
+        query = '''
+        SELECT ?ms ?source_id ?record_id ?commodity
+        WHERE {
+            ?ms :mineral_inventory ?mi .
+
+            ?ms rdfs:label|:source_id ?source_id . FILTER (STR(?source_id) = "%s")
+            ?ms rdfs:label|:record_id ?record_id . FILTER (STR(?record_id) != "")
+
+            ?mi :commodity [ :name ?commodity ] . FILTER(LCASE(STR(?commodity)) = "nickel")
+        }
+        ''' % (source_name)
+        query_resp_df = run_minmod_query(query, values=True)
+
+        pl_data = pl.from_pandas(query_resp_df)
+        
+        return pl_data
+
+
 def load_minmod_kg(commodity:str):
     # commodity = args.commodity
-    # output_directory = args.output_directory
-    query = ''' SELECT ?ms1 ?ms2
-                WHERE {
-                    ?ms1 a :MineralSite .
-                    ?ms2 a :MineralSite .
+    # query = ''' SELECT ?ms1 ?ms2
+    #             WHERE {
+    #                 ?ms1 a :MineralSite .
+    #                 ?ms2 a :MineralSite .
     
-                    ?ms1 owl:sameAs ?ms2 .
-                } '''
-    df_all_sites = run_minmod_query(query, values=True)
-    G = nx.from_pandas_edgelist(df_all_sites, source='ms1.value', target='ms2.value')
+    #                 ?ms1 owl:sameAs ?ms2 .
+    #             } '''
+    # df_all_sites = run_minmod_query(query, values=True)
+    # G = nx.from_pandas_edgelist(df_all_sites, source='ms1.value', target='ms2.value')
 
-    # Find connected components
-    groups = nx.connected_components(G)
+    # # Find connected components
+    # groups = nx.connected_components(G)
 
-    # Create a mapping from value to group ID
-    group_mapping = {}
-    for group_id, group in enumerate(groups, start=1):
-        for value in group:
-            group_mapping[value] = group_id
+    # # Create a mapping from value to group ID
+    # group_mapping = {}
+    # for group_id, group in enumerate(groups, start=1):
+    #     for value in group:
+    #         group_mapping[value] = group_id
 
-    # Map group IDs to the dataframe
-    df_all_sites['group_id'] = df_all_sites['ms1.value'].map(group_mapping)
+    # # Map group IDs to the dataframe
+    # df_all_sites['group_id'] = df_all_sites['ms1.value'].map(group_mapping)
 
     # ------------------ Hyper Site (aggregated group of sites) to Mineral Site ------------------
 
     # get all Mineral Sites
-    query = '''
-    SELECT ?ms ?source_id ?ms_name ?country ?loc_wkt ?crs ?state_or_province ?commodity
-    WHERE {
+    # query = '''
+    # SELECT ?ms ?source_id ?record_id ?ms_name
+    # WHERE {
 
-        ?ms :mineral_inventory ?mi .
-        OPTIONAL { ?ms rdfs:label|:name ?ms_name . FILTER (STR(?ms_name) != "") }
-        OPTIONAL { ?ms rdfs:label|:source_id ?source_id . FILTER (STR(?source_id) != "") }
+    #     ?ms :mineral_inventory ?mi .
+    #     ?ms :deposit_type_candidate ?md .
+    #     OPTIONAL { ?ms rdfs:label|:name ?ms_name . FILTER (STR(?ms_name) != "") }
+    #     OPTIONAL { ?ms rdfs:label|:source_id ?source_id . FILTER(LCASE(STR(?source_id)) = "mrds") }
+    #     OPTIONAL { ?ms rdfs:label|:record_id ?record_id . FILTER (STR(?record_id) != "") }
+    # }
+    # '''
 
-        OPTIONAL { ?ms :location_info ?loc . 
-        OPTIONAL { ?loc :country ?country . FILTER (STR(?country) != "") }
-        OPTIONAL { ?loc :state_or_province ?state_or_province . FILTER (STR(?state_or_province) != "") }
-        OPTIONAL { ?loc :location ?loc_wkt . FILTER (STR(?loc_wkt) != "") }
-        OPTIONAL { ?loc :crs ?crs . FILTER (STR(?crs) != "") }
+    # query_resp_df = run_minmod_query(query, values=True)
+
+    # pl_data = pl.from_pandas(query_resp_df).filter(
+    #     pl.col('record_id.value') == '10100737'
+    # )
+    # print(pl_data)
+    # pl_data = pl.from_pandas(query_resp_df).filter(
+    #     pl.col('record_id.value') == '10100737'
+    # )
+
+    # Get commodity specific Mineral Sites
+    # query = '''
+    # SELECT ?ms ?source_id ?record_id ?ms_name ?country ?loc_wkt ?crs ?state_or_province ?commod ?miq_comm
+
+    # WHERE {
+    #     ?ms a :MineralSite .
+    #     ?ms :mineral_inventory ?mi .
+    #     ?ms :deposit_type_candidate ?md .
+
+    #     OPTIONAL { ?ms :name ?ms_name }
+    #     OPTIONAL { ?ms :source_id ?source_id }
+    #     OPTIONAL { ?ms :record_id ?record_id }
+
+    #     ?mi :observed_commodity ?commod . FILTER(LCASE(STR(?commod)) = "%s")
+    # }
+
+    # ''' % (commodity)
+
+    query = ''' SELECT ?ms ?source_id ?record_id ?ms_name ?country ?state_or_province ?loc_wkt ?crs ?miq_comm ?deposit_type
+        WHERE {
+            ?ms a :MineralSite .
+            ?ms :mineral_inventory ?mi .
+
+            ?ms :source_id ?source_id .
+            ?ms :record_id ?record_id .
+            OPTIONAL { ?ms :name ?ms_name . }
+
+            OPTIONAL { ?ms :location_info ?loc . 
+                OPTIONAL { ?loc :country ?country }
+                OPTIONAL { ?loc :state_or_province ?state_or_province }
+                OPTIONAL { ?loc :location ?loc_wkt }
+                OPTIONAL { ?loc :crs ?crs }
+            }
+
+            ?mi :commodity [ :name ?commod ] . FILTER(LCASE(STR(?commod)) = "%s")
+
+            ?ms  :mineral_inventory ?miq .
+            ?miq :commodity/:name   ?miq_comm .
+
+            OPTIONAL { ?ms :deposit_type_candidate ?md .
+                OPTIONAL { ?md :observed_name ?deposit_type }
+            }
         }
-        
-        OPTIONAL { ?mi :category ?mi_cat . }
-        ?mi :commodity [ :name ?commodity ] . FILTER(LCASE(STR(?commodity)) = "%s")
-    }
-    ''' % (commodity)
+        ''' % (commodity)
+
+    # OPTIONAL { ?ms :location_info ?loc . 
+    #             OPTIONAL { ?loc :country ?country }
+    #             OPTIONAL { ?loc :state_or_province ?state_or_province }
+    #             OPTIONAL { ?loc :location ?loc_wkt }
+    #             OPTIONAL { ?loc :crs ?crs }
+    #         }
+
     query_resp_df = run_minmod_query(query, values=True)
 
     if not query_resp_df.empty:
@@ -110,17 +196,31 @@ def load_minmod_kg(commodity:str):
             {
                 'ms_uri': row['ms.value'],
                 'source_id':row['source_id.value'],
+                'record_id':row['record_id.value'],
                 'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
                 'country': row.get('country.value', None),
                 'state_or_province': row.get('state_or_province.value', None),
                 'location': row.get('loc_wkt.value', None),
                 'crs': row.get('crs.value', None),
-                'commodity': row.get('commodity.value', None)
+                'commodity': row.get('miq_comm.value', None),
+                'deposit_type': row.get('deposit_type.value', None)
             }
             for index, row in query_resp_df.iterrows()
         ])
 
-        pl_sites = pl.from_pandas(sites_df).unique('ms_uri')
+        pl_sites = pl.from_pandas(sites_df).group_by(
+            'ms_uri'
+        ).agg([pl.all()]).with_columns(
+            pl.exclude('ms_uri').list.unique().list.join(',')
+        ).with_columns(
+            pl.col('record_id').cast(pl.Utf8)
+        )
+
+        # pl_sites = pl_sites.filter(
+        #     (pl.col('source_id') == 'MRDS') | (pl.col('source_id') == 'USMIN')
+        # )
+
+        # print(pl_sites)
 
         # ------------ GENERATES HYPERSITES ------------ #
         # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)
@@ -145,3 +245,23 @@ def load_minmod_kg(commodity:str):
         # sorted_df_all_sites_all_dep.to_csv(f'{output_directory}/{commodity}_mineral_sites_hypersites.csv', index=False, mode='w')
 
         return pl_sites
+        # return separate_data(pl_sites)
+    
+def separate_data(pl_sites):
+    list_all_data_sources = set(pl_sites['source_id'].to_list())
+
+    source_linked = pl_sites.filter(
+        pl.col('same_as').is_not_null()
+    )['source_id'].to_list()
+    source_linked = set(source_linked)
+
+    source_not_linked = list_all_data_sources - source_linked
+
+    pl_already_linked = pl_sites.filter(
+        pl.col('source_id').is_in(list(source_linked))
+    )
+    pl_not_linked = pl_sites.filter(
+        pl.col('source_id').is_in(list(source_not_linked))
+    )
+
+    return [pl_not_linked, pl_already_linked]
