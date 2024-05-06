@@ -188,6 +188,9 @@ def load_minmod_kg(commodity:str):
     #             OPTIONAL { ?loc :location ?loc_wkt }
     #             OPTIONAL { ?loc :crs ?crs }
     #         }
+            #     OPTIONAL { ?ms  :mineral_inventory ?miq .
+            #     OPTIONAL { ?miq :commodity/:name   ?miq_comm }
+            # }
 
     query_resp_df = run_minmod_query(query, values=True)
 

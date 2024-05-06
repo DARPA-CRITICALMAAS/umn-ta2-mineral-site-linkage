@@ -1,12 +1,12 @@
 attribute_label,corresponding_attribute_label,file_name
-source_id,USMIN,
-record_id,Site_ID *,Site
+source_id,"https://mrdata.usgs.gov/deposit",
+record_id,Site_ID,Site
 name,Site_Name,Site
 commodity,Commodity,Site
 latitude,Approx_Lat,Site
 longitude,Approx_Lon,Site
 crs,"EPSG:4326",
-country,"United States"
+country,"United States",
 state_or_province,State,Loc_Pt
 deposit_type,DpMd_NoNm,Dep_Model
-uri,"https://mrdata.usgs.gov/deposit/",main
+uri,"https://mrdata.usgs.gov/deposit",

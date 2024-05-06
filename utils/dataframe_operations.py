@@ -12,9 +12,9 @@ config = configparser.ConfigParser()
 config.read('./params.ini')
 prefix_params = config['mapping.prefix']
 
-def map_attribute_labels(pl_rawdata, dict_attribute_map: dict):
+def map_attribute_labels(pl_rawdata, pl_attribute_map, key_column:str, value_column:str):
     attr_in_rawdata = set(pl_rawdata.columns)
-    attr_in_dictionary = set(dict_attribute_map.keys())
+    attr_in_dictionary = set(pl_attribute_map[key_column].to_list())
 
     attr_coexist = list(attr_in_rawdata & attr_in_dictionary)
     attr_exclusive = list(attr_in_dictionary - attr_in_rawdata)
@@ -23,12 +23,17 @@ def map_attribute_labels(pl_rawdata, dict_attribute_map: dict):
         pl.col(attr_coexist)
     )
 
-    for attribute in attr_exclusive:
-        attribute_label = dict_attribute_map[attribute]
+    dict_attribute_map = as_dictionary(pl_attribute_map, key_column, value_column)
 
-        pl_mapped_data = pl_mapped_data.with_columns(
-            pl.lit(attribute).cast(pl.Utf8).alias(attribute_label)
-        )
+    for attribute in attr_exclusive:
+        list_attribute_labels = pl_attribute_map.filter(
+            pl.col(key_column) == attribute
+        )[value_column].to_list()
+        
+        for label in list_attribute_labels:
+            pl_mapped_data = pl_mapped_data.with_columns(
+                pl.lit(attribute).cast(pl.Utf8).alias(label)
+            )
 
         dict_attribute_map.pop(attribute)
 
@@ -57,7 +62,23 @@ def map_attribute_labels(pl_rawdata, dict_attribute_map: dict):
 
     return pl_mapped_data
 
-def map_to_nodes(struct_input:dict, target_column:str, column_as:str, pl_map, value_map_to:str, bool_optional:bool, other_column_to_include:str|None=None,) -> int:
+def append_to_list(list_to_be_modified:list, target_column:str, item:str, column_as:str,  mapped_value:str, bool_additional:bool, additional_item:str|None=None, additional_value:dict|str|list|None=None):
+    if bool_additional:
+        list_to_be_modified.append({
+            target_column:item,
+            column_as:mapped_value,
+            additional_item: additional_value
+        })
+
+    else:
+        list_to_be_modified.append({
+            target_column:item,
+            column_as:mapped_value
+        })
+
+    return list_to_be_modified
+
+def map_to_nodes(struct_input:dict, target_column:str, column_as:str, pl_map, value_map_to:str, bool_optional:bool, bool_code:bool, other_column_to_include:str|None=None,) -> int:
     attribute_item = struct_input[target_column]
     prefix = prefix_params['MINMOD_PREFIX']
 
@@ -68,33 +89,53 @@ def map_to_nodes(struct_input:dict, target_column:str, column_as:str, pl_map, va
         for i in attribute_item:
             if i:
                 item = i.strip()
-                
-                # if not bool_optional:
-                pl_item = pl_map.filter(
-                    pl.col('map_from').list.contains(item.lower())
-                )
+                identified_items = []
 
-                if pl_item.shape[0] == 0 and bool_optional:
-                    formatted_item.append({
-                        target_column:item
-                    })
+                if item.isupper() and bool_code:
+                    # commodity code case
+                    item = item.split(' ')
+                    for i in item:
+                        pl_item = pl_map.filter(
+                            pl.col('map_from').list.contains(i.lower())
+                        )
+                        identified_items.append((i, pl_item))
 
-                elif pl_item.shape[0] != 0:
-                    mapped_value = prefix + pl_item.item(0, value_map_to)
-                    
-                    if mapped_value not in unique_nodes:
+                else:
+                    pl_item = pl_map.filter(
+                        pl.col('map_from').list.contains(item.lower())
+                    )
+
+                    identified_items.append((item, pl_item))
+
+                for item, pl_item in identified_items:
+                    if pl_item.shape[0] == 0 and bool_optional:
                         if other_column_to_include:
-                            formatted_item.append({
-                                target_column:item,
-                                column_as:mapped_value,
-                                'reference':{'document':{'uri':struct_input[other_column_to_include]}}
-                            })
+                            formatted_item = append_to_list(formatted_item, 
+                                                            target_column, item, 
+                                                            column_as, '', 
+                                                            True, 'reference', {'document':{'uri':struct_input[other_column_to_include]}})
+
                         else:
-                            formatted_item.append({
-                                target_column:item,
-                                column_as:mapped_value
-                            })
-                        unique_nodes.append(mapped_value)
+                            formatted_item = append_to_list(formatted_item, 
+                                                            target_column, item, 
+                                                            column_as, '',
+                                                            False)
+
+                    elif pl_item.shape[0] == 1:
+                        mapped_value = prefix + pl_item.item(0, value_map_to)
+                        
+                        if mapped_value not in unique_nodes:
+                            if other_column_to_include:
+                                formatted_item = append_to_list(formatted_item,
+                                                                target_column, item,
+                                                                column_as, mapped_value,
+                                                                True, 'reference', {'document':{'uri':struct_input[other_column_to_include]}})
+                            else:
+                                formatted_item = append_to_list(formatted_item,
+                                                                target_column, item,
+                                                                column_as, mapped_value,
+                                                                False)
+                            unique_nodes.append(mapped_value)
 
         return formatted_item
 
@@ -115,7 +156,7 @@ def map_values(pl_rawdata, pl_value_map,
     return pl_rawdata
 
 def map_node_values(pl_rawdata, pl_value_map, 
-               column_to_map: str, map_column_as:str, value_map_from: list|str, value_map_to: str, bool_optional: bool,
+               column_to_map: str, map_column_as:str, value_map_from: list|str, value_map_to: str, bool_optional: bool, bool_code=False,
                prefix: str|None=None, other_column_to_include:str|None=None, store_original_value: str|None=None):
     
     if store_original_value:
@@ -152,11 +193,11 @@ def map_node_values(pl_rawdata, pl_value_map,
 
     if other_column_to_include:
         pl_rawdata = pl_rawdata.with_columns(
-            tmp = pl.struct(pl.col([store_original_value, other_column_to_include])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, other_column_to_include))
+            tmp = pl.struct(pl.col([store_original_value, other_column_to_include])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, bool_code, other_column_to_include))
         )
     else:
         pl_rawdata = pl_rawdata.with_columns(
-            tmp = pl.struct(pl.col([store_original_value])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional))
+            tmp = pl.struct(pl.col([store_original_value])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, bool_code))
         )
 
     pl_rawdata = pl_rawdata.drop(

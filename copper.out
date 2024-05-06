@@ -1,0 +1,78 @@
+thread '<unnamed>' panicked at py-polars/src/map/series.rs:213:19:
+python function failed GEOSException: ParseException: Expected word but encountered end of stream
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+8435 records loaded - Elapsed Time: 71.96404767036438s
+https://doi.org/10.4095/295581
+not working https://doi.org/10.4095/295581
+https://mrdata.usgs.gov/deposit
+not working https://mrdata.usgs.gov/deposit
+https://mrdata.usgs.gov/mrds
+not working https://mrdata.usgs.gov/mrds
+https://w3id.org/usgs/z/4530692/26EMIR7B
+not working https://w3id.org/usgs/z/4530692/26EMIR7B
+https://w3id.org/usgs/z/4530692/33R38T8G
+not working https://w3id.org/usgs/z/4530692/33R38T8G
+https://w3id.org/usgs/z/4530692/47P3RMZK
+not working https://w3id.org/usgs/z/4530692/47P3RMZK
+https://w3id.org/usgs/z/4530692/4DX4GJDW
+not working https://w3id.org/usgs/z/4530692/4DX4GJDW
+https://w3id.org/usgs/z/4530692/4U6XN9EW
+not working https://w3id.org/usgs/z/4530692/4U6XN9EW
+https://w3id.org/usgs/z/4530692/5ATMEVUV
+not working https://w3id.org/usgs/z/4530692/5ATMEVUV
+https://w3id.org/usgs/z/4530692/6VKZRUMZ
+not working https://w3id.org/usgs/z/4530692/6VKZRUMZ
+https://w3id.org/usgs/z/4530692/8TRH6NTP
+not working https://w3id.org/usgs/z/4530692/8TRH6NTP
+https://w3id.org/usgs/z/4530692/8UB8ZHKF
+not working https://w3id.org/usgs/z/4530692/8UB8ZHKF
+https://w3id.org/usgs/z/4530692/9D9CJDWS
+not working https://w3id.org/usgs/z/4530692/9D9CJDWS
+https://w3id.org/usgs/z/4530692/9V6FSWT6
+not working https://w3id.org/usgs/z/4530692/9V6FSWT6
+https://w3id.org/usgs/z/4530692/AJIE6UTW
+not working https://w3id.org/usgs/z/4530692/AJIE6UTW
+https://w3id.org/usgs/z/4530692/EFEWPRUA
+not working https://w3id.org/usgs/z/4530692/EFEWPRUA
+https://w3id.org/usgs/z/4530692/F4U77TXQ
+not working https://w3id.org/usgs/z/4530692/F4U77TXQ
+https://w3id.org/usgs/z/4530692/GBXFHJJG
+not working https://w3id.org/usgs/z/4530692/GBXFHJJG
+https://w3id.org/usgs/z/4530692/GW46XXPU
+not working https://w3id.org/usgs/z/4530692/GW46XXPU
+https://w3id.org/usgs/z/4530692/H9RR2X54
+not working https://w3id.org/usgs/z/4530692/H9RR2X54
+https://w3id.org/usgs/z/4530692/M2KAC3MU
+not working https://w3id.org/usgs/z/4530692/M2KAC3MU
+https://w3id.org/usgs/z/4530692/N4X9Q3PJ
+not working https://w3id.org/usgs/z/4530692/N4X9Q3PJ
+https://w3id.org/usgs/z/4530692/PP98WPVS
+not working https://w3id.org/usgs/z/4530692/PP98WPVS
+https://w3id.org/usgs/z/4530692/Q2S5JXHE
+not working https://w3id.org/usgs/z/4530692/Q2S5JXHE
+https://w3id.org/usgs/z/4530692/Q3RBBA7B
+not working https://w3id.org/usgs/z/4530692/Q3RBBA7B
+https://w3id.org/usgs/z/4530692/QEXJZU82
+not working https://w3id.org/usgs/z/4530692/QEXJZU82
+https://w3id.org/usgs/z/4530692/UEXJ8FNG
+not working https://w3id.org/usgs/z/4530692/UEXJ8FNG
+https://w3id.org/usgs/z/4530692/W8JP6NPW
+not working https://w3id.org/usgs/z/4530692/W8JP6NPW
+https://w3id.org/usgs/z/4530692/WNAUNE5K
+not working https://w3id.org/usgs/z/4530692/WNAUNE5K
+https://w3id.org/usgs/z/4530692/X4V9P579
+not working https://w3id.org/usgs/z/4530692/X4V9P579
+https://w3id.org/usgs/z/4530692/X73C2ZJA
+not working https://w3id.org/usgs/z/4530692/X73C2ZJA
+https://w3id.org/usgs/z/4530692/XKHFMUG8
+not working https://w3id.org/usgs/z/4530692/XKHFMUG8
+https://w3id.org/usgs/z/4530692/XRIBM25P
+not working https://w3id.org/usgs/z/4530692/XRIBM25P
+https://w3id.org/usgs/z/4530692/XUSFKSBK
+not working https://w3id.org/usgs/z/4530692/XUSFKSBK
+https://w3id.org/usgs/z/4530692/ZATAV5GC
+not working https://w3id.org/usgs/z/4530692/ZATAV5GC
+https://w3id.org/usgs/z/4530692/ZG2QGKCS
+not working https://w3id.org/usgs/z/4530692/ZG2QGKCS
+Intralinking on 25 sources completed - Elapsed Time: 3.6445565223693848s
+Interlinking completed - Elapsed Time: 0.09792542457580566s

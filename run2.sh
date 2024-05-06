@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=2fusemine_main
 #SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/fusemine_main2.out
-#SBATCH --time=5:00:00
+#SBATCH --time=24:00:00
 #SBATCH -p a100-4    
 #SBATCH --gres=gpu:a100:1 
 #SBATCH --ntasks=1
@@ -13,5 +13,5 @@ module load python3
 source ~/.bashrc
 conda activate ta2
 cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage
-python3 test.py
+python3 test.py -c copper
 # python3 fusemine.py data_process -d /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/full_MRDS.csv -m /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/resource/sample_map_file.csv

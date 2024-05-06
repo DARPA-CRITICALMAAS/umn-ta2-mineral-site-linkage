@@ -3,6 +3,9 @@ import time
 import logging
 import configparser
 
+import torch
+import torch.nn as nn
+
 import ast
 import regex as re
 import polars as pl
@@ -10,12 +13,17 @@ from typing import Literal
 from scipy import spatial
 from itertools import combinations, product
 
+from utils.load_files import *
 from utils.dataframe_operations import *
 from utils.create_textinfo_representation import *
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+logging.info(f'Fusemine running on {device}')
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
 text_params = config['text.params']
+path_params = config['directory.paths']
 
 def string_match_on_attribute(pl_data, item_to_string_match:str):
     item_to_string_match = re.sub('[^A-Za-z0-9]', '', item_to_string_match)
@@ -33,11 +41,17 @@ def string_match_on_attribute(pl_data, item_to_string_match:str):
     return pl_data
 
 def measure_cosine_similarity(embedding1:list, embedding2:list, embedding3:list, embedding4:list, threshold_value:float) -> bool:
-    cosine_similarity1 = 1 - spatial.distance.cosine(embedding1, embedding2)
-    cosine_similarity2 = 1 - spatial.distance.cosine(embedding3, embedding4)
-    # TODO: dimension reduction
+    cos = nn.CosineSimilarity(dim=0, eps=1e-6)
+    emb1 = torch.from_numpy(embedding1).to(device)
+    emb2 = torch.from_numpy(embedding2).to(device)
+    emb3 = torch.from_numpy(embedding3).to(device)
+    emb4 = torch.from_numpy(embedding4).to(device)
 
-    if 0.79 * cosine_similarity1 + 0.21 * cosine_similarity2> threshold_value:
+    cosine_similarity1 = cos(emb1, emb2).item()
+    cosine_similarity2 = cos(emb3, emb4).item()
+
+    # TODO: dimension reduction
+    if 0.79 * cosine_similarity1 + 0.21 * cosine_similarity2 > threshold_value:
         return True
     return False
 
@@ -69,9 +83,16 @@ def compare_text_value_embedding(pl_data, source_id:str|None=None, items_to_comp
     
     logging.info(f'\t\ttext linking with: {", ".join(items_to_compare)}')
     
+    suffix_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'site_suffix.pkl'))}"
+
+    pl_data = pl_data.with_columns(
+        pl.col(items_to_compare).str.strip_chars().str.replace(rf"{suffix_regex}", '')
+    )
+    # print(pl_data)
     pl_data = pl_data.with_columns(
         pl.col(items_to_compare).map_elements(lambda x: text_embedding(x)).name.map(lambda c: c+'_embedding')
     )
+
     pl_data = add_index_columns(pl_data, 'GroupID')
 
     # Create combinations of index of every row

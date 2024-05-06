@@ -22,7 +22,8 @@ def to_pandas(df_input, input_dataframe_type: str):
         
         case 'gpd':
             try:
-                return df_input.drop('location', axis=1)
+                df_input['location'] = df_input['location'].apply(wkt.dumps)
+                return df_input
             except:
                 return pd.DataFrame(df_input)
         
@@ -33,17 +34,21 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column: list|str)
     pd_input = to_pandas(df_input, input_dataframe_type)
     crs_value = pd_input['crs'][0]
 
-    try:
-        pd_input[geometry_column] = gpd.GeoSeries.from_wkt(pd_input[geometry_column])
+    if isinstance(geometry_column, str):
+        pd_input[geometry_column] = df_input[geometry_column].apply(wkt.loads)
 
         return gpd.GeoDataFrame(
             pd_input,
-            geometry = 'location',
+            geometry = geometry_column,
             crs = crs_value
         )
     
-    except:
-        return gpd.GeoDataFrame(
+    else:
+        gpd_input = gpd.GeoDataFrame(
             pd_input,
             geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
-        ).rename_geometry('location')
+        ).drop('location', axis=1)
+
+        gpd_input.rename_geometry('location', inplace=True)
+
+        return gpd_input

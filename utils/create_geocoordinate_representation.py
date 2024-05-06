@@ -16,6 +16,7 @@ geo_params = config['geolocation.params']
 def create_coordinate_point_representation(gpd_data):
     # Convert geometry to single point by finding centroid if the geometry is not a point
     # TODO: check that it is a centroid
+
     gpd_data['location'] = gpd_data['location'].apply(lambda x: x.centroid if x.type!='Point' else x)
 
     # Create a longitude, latitude column
@@ -56,13 +57,14 @@ def create_buffer_area_representation(gpd_data):
     )
 
     gpd_polygon = gpd_polygon.to_frame().reset_index().sort_values(by=['GroupID']).rename_geometry('location')
+
     pl_data = to_polars(gpd_data, 'gpd').group_by(
         'GroupID'
     ).agg([pl.all()]).with_columns(
         pl.exclude(['latitude', 'longitude', 'GroupID']).list.unique().list.join(',')
     )
 
-    pd_data = to_pandas(pl_data, 'pl')
+    pd_data = to_pandas(pl_data, 'pl').drop('location', axis=1)
     gpd_polygon = gpd_polygon.to_crs(crs=geo_params['DEFAULT_CRS_SYSTEM'])
     gpd_polygon = gpd_polygon.merge(pd_data, on='GroupID')
 

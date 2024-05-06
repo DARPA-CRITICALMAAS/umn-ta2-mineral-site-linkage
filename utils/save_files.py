@@ -32,9 +32,9 @@ def clean_nones(input_object: dict | list) -> dict | list:
     else:
         return input_object
 
-def as_pkl(pl_data, output_file_location:str) -> int:
+def as_pkl(input_data, output_file_location:str) -> int:
     with open(output_file_location, 'wb') as handle:
-        pickle.dump(handle, pl_data, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(handle, input_data, protocol=pickle.HIGHEST_PROTOCOL)
 
 def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: bool):
     if bool_sameas:

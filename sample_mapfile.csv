@@ -1,5 +1,5 @@
 attribute_label,corresponding_attribute_label,file_name
-source_id,"MRDS",
+source_id,"https://mrdata.usgs.gov/mrds",
 record_id,dep_id,
 name,site_name,
 commodity,commod1,
@@ -12,4 +12,4 @@ crs,"EPSG:4326",
 country,country,
 state_or_province,state,
 deposit_type,dep_type,
-uri,"https://mrdata.usgs.gov/mrds/",
+uri,"https://mrdata.usgs.gov/mrds",

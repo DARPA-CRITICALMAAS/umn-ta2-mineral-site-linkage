@@ -66,12 +66,11 @@ def compare_buffer_overlap(gpd_data, source_id,
     
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
-    gpd_data[['GroupID', 'ms_uri', 'location', 'source_id']].to_file('./raw.geojson', driver='GeoJSON')
-
     gpd_overlapped_data = gpd_data.overlay(
         gpd_data,
         how='intersection', keep_geom_type=False
     )
+
     gpd_overlapped_union = gpd_data.overlay(
         gpd_data,
         how='union', keep_geom_type=False
@@ -84,6 +83,8 @@ def compare_buffer_overlap(gpd_data, source_id,
     gpd_overlapped_union['union_area'] = gpd_overlapped_union.area
     gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2']]
     pl_union = to_polars(gpd_overlapped_union, 'gpd')
+
+    pl_intersection.write_csv('./intersection.csv')
 
     pl_IOU = pl.concat(
         [pl_intersection, pl_union],
@@ -101,39 +102,41 @@ def compare_buffer_overlap(gpd_data, source_id,
 
     pl_IOU = pl_IOU.filter(
         pl.col('IOU') > minimum_overlap_threshold
-    ).sort(
-        'IOU'
-    ).with_columns(
-        grouping = pl.concat_list(pl.col(['GroupID_1', 'GroupID_2'])).list.sort().list.to_struct()
-    ).unnest('grouping').drop(['GroupID_1', 'GroupID_2']).rename(
-        {
-            'field_0': 'GroupID_1',
-            'field_1': 'GroupID_2',
-        }
-    ).unique(
-        subset=['GroupID_1', 'GroupID_2'],
-        maintain_order=True,
-        keep='first'
-    ).unique(
-        subset=['GroupID_1', 'source_id_1', 'source_id_2'],
-        maintain_order=True,
-        keep='first'
-    ).unique(
-        subset=['GroupID_2', 'source_id_1', 'source_id_2'],
-        maintain_order=True,
-        keep='first'
     )
+    try:
+        pl_IOU = pl_IOU.sort(
+            'IOU'
+        ).with_columns(
+            grouping = pl.concat_list(pl.col(['GroupID_1', 'GroupID_2'])).list.sort().list.to_struct()
+        ).unnest('grouping').drop(['GroupID_1', 'GroupID_2']).rename(
+            {
+                'field_0': 'GroupID_1',
+                'field_1': 'GroupID_2',
+            }
+        ).unique(
+            subset=['GroupID_1', 'GroupID_2'],
+            maintain_order=True,
+            keep='first'
+        ).unique(
+            subset=['GroupID_1', 'source_id_1', 'source_id_2'],
+            maintain_order=True,
+            keep='first'
+        ).unique(
+            subset=['GroupID_2', 'source_id_1', 'source_id_2'],
+            maintain_order=True,
+            keep='first'
+        )
+        # print(pl_IOU[['source_id_1', 'source_id_2']])
+
+        pl_data = map_values(to_polars(gpd_data, 'gpd'), pl_IOU, 
+                             column_to_map='GroupID', value_map_from='GroupID_1', value_map_to='GroupID_2')
+    except:
+        pl_data = to_polars(gpd_data, 'gpd')
+        pass
 
     # deleting for memory release
     del gpd_overlapped_data, pl_intersection, gpd_overlapped_union, pl_union
-
-    # pl_data = to_polars(gpd_data, 'gpd')
-
-    # print(pl_data.columns)
-
-    pl_data = map_values(to_polars(gpd_data, 'gpd'), pl_IOU, 
-                         column_to_map='GroupID', value_map_from='GroupID_1', value_map_to='GroupID_2')
-
+    
     return pl_data
 
 # def select_area_max_overlap(gpd_data):
@@ -164,8 +167,8 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
         ).drop('GroupID')
 
         return to_polars(to_geopandas(pl_data, 'pl', 'location'), 'gpd')
-        
-    try:
+
+    try:    
         gpd_data = to_geopandas(pl_data, 'pl', 'location')
     except:
         gpd_data = to_geopandas(pl_data, 'pl', ['longitude', 'latitude'])
@@ -177,8 +180,8 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             gpd_data = create_coordinate_point_representation(gpd_data)
             pl_data = compare_point_distance(gpd_data)
         
-        case 'area':                
-            gpd_data = create_buffer_area_representation(gpd_data)   
+        case 'area':
+            gpd_data = create_buffer_area_representation(gpd_data)
             pl_data = compare_buffer_overlap(gpd_data, source_id)
 
     pl_data = pl_data.with_columns(
