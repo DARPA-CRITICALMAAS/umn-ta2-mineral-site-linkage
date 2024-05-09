@@ -10,6 +10,7 @@ import configparser
 import polars as pl
 
 from utils.load_files import *
+from utils.append_rawdata import *
 from utils.load_kg_data import *
 from utils.compare_geolocation import *
 from utils.compare_text import *
@@ -51,7 +52,7 @@ def fusemine(args):
 
     output_file_name = args.same_as_filename
     if not output_file_name:
-        output_file_name = f'{focus_commodity}_results'
+        output_file_name = f'{focus_commodity}_sameas'
         
     if path_rawdata:
         logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
@@ -68,6 +69,11 @@ def fusemine(args):
 
     pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
     logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
+
+    try:
+        pl_data = append_rawdata(pl_data)
+    except:
+        pass
 
     # ------ Running Single Stage ------ #
     if bool_singlestage:
