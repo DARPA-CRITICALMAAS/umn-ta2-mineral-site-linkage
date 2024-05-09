@@ -142,9 +142,9 @@ if __name__ == '__main__':
                         help='directory in where you will like to store the processed raw mineral site database')
     parser.add_argument('--schema_output_filename', '-sof',
                         help='file name of the processed raw mineral site database')
+    
     parser.add_argument('--commodity', '-c', required=True,
                         help='specific commodity to focus on (default: no all commodities)')
-
     parser.add_argument('--single_stage', 
                         help='method to use for location-based single-stage linking (default: distance-based)')
     parser.add_argument('--intralink', 
