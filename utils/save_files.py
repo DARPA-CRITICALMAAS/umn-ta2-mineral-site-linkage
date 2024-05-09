@@ -75,16 +75,13 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
         output_file_location = os.path.join(output_directory, output_file_name)
     else:
         output_file_location = os.path.join(output_directory, output_file_name+'.csv')
-                                            
+
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)                                         
     pl_data.write_csv(output_file_location)
 
 def as_geojson(pl_data, output_directory: str, output_file_name: str):
-    # pl_processed_mineralsite = pl_processed_mineralsite.with_columns(
-    #     pl.col('name').list.join(", ")
-    # )
-
     df_processed_mineralsite = pl_data.to_pandas()
-    # gs_mineralsite = gpd.GeoSeries.from_wkt(df_processed_mineralsite['location'])
     gdb_mineralsite = gpd.GeoDataFrame(df_processed_mineralsite, 
                                        geometry=gpd.points_from_xy(df_processed_mineralsite.longitude, df_processed_mineralsite.latitude), 
                                        crs='EPSG:4326')
@@ -116,14 +113,10 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         )
     
     attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'mineral_inventory', 'deposit_type_candidate']))
-    # attribute_deposit_type_candidate = ['deposit_type_candidate']
-    # attribute_mineral_inventory = ['mineral_inventory']
     attribute_location_info = list(set(pl_data.columns) & set(['location', 'crs', 'country', 'state_or_province']))
 
     pl_data = pl_data.select(
         pl.col(attribute_record_identifiers),
-        # observed_name = pl.col(attribute_deposit_type_candidate),
-        # mineral_inventory = pl.struct(pl.col(attribute_mineral_inventory)),
         location_info = pl.struct(pl.col(attribute_location_info)),
     )
 
@@ -138,7 +131,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
     with open(output_file_location, 'w') as f:
         dump(cleaned_json_data, f, indent=4, default=str)
 
-    # del str_data, json_data, cleaned_json_data
+    del str_data, json_data, cleaned_json_data
 
 def to_directory(list_pl_data, output_directory:str):
     for pl_data in list_pl_data:

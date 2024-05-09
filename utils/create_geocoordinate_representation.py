@@ -15,14 +15,11 @@ geo_params = config['geolocation.params']
 
 def create_coordinate_point_representation(gpd_data):
     # Convert geometry to single point by finding centroid if the geometry is not a point
-    # TODO: check that it is a centroid
-
     gpd_data['location'] = gpd_data['location'].apply(lambda x: x.centroid if x.type!='Point' else x)
 
     # Create a longitude, latitude column
     gpd_data['longitude'] = gpd_data.location.x
     gpd_data['latitude'] = gpd_data.location.y
-    crs_value = geo_params['DEFAULT_CRS_SYSTEM']
 
     pl_data = to_polars(gpd_data, 'gpd')
 
@@ -37,8 +34,12 @@ def create_coordinate_point_representation(gpd_data):
     pl_data = pl_data.with_columns(
         pl.col('latitude').list.mean(),
         pl.col('longitude').list.mean(),
-        pl.exclude(['latitude', 'longitude', 'GroupID']).list.unique().list.join(',')
-    ).drop('GroupID')
+    )
+    pl_data = pl_data.with_columns(
+        pl.exclude(['latitude', 'longitude', 'GroupID']).list.unique().list.join(separator=',')
+    )
+
+    pl_data = pl_data.drop('GroupID')
 
     # convert back to geodataframe using the average longitude and latitude value
     gpd_data = to_geopandas(pl_data, 'pl', ['longitude', 'latitude'])
@@ -60,8 +61,10 @@ def create_buffer_area_representation(gpd_data):
 
     pl_data = to_polars(gpd_data, 'gpd').group_by(
         'GroupID'
-    ).agg([pl.all()]).with_columns(
-        pl.exclude(['latitude', 'longitude', 'GroupID']).list.unique().list.join(',')
+    ).agg([pl.all()])
+
+    pl_data = pl_data.with_columns(
+        pl.exclude(['latitude', 'longitude', 'GroupID']).list.unique().list.join(separator=',')
     )
 
     pd_data = to_pandas(pl_data, 'pl').drop('location', axis=1)

@@ -16,10 +16,6 @@ from utils.dataframe_operations import *
 from utils.create_geocoordinate_representation import *
 from utils.unify_coordinate_system import *
 
-###
-from utils.save_files import *
-###
-
 config = configparser.ConfigParser()
 config.read('./params.ini')
 geo_params = config['geolocation.params']
@@ -78,13 +74,11 @@ def compare_buffer_overlap(gpd_data, source_id,
 
     gpd_overlapped_data['intersection_area'] = gpd_overlapped_data.area
     gpd_overlapped_data = gpd_overlapped_data[['GroupID_1', 'GroupID_2', 'intersection_area', 'source_id_1', 'source_id_2']]
-    pl_intersection = to_polars(gpd_overlapped_data, 'gpd')
+    pl_intersection = to_polars(gpd_overlapped_data, 'gpd').with_columns(pl.exclude('intersection_area').cast(pl.Utf8))
 
     gpd_overlapped_union['union_area'] = gpd_overlapped_union.area
     gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2']]
-    pl_union = to_polars(gpd_overlapped_union, 'gpd')
-
-    pl_intersection.write_csv('./intersection.csv')
+    pl_union = to_polars(gpd_overlapped_union, 'gpd').with_columns(pl.exclude('union_area').cast(pl.Utf8))
 
     pl_IOU = pl.concat(
         [pl_intersection, pl_union],
@@ -139,19 +133,6 @@ def compare_buffer_overlap(gpd_data, source_id,
     
     return pl_data
 
-# def select_area_max_overlap(gpd_data):
-#     pl_polygon_region_data = pl_polygon_region_data.unique(
-#         subset = ['GroupAlias_1'],
-#         maintain_order=True,
-#         keep='first'
-#     ).unique(
-#         subset = ['GroupAlias_2'],
-#         maintain_order=True,
-#         keep='first'
-#     )
-
-#     return pl_polygon_region_data
-
 def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
     if not source_id:
         source_id = 'ALL'
@@ -160,7 +141,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
     if 'GroupID' not in list(pl_data.columns):
         pl_data = add_index_columns(pl_data=pl_data,
                                     index_column_name='GroupID')
-        
+
     if not method or pl_data.shape[0] < 2:
         pl_data = pl_data.with_columns(
             GroupID_location = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
@@ -172,9 +153,8 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
         gpd_data = to_geopandas(pl_data, 'pl', 'location')
     except:
         gpd_data = to_geopandas(pl_data, 'pl', ['longitude', 'latitude'])
-
-    logging.info(f'\t\tlocation linking with: {method}')
     
+    start_time = time.time()
     match method:
         case 'distance':
             gpd_data = create_coordinate_point_representation(gpd_data)
@@ -187,5 +167,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
     pl_data = pl_data.with_columns(
         GroupID_location = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
     ).drop('GroupID')
+
+    logging.info(f'\t\tLocation linking with {method} - Elapsed time: {time.time() - start_time}')
 
     return pl_data

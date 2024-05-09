@@ -1,4 +1,4 @@
-run.sh
-full_MRDS.csv
-.ta2/
-epsg_sql_db.csv
+fusemine_dev.py
+*.sh
+*.out
+*.log

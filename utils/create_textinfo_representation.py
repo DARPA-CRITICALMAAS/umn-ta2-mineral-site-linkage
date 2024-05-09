@@ -16,11 +16,12 @@ text_params = config['text.params']
 
 st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
-def text_embedding(input_str:str|list):
-    if isinstance(input_str, list):
+def text_embedding(input_str:str|list, bool_individual=False):
+    if bool_individual & isinstance(input_str, list):
         input_str = ",".join(input_str)
 
-    return get_sentbert_embeddings(input_str)
+    return get_sentbert_embeddings(input_str, not bool_individual)
+    # return get_sentbert_embeddings(input_str).tolist()
 
 def create_text_attribute_representation(pl_data):
     return 0
@@ -57,9 +58,7 @@ def row_to_doc_string(struct_input:dict, bool_shuffle:bool):
         if struct_input[h] != '':
             doc_formatted_str += f'{h} is {struct_input[h]}. '
 
-    print(doc_formatted_str)
-
     return get_sentbert_embeddings(doc_formatted_str)
 
-def get_sentbert_embeddings(input_str:str):
-    return st_model.encode(input_str)
+def get_sentbert_embeddings(input_str:str, convert_to_tensor=True):
+    return st_model.encode(input_str, convert_to_tensor=True)

@@ -1,129 +1,155 @@
 import os
-import regex as re
+import time
+import logging
+from datetime import datetime
+
+import torch
+import argparse
+import configparser
+
 import polars as pl
 
+from utils.load_files import *
 from utils.load_kg_data import *
+from utils.compare_geolocation import *
+from utils.compare_text import *
 
-def load_file(file_name_full:str):
-    pl_data = pl.read_csv(file_name_full, ignore_errors=True, truncate_ragged_lines=True)
+from utils.convert_dataframe import *
+from utils.combine_grouping_results import *
+from utils.save_files import *
+from process_rawdata import process_rawdata
 
-    return pl_data
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def load_directory(directory_path:str, file_exclude:list|None=None):
-    files_in_directory = os.listdir(directory_path)
+def fusemine(args):
+    logging.basicConfig(filename=f'fusemine_{datetime.timestamp(datetime.now())}.log', format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.info(f'FuseMine is running on {device}')
 
-    pl_data_whole = pl.DataFrame()
-    for file in files_in_directory:
-        file_basename = os.path.splitext(os.path.basename(file))[0]
-        file_name, file_extension = os.path.splitext(file)
+    if args.single_stage and (args.intralink or args.interlink):
+        logging.error(f'Must select either single_stage or two_stage (intralink, interlink). Cannot select both.')
+        return -1
 
-        if file_exclude and file_name in file_exclude:
-            continue
+    bool_singlestage = True if args.single_stage else False
+    bool_intralink = True if args.intralink else False
+    bool_interlink = True if args.interlink else False
 
-        if not file_extension:
-            load_directory(os.path.join(directory_path, file_name))
-        else:
-            pl_data = load_file(os.path.join(directory_path, file))
+    path_rawdata = args.raw_data
+    path_attribute_map = args.attribute_map
+    path_output_dir = args.schema_output_directory
+    schema_filename = args.schema_output_filename
 
-            if pl_data_whole.is_empty():
-                pl_data_whole = pl_data
-            
-            else:
+    intralink_location = args.intralink or args.single_stage
+    interlink_location = args.interlink
+
+    methods = [intralink_location, ['site_name', 'commodity'], interlink_location, None]
+    intralinked_file = None
+
+    focus_commodity = args.commodity
+    output_directory = args.same_as_directory
+
+    output_file_name = args.same_as_output
+    if not output_file_name:
+        output_file_name = f'{focus_commodity}_results'
+        
+    if path_rawdata:
+        logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
+
+        try:
+            process_rawdata(path_rawdata, path_attribute_map, path_output_dir, schema_filename)
+        except:
+            if not path_attribute_map:
+                logging.error(f'Process exiting due to missing attribute_map')
+
+
+    logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
+    start_time = time.time()
+
+    pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
+    logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
+
+    # ------ Running Single Stage ------ #
+    if bool_singlestage:
+        pl_data = compare_geolocation(pl_data, method=methods[0])
+        pl_data = compare_text_embedding(pl_data, 'ALL', method=methods[1])
+
+        pl_data = merge_grouping_results(pl_data, 'ALL')
+
+    else:
+        # ------ Data Separation ------ #
+        list_pl_by_source = pl_data.partition_by('source_id')
+        list_grouped = []
+
+        # --------- Intralink --------- #
+        if bool_intralink:
+            logging.info(f'Intralinking...')
+            intralink_start_time = time.time()
+            start_time = time.time()
+
+            for idx, pl_data in enumerate(list_pl_by_source):
+                source_id = pl_data.item(0, 'source_id')
+
+                logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
                 try:
-                    pl_data_whole = pl.concat(
-                        [pl_data_whole, pl_data],
-                        how='align'
-                    )
+                    pl_data = compare_geolocation(pl_data, source_id, methods[0])
+                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
+
+                    pl_data = merge_grouping_results(pl_data, source_id)
+                    list_grouped.append(pl_data)
+                    
                 except:
-                    pass
+                    logging.info(f'\t\tSkipping due to missing or incorrect geolocation information')
+                    continue
 
-    return pl_data_whole
+            logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
-def list_raw_data_sources(raw_data_path:str):
-    items_in_directory = os.listdir(raw_data_path)
-    data_directories = {}
+        # --------- Interlink --------- #
+        if bool_interlink:
+            if intralinked_file:
+                logging.info(f'Loading intralinked file on local')
 
-    for i in items_in_directory:
-        directory_path = os.path.join(raw_data_path, i)
+            logging.info(f'Interlinking...')
+            start_time = time.time()
 
-        cleaned_items = re.sub('[^A-Za-z0-9]', '',  i).lower()
-        data_directories[cleaned_items] = directory_path
-   
-    return data_directories
+            pl_data = pl.concat(
+                list_grouped,
+                how='diagonal'
+            )
 
-def load_original_data(data_directories:dict, source_name:str) -> str:
-    list_directories = list(data_directories.keys())
+            pl_data = compare_geolocation(pl_data, method=methods[2])
+            pl_data = compare_text_embedding(pl_data, methods[3])
+
+            pl_data = merge_grouping_results(pl_data, 'ALL')
+
+            logging.info(f'Interlinking completed - Elapsed Time: {time.time() - start_time}s')
 
     try:
-        subbed_source_name = re.sub('[^A-Za-z0-9]', '', source_name).lower()
-
-        if subbed_source_name in list_directories:
-            raw_data_path = data_directories[subbed_source_name]
-            
+        as_csv(pl_data, output_directory, output_file_name, True)
     except:
         pass
 
-def string_match_identify_columns(pl_data, item:str):
-    item = re.sub('[^A-Za-z0-9]', '', item)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
+    parser.add_argument('--raw_data', '-r',
+                        help='the directory or file where the raw mineral site databases are located')
+    parser.add_argument('--attribute_map',
+                        help='CSV file where the label mapping information is stored. See sample_mapfile.csv for reference')
+    parser.add_argument('--schema_output_directory', '-sod',
+                        help='directory in where you will like to store the processed raw mineral site database')
+    parser.add_argument('--schema_output_filename', '-sof',
+                        help='file name of the processed raw mineral site database')
+    parser.add_argument('--commodity', '-c', required=True,
+                        help='specific commodity to focus on (default: no all commodities)')
 
-    pl_data = pl_data.with_columns(
-        pl.col(pl.Utf8).str.strip_chars()
-    ).with_columns(
-        all_combined = pl.concat_str(
-            pl.all().fill_null('').str.replace_all("[^A-Za-z0-9]", "")           
-        )
-    ).filter(
-        pl.col('all_combined').str.contains(rf'(?i){item}')
-    )
+    parser.add_argument('--single_stage', 
+                        help='method to use for location-based single-stage linking (default: distance-based)')
+    parser.add_argument('--intralink', 
+                        help='method to use for location-based intralinking (default: distance-based)')
+    parser.add_argument('--interlink', 
+                        help='method to use for location-based interlinking (default: overlapping-area-based)')
+    
+    parser.add_argument('--same_as_directory', nargs='?', type=str, const="./output",
+                        help='directory to store the same as CSV files (default: ./output)')
+    parser.add_argument('--same_as_output', '-o',
+                        help='filename of the same as CSV file (default: commmodity_same_as.csv)')
 
-    return pl_data
-
-def load_file_from_directory(data_directory:str, file_name:str, file_type:str) -> str:
-    file_name_full = os.path.join(data_directory, file_name+file_type)
-    pl_file = load_file(file_name_full)
-
-    return pl_file
-
-# pl_data = load_minmod_kg('cobalt')
-
-def get_header_value(dict_value:dict, target_list:list):
-    dict_values = list(dict_value.values())
-    overlapping = list(set(dict_values) & set(target_list))
-
-    return overlapping[0]
-
-# data_directories = list_raw_data_sources('/home/yaoyi/pyo00005/CriticalMAAS/src/MINMOD_DATA')
-
-# pl_data = pl.read_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/minmod_cobalt.csv')
-# pl_data_sources = pl_data.unique('source_id')['source_id'].to_list()
-
-# for i in pl_data_sources:
-#     raw_data_path = load_original_data(data_directories, i)
-
-#     if raw_data_path:
-#         data_dictionary = load_file_from_directory(raw_data_path, 'dictionary', '.csv')
-#         remaining = string_match_identify_columns(data_dictionary, 'other name')
-
-#         pl_data_whole = load_directory(raw_data_path, ['dictionary'])
-#         column_name_of_full = list(pl_data_whole.columns)
-
-#         remaining = remaining.with_columns(
-#             correct = pl.struct(pl.all()).map_elements(lambda x: get_header_value(x, column_name_of_full), skip_nulls=False)
-#         ).item(0, 'correct')
-        
-#         print(remaining)
-
-# pl_data = load_minmod_kg('tungsten').filter(
-#     (pl.col('source_id') == 'USMIN') | (pl.col('source_id') == 'MRDS')
-# )
-
-# print(pl_data)
-# pl_data.write_csv('./minmod_tungsten.csv')
-
-# pl_data.write_csv('./tmp.csv')
-
-# .filter(
-#     pl.col('record_id').is_in(pl_mrds)
-# )
-
-# pl_data.write_csv('minmod_tungsten_partial.csv')
+    fusemine(parser.parse_args())
