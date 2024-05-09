@@ -21,8 +21,8 @@ def print_evaluation_table(fusemine_version:str, pl_ground_truth, pl_prediction)
     accuracy_score = perf_accuracy(pl_ground_truth, pl_prediction)
                                     
     headers = ["FuseMine Version", "Accuracy"]
-    table = [['Naive', '0.0707'],
-            ['ver 0.1', '0.7772'],
+    table = [['Naive', '0.071'],
+            ['ver 0.1', '0.777'],
             [fusemine_version, accuracy_score]]
 
     print(tabulate(table, headers, tablefmt="outline", floatfmt=".3f"))
