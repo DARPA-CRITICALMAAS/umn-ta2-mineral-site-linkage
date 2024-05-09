@@ -46,7 +46,7 @@ pip install -r requirements.txt
 ### Run FuseMine End-to-End
 Run the python file by entering the following code in the command line:
 ```
-python -m fusemine [-d path/to/data/directory] [-l if only using geolocation for linking]
+python3 fusemine.py --commodity name_commodity --intralink intralink_method --interlink interlink_method
 ```
 The final output, formatted in a two-column CSV, will be found in the directory named `./outputs/`
 

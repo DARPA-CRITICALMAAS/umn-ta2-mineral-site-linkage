@@ -47,13 +47,7 @@ def fusemine(args):
     intralinked_file = None
 
     focus_commodity = args.commodity
-    output_directory = args.same_as_directory
-
-    output_file_name = args.same_as_output
-    if not output_file_name:
-        output_file_name = f'{focus_commodity}_results'
         
-
     if path_rawdata:
         logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
 
@@ -64,14 +58,11 @@ def fusemine(args):
                 logging.error(f'Process exiting due to missing attribute_map')
 
 
-    # logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
-    # start_time = time.time()
+    logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
+    start_time = time.time()
 
-    # pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
-    # logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
-
-    with open('./tungsten_raw.pkl', 'rb') as handle:
-        pl_data = pickle.load(handle)
+    pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
+    logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
     try:
         pl_data = append_rawdata(pl_data).filter(
@@ -134,9 +125,6 @@ def fusemine(args):
             pl_data = merge_grouping_results(pl_data, 'ALL')
 
             logging.info(f'Interlinking completed - Elapsed Time: {time.time() - start_time}s')
-
-    # with open('./tungsten_result.pkl', 'rb') as handle:
-    #     pl_data = pickle.load(handle)
 
     pl_data = pl_data.with_columns(
             pl.col('record_id').str.split(',')

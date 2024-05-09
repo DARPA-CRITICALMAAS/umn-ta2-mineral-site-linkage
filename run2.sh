@@ -2,7 +2,7 @@
 #SBATCH --job-name=tungsten
 #SBATCH --output=/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/tungsten.out
 #SBATCH --time=24:00:00
-#SBATCH -p a100-8    
+#SBATCH -p a100-4    
 #SBATCH --gres=gpu:a100:1 
 #SBATCH --ntasks=1
 #SBATCH --mem=40g

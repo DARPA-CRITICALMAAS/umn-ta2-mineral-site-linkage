@@ -47,7 +47,7 @@ def fusemine(args):
     focus_commodity = args.commodity
     output_directory = args.same_as_directory
 
-    output_file_name = args.same_as_output
+    output_file_name = args.same_as_filename
     if not output_file_name:
         output_file_name = f'{focus_commodity}_results'
         
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--same_as_directory', nargs='?', type=str, const="./output",
                         help='directory to store the same as CSV files (default: ./output)')
-    parser.add_argument('--same_as_output', '-o',
+    parser.add_argument('--same_as_filename', '-o',
                         help='filename of the same as CSV file (default: commmodity_same_as.csv)')
 
     fusemine(parser.parse_args())
