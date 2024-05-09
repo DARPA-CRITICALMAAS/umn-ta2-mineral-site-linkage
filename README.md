@@ -1,4 +1,4 @@
-# TA2 UMN - FuseMine (UPDATE CURRENTLY IN PROGRESS)
+# TA2 UMN - FuseMine
 FuseMine is the pipeline for data reconciliation from multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from the reports (i.e., output from TA2 InferLink/USC).
 
 ## Requirements
@@ -20,7 +20,28 @@ pip install -r requirements.txt
 ```
 
 ## How to run
-### Run FuseMine End-to-End
+### Processing Raw Data to Mineral Site Schema
+FuseMine uses data that are available on the [MinMod Knowledge Graph](https://minmod.isi.edu/). Therefore, to run FuseMine on new data, an additional data-processing step is required.
+New data can be processed by using the following lines:
+```
+python3 fusemine.py --raw_data path/to/raw/data --attribute_map path/to/attribute/map --schema_output_directory path/to/schema/output/directory --schema_output_filename file_name
+```
+The resulting output follows the [MineralSite schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2).
+
+Raw data process requires an attribute map which is structured as follows:
+| attribute_label | corresponding_attribute_label | file_name |
+| --- | --- | --- |
+| target attribute label required by mineral site schema | attribute label in the raw data | file_name |
+
+If the attribute spans across multiple files (e.g., `record_id` is available in `A.csv` and `commodity` is available in `B.csv`), please indicate the corresponding file name in the `file_name` field.
+If there are multiple attributes in the raw data representing the same target attribute (e.g., both `commod1` and `commod2` represents `commodity`), please indicate all attributes on separate rows with identical `attribute_label`.
+If the attribute is not availble in the raw data (e.g., `crs` is EPSG:4326 but there is no column representing `crs` in the data), fill in the `corresponding_attribute_label` with the required information, but leave `file_name` empty.
+
+An example of an attribute map can be found [here](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
+<!-- If the attribute spans across multiple files /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/sample_mapfile.csv -->
+
+
+### Run FuseMine
 Run the python file by entering the following code in the command line:
 ```
 python3 fusemine.py --commodity commodity_name --intralink distance --interlink area
