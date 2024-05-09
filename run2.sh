@@ -20,6 +20,8 @@ cd /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage
 # python3 testing_cpu.py
 # python3 tester.py
 python3 evaluation_on_tungsten.py --commodity tungsten --intralink distance --interlink area
+
+# python3 evaluation_on_tungsten.py --commodity tungsten --intralink distance --interlink area
 # cd /home/yaoyi/pyo00005/CriticalMAAS/src/DATA/ta2-minmod-data/data/umn
 
 # sleep 3h

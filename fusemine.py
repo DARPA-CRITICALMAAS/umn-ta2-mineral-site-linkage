@@ -46,6 +46,8 @@ def fusemine(args):
 
     focus_commodity = args.commodity
     output_directory = args.same_as_directory
+    if not output_directory:
+        output_directory = './output'
 
     output_file_name = args.same_as_filename
     if not output_file_name:
@@ -122,10 +124,7 @@ def fusemine(args):
 
             logging.info(f'Interlinking completed - Elapsed Time: {time.time() - start_time}s')
 
-    try:
-        as_csv(pl_data, output_directory, output_file_name, True)
-    except:
-        pass
+    as_csv(pl_data, output_directory, output_file_name, True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
@@ -147,7 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('--interlink', 
                         help='method to use for location-based interlinking (default: overlapping-area-based)')
     
-    parser.add_argument('--same_as_directory', nargs='?', type=str, const="./output",
+    parser.add_argument('--same_as_directory',
                         help='directory to store the same as CSV files (default: ./output)')
     parser.add_argument('--same_as_filename', '-o',
                         help='filename of the same as CSV file (default: commmodity_same_as.csv)')

@@ -2,7 +2,7 @@
 FuseMine is the pipeline for data reconciliation from multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from the reports (i.e., output from TA2 InferLink/USC).
 
 ## Requirements
-### Mineral Site Databases & Data Dictionaries
+<!-- ### Mineral Site Databases & Data Dictionaries
 FuseMine requires a data directory that consists of one or more mineral site database and their corresponding data dictionary (i.e., attribute name and description). 
 
 The following is an example of data directory layout:
@@ -23,7 +23,7 @@ The following is an example of data directory layout:
     | latitude | Latitude | Geographic latitude of the site, WGS84 if needed. Real numbers stored in double precision. |
     * e.g., data dictionary of USMIN can be found in `Data_Dictionary.csv` under [USGS_Cobalt_US_CSV.zip](https://www.sciencebase.gov/catalog/file/get/5ad623f2e4b0e2c2dd23f09e?name=USGS_Cobalt_US_CSV.zip).
 
-* The description from the data dictionary is compared against our predefined target description of required attributes. These can be found in [`dictionary_target.pkl`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/src/dictionary_target.pkl) file.
+* The description from the data dictionary is compared against our predefined target description of required attributes. These can be found in [`dictionary_target.pkl`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/src/dictionary_target.pkl) file. -->
 
 ### Conda Environment Configurations
 FuseMine recommends dedicating more than 10GB of memory. The code requires `python >= 3.10` and `pytorch >= 2.0`.
@@ -46,7 +46,12 @@ pip install -r requirements.txt
 ### Run FuseMine End-to-End
 Run the python file by entering the following code in the command line:
 ```
-python3 fusemine.py --commodity name_commodity --intralink intralink_method --interlink interlink_method
+python3 fusemine.py --commodity commodity_name --intralink distance --interlink area
+```
+
+To save the same as result to a specific directory with a specific filename, append the following flags with the desired values:
+```
+--
 ```
 The final output, formatted in a two-column CSV, will be found in the directory named `./outputs/`
 
@@ -112,7 +117,7 @@ python interlinking.py [-d path/to/data/directory] [-l if only using geolocation
 
 
 
-### Parameters
+<!-- ### Parameters
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the [`params.py`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/fusemine/params.py) file.
 
 | Name | Description | Value |
@@ -120,6 +125,6 @@ The following portion lists all the parameters that are used in the pipeline. Th
 | `INTRALINK_BOUNDARY` | Intralink Boundary | 500 (meters) |
 | `INTERLINK_BUFFER` | Interlink Buffer | 5000 (meters) |
 | `INTERLINK_OVERLAP` | Interlink Overlap Area | 1 (meters squared) |
-| `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 |
+| `THRESHOLD_SIMILARITY` | Textual Similarity Threshold | 0.74 | -->
 <!-- | `EMBEDDING_RATIO1` | Ratio of Name Embedding | 0.71 |
 | `EMBEDDING_RATIO2` | Ratio of Commodity Embedding | 0.29 | -->

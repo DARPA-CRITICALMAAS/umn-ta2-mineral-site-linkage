@@ -77,8 +77,10 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
         output_file_location = os.path.join(output_directory, output_file_name+'.csv')
 
     if not os.path.exists(output_directory):
-        os.makedirs(output_directory)                                         
+        os.makedirs(output_directory)          
     pl_data.write_csv(output_file_location)
+
+    logging.info(f'Data saved to {output_file_location}')
 
 def as_geojson(pl_data, output_directory: str, output_file_name: str):
     df_processed_mineralsite = pl_data.to_pandas()
