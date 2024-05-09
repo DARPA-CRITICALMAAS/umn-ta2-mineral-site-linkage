@@ -23,7 +23,11 @@ from process_rawdata import process_rawdata
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def fusemine(args):
-    logging.basicConfig(filename=f'fusemine_{datetime.timestamp(datetime.now())}.log', format='%(asctime)s: %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO, 
+                        handlers=[
+                            logging.FileHandler(f'fusemine_{datetime.timestamp(datetime.now())}.log'),
+                            logging.StreamHandler()
+                        ])
     logging.info(f'FuseMine is running on {device}')
 
     if args.single_stage and (args.intralink or args.interlink):
