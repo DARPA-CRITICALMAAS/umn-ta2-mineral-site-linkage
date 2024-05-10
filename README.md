@@ -21,42 +21,22 @@ pip install -r requirements.txt
 
 ## How to run
 ### Processing Raw Data to Mineral Site Schema
-FuseMine uses data that are available on the [MinMod Knowledge Graph](https://minmod.isi.edu/). Therefore, to run FuseMine on new data, an additional data-processing step is required.
-New data can be processed by using the following lines:
+Before running FuseMine, you'll need to check that all data are on the [MinMod Knowledge Graph](https://minmod.isi.edu/). The [required attribute](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2) can be across multiple files as long as they are indicated in the attribute map. An example of an acceptable attribute map can be found [here](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
 ```
-python3 fusemine.py --raw_data path/to/raw/data --attribute_map path/to/attribute/map --schema_output_directory path/to/schema/output/directory --schema_output_filename file_name
+python3 fusemine.py --raw_data path/to/raw/data --attribute_map path/to/attribute/map --sod path/to/schema/directory --sof file_name
 ```
-The resulting output follows the [MineralSite schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2).
-
-Raw data process requires an attribute map which is structured as follows:
-| attribute_label | corresponding_attribute_label | file_name |
-| --- | --- | --- |
-| target attribute label required by mineral site schema | attribute label in the raw data | file_name |
-
-Consider the following when creating the attribute map file:
-- If the attribute spans across multiple files (e.g., `record_id` is available in `A.csv` and `commodity` is available in `B.csv`), please indicate the corresponding file name in the `file_name` field.
-- If there are multiple attributes in the raw data representing the same target attribute (e.g., both `commod1` and `commod2` represents `commodity`), please indicate all attributes on separate rows with identical `attribute_label`.
-- If the attribute is not availble in the raw data (e.g., `crs` is EPSG:4326 but there is no column representing `crs` in the data), fill in the `corresponding_attribute_label` with the required information, but leave `file_name` empty.
-
-An example of an attribute map can be found [here](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
-<!-- If the attribute spans across multiple files /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/sample_mapfile.csv -->
-
 
 ### Run FuseMine
-Run the python file by entering the following code in the command line:
+Enter one of the following in the command line to run FuseMine:
 ```
-python3 fusemine.py --commodity commodity_name --intralink distance --interlink area
-```
-The final output, formatted as a two-column CSV, will be found in the directory `./outputs/` with the name `{commodity_name}_sameas.csv` by default.
+# Store same as file as ./outputs/{commodity_name}_sameas.csv
+python3 fusemine.py -c commodity_name --intralink distance --interlink area
 
-To save the same as result to a specific directory with a specific filename, append the following flags, respectively, with the desired values:
-```
---same_as_directory path/to/directory --same_as_filename file_name
+# Store same as file at a specific directory with a specific name
+python3 fusemine.py -c commodity_name --intralink distance --interlink area -d path/to/directory -f file_name
 ```
 
-<!-- ### Run Interlinking on Intralinked Data -->
-
-### Parameters
+#### Parameters
 The following portion lists all the parameters that are used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini) file.
 
 | Name | Description | Value |
@@ -65,3 +45,27 @@ The following portion lists all the parameters that are used in the pipeline. Th
 | `POLYGON_BUFFER_unit_meter` | Size of buffer to be added around a geometry | 5000 (meters) |
 | `POLYGON_AREA_OVERLAP_unit_sqmeter` | Minimum intersection-over-union (IOU) two geometries must have to be considered as a same site | 0.5 |
 | `ATTRIBUTE_VALUE_THRESHOLD` | Minimum cosine similarity distance two text embeddings must have to be considered as a similar text | 0.65 |
+
+### Run FuseMine with Evaluation
+To evaluate the performance of FuseMine on [Idaho/Montana region Tungsten](), use the following:
+```
+python3 fusemine.py --tungsten
+```
+
+
+<!-- Raw data process requires an attribute map which is structured as follows:
+| attribute_label | corresponding_attribute_label | file_name |
+| --- | --- | --- |
+| target attribute label required by mineral site schema | attribute label in the raw data | file_name |
+
+Consider the following when creating the attribute map file:
+- If the attribute spans across multiple files (e.g., `record_id` is available in `A.csv` and `commodity` is available in `B.csv`), please indicate the corresponding file name in the `file_name` field.
+- If there are multiple attributes in the raw data representing the same target attribute (e.g., both `commod1` and `commod2` represents `commodity`), please indicate all attributes on separate rows with identical `attribute_label`.
+- If the attribute is not availble in the raw data (e.g., `crs` is EPSG:4326 but there is no column representing `crs` in the data), fill in the `corresponding_attribute_label` with the required information, but leave `file_name` empty. -->
+
+<!-- If the attribute spans across multiple files /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/sample_mapfile.csv -->
+
+<!-- ### Run Interlinking on Intralinked Data -->
+
+
+<!-- ground reference -->

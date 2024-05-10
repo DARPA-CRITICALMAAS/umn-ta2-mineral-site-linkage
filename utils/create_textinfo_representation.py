@@ -24,6 +24,7 @@ def text_embedding(input_str:str|list, bool_individual=False):
     # return get_sentbert_embeddings(input_str).tolist()
 
 def create_text_attribute_representation(pl_data):
+    
     return 0
 
 def row_to_json_string(struct_input:dict, bool_shuffle:bool):
@@ -42,9 +43,7 @@ def row_to_json_string(struct_input:dict, bool_shuffle:bool):
     json_formatted_str = json_formatted_str.rstrip(', ')
     json_formatted_str += '}'
 
-    print(json_formatted_str)
-
-    return get_sentbert_embeddings(json_formatted_str)
+    return json_formatted_str
 
 def row_to_doc_string(struct_input:dict, bool_shuffle:bool):
     list_headers = list(struct_input.keys())
@@ -58,7 +57,7 @@ def row_to_doc_string(struct_input:dict, bool_shuffle:bool):
         if struct_input[h] != '':
             doc_formatted_str += f'{h} is {struct_input[h]}. '
 
-    return get_sentbert_embeddings(doc_formatted_str)
+    return doc_formatted_str
 
 def get_sentbert_embeddings(input_str:str, convert_to_tensor=True):
-    return st_model.encode(input_str, convert_to_tensor=True)
+    return st_model.encode(input_str, convert_to_tensor=convert_to_tensor)
