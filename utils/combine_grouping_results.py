@@ -19,6 +19,11 @@ def merge_grouping_results(pl_grouped, source_id:str):
             )
         
         case _:
+            if 'GroupID' in list(pl_grouped.columns):
+                pl_grouped = pl_grouped.drop(
+                    'GroupID'
+                )
+                
             pl_grouped = pl_grouped.group_by(
                 column_overlap
             ).agg([pl.all()]).drop(column_overlap)
@@ -26,6 +31,6 @@ def merge_grouping_results(pl_grouped, source_id:str):
             pl_grouped = add_index_columns(pl_grouped, 'tmpID')
             pl_grouped = pl_grouped.with_columns(
                 GroupID = pl.lit(source_id) + pl.col('tmpID').cast(pl.Utf8)
-            ).drop('tmpID')
+            ).drop('tmpID').drop(column_overlap)
 
             return pl_grouped

@@ -79,7 +79,7 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
         
     if not items_to_compare or pl_data.shape[0] < 2:
         pl_data = pl_data.with_columns(
-            GroupID_text = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
+            GroupID_text = pl.lit(source_id) + pl.lit('default')
         ).drop('GroupID')
 
         return pl_data
@@ -91,13 +91,42 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
     )
 
     if device == 'cpu':
-        compare_text_value_embedding_cpu(pl_data, source_id, items_to_compare)
+        return compare_text_value_embedding_cpu(pl_data, source_id, items_to_compare)
 
     else:
         return compare_text_value_embedding_cuda(pl_data, source_id, items_to_compare)
 
-def compare_text_value_embedding_cuda_n(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
-    # logging.info(f'\t\tComparing text embedding for {source_id} - {pl_data.shape[0]} records')
+def compare_text_value_embedding_cuda_n(pl_data, source_id:str|None=None, items_to_compare:list|None=None, method='doc'):
+    if not source_id:
+        source_id = 'ALL'
+    
+    if 'GroupID' not in list(pl_data.columns):
+        pl_data = add_index_columns(pl_data=pl_data,
+                                    index_column_name='GroupID')
+        
+    if not items_to_compare or pl_data.shape[0] < 2:
+        pl_data = pl_data.with_columns(
+            GroupID_text = pl.lit(source_id) + pl.lit('default')
+        ).drop('GroupID')
+
+        return pl_data
+    
+    suffix_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'site_suffix.pkl'))}"
+
+    pl_data = pl_data.with_columns(
+        pl.col(items_to_compare).str.strip_chars().str.replace(rf"{suffix_regex}", '')
+    )
+
+    match method:
+        case 'json':
+            pl_data = pl_data.with_columns(
+                combined_text = pl.struct(pl.col(items_to_compare)).map_elements(lambda x: row_to_json_string(x, True))
+            )
+        case 'doc':
+            pl_data = pl_data.with_columns(
+                combined_text = pl.struct(pl.col(items_to_compare)).map_elements(lambda x: row_to_doc_string(x, True))
+            )
+
     list_item_values = pl_data['combined_text'].to_list()
     list_item_embedding = text_embedding(list_item_values)
 
@@ -137,29 +166,28 @@ def compare_text_value_embedding_cuda_n(pl_data, source_id:str|None=None, items_
     return pl_data
 
 def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
-    # logging.info(f'\t\tComparing text embedding for {source_id} - {pl_data.shape[0]} records')
-
     list_attribute_ratio = ast.literal_eval(text_params['ATTRIBUTE_VALUE_RATIO'])
+    default_ratio = float(text_params['DEFAULT_WEIGHT_FACTOR'])
+
     list_embedding_matrix = []
     for idx, item in enumerate(items_to_compare):
         list_item_values = pl_data[item].to_list()
 
         start_time = time.time()
         list_item_embedding = text_embedding(list_item_values)
-        # logging.info(f'\t\t\tText embeddings created for {item} - Elapsed time: {time.time() - start_time}')
 
         start_time = time.time()
-        # similarity_score = torch.cdist(list_item_embedding, list_item_embedding, p=float("inf")).numpy(force=True)
-        # print(similarity_score)
         similarity_score = pairwise_cosine_similarity(list_item_embedding).numpy(force=True)
         similarity_score = np.triu(similarity_score)
-        normalized_similarity = list_attribute_ratio[idx] * similarity_score
+        try:
+            normalized_similarity = list_attribute_ratio[idx] * similarity_score
+        except:
+            normalized_similarity = default_ratio * similarity_score
 
         if idx == 0:
             list_embedding_matrix = normalized_similarity
         else:
             list_embedding_matrix = list_embedding_matrix + normalized_similarity
-        # logging.info(f'\t\t\tCosine similarity calculated for {item} - Elapsed time: {time.time() - start_time}')
     
     list_condition_satisfied = np.transpose(np.nonzero(list_embedding_matrix > float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])))
     for idx, pair in enumerate(tqdm(list_condition_satisfied)):

@@ -31,6 +31,7 @@ def append_rawdata(pl_data):
             )
 
             columns_raw_data = list(pl_raw_data.columns)
+            print(columns_raw_data)
 
             identified_attribute_label = None
             try:
@@ -43,6 +44,8 @@ def append_rawdata(pl_data):
             if identified_attribute_label:
                 list_record_id = initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))['record_id']
                 attribute_record_id = list(set(list_record_id) & set(columns_raw_data))[0]
+                print(attribute_record_id)
+                print('here8')
 
                 pl_raw_data = pl_raw_data.group_by(
                     attribute_record_id
@@ -51,6 +54,7 @@ def append_rawdata(pl_data):
                 ).with_columns(
                     pl.exclude(attribute_record_id).list.unique().list.drop_nulls().list.join(",")
                 )
+                print('here9')
 
                 try:
                     pl_raw_data = pl_raw_data.select(
@@ -61,6 +65,7 @@ def append_rawdata(pl_data):
                     }).with_columns(
                         pl.col('record_id').cast(pl.Utf8)
                     )
+                    print('here10')
 
                 except:
                     pass
@@ -71,6 +76,7 @@ def append_rawdata(pl_data):
                 ).drop_nulls(
                     subset=['record_id']
                 ).fill_null('')
+                print('here11')
 
 
     pl_data = pl_data.rename(

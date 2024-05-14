@@ -23,10 +23,9 @@ def process_rawdata(path_rawdata:str, path_attribute_map:str, path_output_dir:st
         pl.col('attribute_label') == 'record_id'
     ).item(0, 'corresponding_attribute_label')
 
-    list_record_id_archive = initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
-    list_record_id_archive['record_id'].append(group_by_column)
-    as_pkl(list_record_id_archive, os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
-
+    # list_record_id_archive = initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
+    # list_record_id_archive['record_id'].append(group_by_column)
+    # as_pkl(list_record_id_archive, os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
     # For the case where the input is a directory
     file_names = pl_attribute_map.unique(
         'file_name'

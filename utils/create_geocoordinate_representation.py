@@ -54,7 +54,7 @@ def create_buffer_area_representation(gpd_data):
     gpd_polygon = gpd_data.dissolve(
         'GroupID'
     ).convex_hull.buffer(
-        int(geo_params['POLYGON_BUFFER_unit_meter'])
+        float(geo_params['POLYGON_BUFFER_unit_meter'])
     )
 
     gpd_polygon = gpd_polygon.to_frame().reset_index().sort_values(by=['GroupID']).rename_geometry('location')
