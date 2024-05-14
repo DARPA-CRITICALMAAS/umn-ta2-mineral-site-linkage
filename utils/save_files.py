@@ -118,7 +118,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
             crs = pl.lit(crs_value)
         )
     
-    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'mineral_inventory', 'deposit_type_candidate']))
+    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'mineral_inventory', 'deposit_type_candidate', 'site_type']))
     attribute_location_info = list(set(pl_data.columns) & set(['location', 'crs', 'country', 'state_or_province']))
 
     pl_data = pl_data.select(

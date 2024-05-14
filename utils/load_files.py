@@ -37,6 +37,12 @@ def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value
         case '.json':
             input_data = pl.read_json(input_filename)
 
+        case '.txt':
+            input_data = pd.read_csv(input_filename,
+                                     header=0,
+                                     delimiter='\t')
+            input_data = pl.from_pandas(input_data)
+
         case _:
             # input_data = initiate_load(input_filename+'dictionary.csv', bool_asdict=True, key_column='label', value_column='definition')
             pass

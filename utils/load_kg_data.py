@@ -117,9 +117,10 @@ def minmod_kg_check(source_name:str|None=None, record_id:str|None=None):
             pl_sites = pl.from_pandas(sites_df).group_by(
                 'ms_uri'
             ).agg([pl.all()]).with_columns(
-                pl.exclude('ms_uri').list.unique().list.join(',')
+                pl.exclude('ms_uri', 'location').list.unique().list.join(',')
             ).with_columns(
-                pl.col('record_id').cast(pl.Utf8)
+                pl.col('record_id').cast(pl.Utf8),
+                pl.col('location').list.get(0)
             )
         
         return pl_sites
