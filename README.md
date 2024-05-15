@@ -41,7 +41,7 @@ The following command-line arguments are available to customize FuseMine:
 - `--same_as_filename`: Filename of the same as CSV file (default: `./<commodity>_same_as.csv`).
 - `--tungsten`: Run evaluation with tungsten.
 
-## Example FuseMine Commands
+### Example FuseMine Commands
 Before running FuseMine, ensure that all data is available on the [MinMod Knowledge Graph](https://minmod.isi.edu/) (MinMod KG). 
 
 To populate additional raw structured data to MinMod KG, create the attribute map file (.CSV), which maps headers of raw structured data to [MinMod KG schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2). Here is an example of attribute map CSV: [`sample_mapfile.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
@@ -56,12 +56,12 @@ To store the output file in the default location (./outputs/) and use distance-b
 python3 fusemine.py -commodity <commodity_name> --intralink distance --interlink area
 ```
 
-To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data[( et al., )](), use the following:
+To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data [(Goldman et al., 2020)](https://www.sciencebase.gov/catalog/item/5f1f058682cef313ed8e9e91), use the following:
 ```
 python3 fusemine.py --tungsten
 ```
 
-## FuseMine Parameters
+### FuseMine Parameters
 The following table lists all the parameters used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini).
 
 | Name | Description | Value |
