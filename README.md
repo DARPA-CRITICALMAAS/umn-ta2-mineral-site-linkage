@@ -44,13 +44,6 @@ The following command-line arguments are available to customize FuseMine:
 ### Example FuseMine Commands
 Before running FuseMine, ensure that all data is available on the [MinMod Knowledge Graph](https://minmod.isi.edu/) (MinMod KG). 
 
-To populate additional raw structured data to MinMod KG, create the attribute map file (.CSV), which maps headers of raw structured data to [MinMod KG schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2). Here is an example of attribute map CSV: [`sample_mapfile.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
-
-After creating a attribute map CSV, run the following command line:
-```
-python3 fusemine.py --raw_data <path/to/raw/data> --attribute_map <path/to/attribute/map> --schema_output_directory path/to/schema/directory --schema_output_filename file_name
-```
-
 To run FuseMine by using distance-based inra-linking and area-based inter-linking methoeds, use the following command:
 ```
 python3 fusemine.py -commodity <commodity_name> --intralink distance --interlink area
@@ -60,6 +53,13 @@ The output file will be stored in the default location (`./outputs/`).
 To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data [(Goldman et al., 2020)](https://www.sciencebase.gov/catalog/item/5f1f058682cef313ed8e9e91), use the following:
 ```
 python3 fusemine.py --tungsten
+```
+
+To populate additional raw structured data to MinMod KG, create the attribute map file (.CSV), which maps headers of raw structured data to [MinMod KG schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2). Here is an example of attribute map CSV: [`sample_mapfile.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
+
+After creating a attribute map CSV, run the following command line:
+```
+python3 fusemine.py --raw_data <path/to/raw/data> --attribute_map <path/to/attribute/map> --schema_output_directory path/to/schema/directory --schema_output_filename file_name
 ```
 
 ### FuseMine Parameters
