@@ -59,7 +59,7 @@ To populate additional raw structured data to MinMod KG, create the attribute ma
 
 After creating a attribute map CSV, run the following command line:
 ```
-python3 fusemine.py --raw_data <path/to/raw/data> --attribute_map <path/to/attribute/map> --schema_output_directory path/to/schema/directory --schema_output_filename file_name
+python3 fusemine.py --raw_data <path/to/raw/data> --attribute_map <path/to/attribute/map> --schema_output_directory <path/to/schema/directory> --schema_output_filename <file_name>
 ```
 
 ### FuseMine Parameters
