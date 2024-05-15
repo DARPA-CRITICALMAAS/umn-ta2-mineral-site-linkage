@@ -198,32 +198,44 @@ def fusemine(args):
 
         print_evaluation_table('ver 0.2', pl_ground_truth, pl_prediction)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
-    parser.add_argument('--raw_data', '-r',
-                        help='the directory or file where the raw mineral site databases are located')
-    parser.add_argument('--attribute_map',
-                        help='CSV file where the label mapping information is stored. See sample_mapfile.csv for reference')
-    parser.add_argument('--schema_output_directory', '-sod',
-                        help='directory in where you will like to store the processed raw mineral site database')
-    parser.add_argument('--schema_output_filename', '-sof',
-                        help='file name of the processed raw mineral site database')
-    
-    parser.add_argument('--commodity', '-c', 
-                        help='specific commodity to focus on (default: no all commodities)')
-    parser.add_argument('--single_stage', 
-                        help='method to use for location-based single-stage linking (default: distance-based)')
-    parser.add_argument('--intralink', 
-                        help='method to use for location-based intralinking (default: distance-based)')
-    parser.add_argument('--interlink', 
-                        help='method to use for location-based interlinking (default: overlapping-area-based)')
-    
-    parser.add_argument('--same_as_directory', '-d',
-                        help='directory to store the same as CSV files (default: ./output)')
-    parser.add_argument('--same_as_filename', '-f',
-                        help='filename of the same as CSV file (default: commmodity_same_as.csv)')
-    
-    parser.add_argument('--tungsten', '-T', action='store_true',
-                        help='run evaluation with tungsten')
+def main():
+    parser = argparse.ArgumentParser(description='Linking mineral sites within a database and across databases')
 
-    fusemine(parser.parse_args())
+    parser.add_argument('--raw_data',
+                        help='Directory or file where the raw mineral site databases are located')
+
+    parser.add_argument('--attribute_map', 
+                        help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
+
+    parser.add_argument('--schema_output_directory', 
+                        help='Directory where the processed raw mineral site database will be stored')
+
+    parser.add_argument('--schema_output_filename', 
+                        help='Filename for the processed raw mineral site database')
+
+    parser.add_argument('--commodity',
+                        help='Specific commodity to focus on')
+
+    parser.add_argument('--single_stage', default='distance',
+                        help='Method for location-based single-stage linking (default: distance)')
+
+    parser.add_argument('--intralink', default='distance',
+                        help='Method for location-based intralinking (default: distance)')
+
+    parser.add_argument('--interlink', default='area',
+                        help='Method for location-based interlinking (default: area)')
+
+    parser.add_argument('--same_as_directory', default='./output',
+                        help='Directory to store the same as CSV files (default: ./output)')
+
+    parser.add_argument('--same_as_filename',
+                        help='Filename of the same as CSV file (default: ./<commodity>_same_as.csv)')
+
+    parser.add_argument('--tungsten', action='store_true', 
+                        help='Run evaluation with tungsten')
+
+    args = parser.parse_args()
+    fusemine(args)
+
+if __name__ == '__main__':
+    main()
