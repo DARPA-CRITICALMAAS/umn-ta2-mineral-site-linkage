@@ -46,7 +46,7 @@ Before running FuseMine, ensure that all data is available on the [MinMod Knowle
 
 To run FuseMine by using distance-based inra-linking and area-based inter-linking methoeds, use the following command:
 ```
-python3 fusemine.py -commodity <commodity_name> --intralink distance --interlink area
+python3 fusemine.py --commodity <commodity_name> --intralink distance --interlink area
 ```
 The output file will be stored in the default location (`./outputs/`). 
 
