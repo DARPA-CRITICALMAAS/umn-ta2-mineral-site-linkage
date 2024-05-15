@@ -51,10 +51,11 @@ After creating a attribute map CSV, run the following command line:
 python3 fusemine.py --raw_data <path/to/raw/data> --attribute_map <path/to/attribute/map> --schema_output_directory path/to/schema/directory --schema_output_filename file_name
 ```
 
-To store the output file in the default location (./outputs/) and use distance-based inra-linking and area-based inter-linking methoeds, use the following command:
+To run FuseMine by using distance-based inra-linking and area-based inter-linking methoeds, use the following command:
 ```
 python3 fusemine.py -commodity <commodity_name> --intralink distance --interlink area
 ```
+The output file will be stored in the default location (`./outputs/`). 
 
 To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data [(Goldman et al., 2020)](https://www.sciencebase.gov/catalog/item/5f1f058682cef313ed8e9e91), use the following:
 ```
