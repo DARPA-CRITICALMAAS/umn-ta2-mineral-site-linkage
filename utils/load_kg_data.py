@@ -1,3 +1,4 @@
+import logging
 import requests
 
 import pandas as pd
@@ -231,6 +232,18 @@ def load_minmod_kg(commodity:str):
             # }
 
     query_resp_df = run_minmod_query(query, values=True)
+
+    if not query_resp_df:
+        # query = '''
+        #     SELECT ?ms
+        #     WHERE {
+        #         ?ms rdfs:label|:record_id ?record_id . FILTER(STR(?record_id) == "%s")
+        #     }
+        #     ''' % (source_name)
+        # query_resp_df = run_minmod_query(query, values=True)
+        logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
+
+        return -1
 
     if not query_resp_df.empty:
         sites_df = pd.DataFrame([

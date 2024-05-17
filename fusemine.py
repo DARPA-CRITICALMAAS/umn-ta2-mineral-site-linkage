@@ -85,7 +85,12 @@ def fusemine(args):
     logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
     start_time = time.time()
 
-    pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
+    pl_data = load_minmod_kg(focus_commodity)
+    if pl_data == -1:
+        logging.info(f'Program ending due to missing data')
+        return -1
+
+    pl_data = pl_data.drop_nulls(subset=['location', 'crs'])
     logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
     try:
