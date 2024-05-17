@@ -68,12 +68,5 @@ def process_rawdata(path_rawdata:str, path_attribute_map:str, path_output_dir:st
     except:
         pass
 
-    start_point = 0
-    jump = int(pl_data.shape[0] / 12)
-
-    for i in range(12):
-        as_json(pl_data[start_point: start_point+jump], path_output_dir, f'{path_filename}_{i+1}')
-        start_point += jump
-
     as_json(pl_data, path_output_dir, path_filename)
     logging.info(f'Processed data stored in {path_output_dir} as {path_filename}.json - Elapsed Time: {time.time() - start_time}\n')

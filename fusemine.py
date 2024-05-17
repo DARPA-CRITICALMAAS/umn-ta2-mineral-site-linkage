@@ -63,8 +63,7 @@ def fusemine(args):
         focus_commodity = args.commodity
 
     methods = [intralink_location, ['site_name', 'commodity'], interlink_location, None]
-    # methods = [intralink_location, ['site_name', 'commodity'], interlink_location, None]
-    # methods = [None, ['site_name', 'commodity', 'country', 'deposit_type'], interlink_location, None]
+    # methods = [intralink_location, intralink_text, interlink_location, None]
 
     output_directory = args.same_as_directory
     if not output_directory:
@@ -89,11 +88,6 @@ def fusemine(args):
     pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
     logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
-    # pl_data.write_csv('./pre_loaded_copper.csv')
-
-    # pl_data.write_csv('./pre_loaded_tungsten.csv')
-    # pl_data = pl.read_csv('./pre_loaded_tungsten.csv')
-
     try:
         pl_data = append_rawdata(pl_data)
         logging.info(f'\tOriginal data source has been found. Additional fields have been appended.')
@@ -106,6 +100,8 @@ def fusemine(args):
         pl_data = pl_data.filter(
             (pl.col('source_id') == 'https://mrdata.usgs.gov/mrds') | (pl.col('source_id') == 'https://mrdata.usgs.gov/deposit')
         )
+
+        pl_data.write_csv('./tungsten.csv')
 
     # ------ Running Single Stage ------ #
     if bool_singlestage:
@@ -131,20 +127,15 @@ def fusemine(args):
                 logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
                 try:
                     pl_data = compare_geolocation(pl_data, source_id, methods[0])
+                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
+
+                    pl_data = merge_grouping_results(pl_data, source_id)
+                    list_grouped.append(pl_data)
+                    
                 except:
                     logging.info(f'\t\tSkipping due to missing or incorrect geolocation information')
                     continue
 
-                try:
-                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
-                    # pl_data = compare_text_value_embedding_cuda_n(pl_data, source_id, methods[1])
-                except:
-                    logging.info(f'\t\tSkipping due to missing or incorrect text information')
-                    continue
-
-                pl_data = merge_grouping_results(pl_data, source_id)
-                list_grouped.append(pl_data)
-                
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
         # --------- Interlink --------- #
@@ -157,7 +148,7 @@ def fusemine(args):
 
             pl_data = pl.concat(
                 list_grouped,
-                how='diagonal_relaxed'
+                how='diagonal'
             )
 
             pl_data = compare_geolocation(pl_data, method=methods[2])
@@ -206,32 +197,44 @@ def fusemine(args):
 
         print_evaluation_table('ver 0.2', pl_ground_truth, pl_prediction)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Linking mineral site within database and across databases')
-    parser.add_argument('--raw_data', '-r',
-                        help='the directory or file where the raw mineral site databases are located')
-    parser.add_argument('--attribute_map',
-                        help='CSV file where the label mapping information is stored. See sample_mapfile.csv for reference')
-    parser.add_argument('--schema_output_directory', '-sod',
-                        help='directory in where you will like to store the processed raw mineral site database')
-    parser.add_argument('--schema_output_filename', '-sof',
-                        help='file name of the processed raw mineral site database')
-    
-    parser.add_argument('--commodity', '-c', 
-                        help='specific commodity to focus on (default: no all commodities)')
-    parser.add_argument('--single_stage', 
-                        help='method to use for location-based single-stage linking (default: distance-based)')
-    parser.add_argument('--intralink', 
-                        help='method to use for location-based intralinking (default: distance-based)')
-    parser.add_argument('--interlink', 
-                        help='method to use for location-based interlinking (default: overlapping-area-based)')
-    
-    parser.add_argument('--same_as_directory', '-d',
-                        help='directory to store the same as CSV files (default: ./output)')
-    parser.add_argument('--same_as_filename', '-f',
-                        help='filename of the same as CSV file (default: commmodity_same_as.csv)')
-    
-    parser.add_argument('--tungsten', '-T', action='store_true',
-                        help='run evaluation with tungsten')
+def main():
+    parser = argparse.ArgumentParser(description='Linking mineral sites within a database and across databases')
 
-    fusemine(parser.parse_args())
+    parser.add_argument('--raw_data',
+                        help='Directory or file where the raw mineral site databases are located')
+
+    parser.add_argument('--attribute_map', 
+                        help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
+
+    parser.add_argument('--schema_output_directory', 
+                        help='Directory where the processed raw mineral site database will be stored')
+
+    parser.add_argument('--schema_output_filename', 
+                        help='Filename for the processed raw mineral site database')
+
+    parser.add_argument('--commodity',
+                        help='Specific commodity to focus on')
+
+    parser.add_argument('--single_stage',
+                        help='Method for location-based single-stage linking (recommended: distance)')
+
+    parser.add_argument('--intralink', 
+                        help='Method for location-based intralinking (recommended: distance)')
+
+    parser.add_argument('--interlink',
+                        help='Method for location-based interlinking (recommended: area)')
+
+    parser.add_argument('--same_as_directory', default='./output',
+                        help='Directory to store the same as CSV files (recommended: ./output)')
+
+    parser.add_argument('--same_as_filename',
+                        help='Filename of the same as CSV file (recommended: ./<commodity>_sameas.csv)')
+
+    parser.add_argument('--tungsten', action='store_true', 
+                        help='Run evaluation with tungsten')
+
+    args = parser.parse_args()
+    fusemine(args)
+
+if __name__ == '__main__':
+    main()

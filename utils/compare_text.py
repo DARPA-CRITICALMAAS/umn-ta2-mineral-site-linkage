@@ -96,75 +96,6 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
     else:
         return compare_text_value_embedding_cuda(pl_data, source_id, items_to_compare)
 
-def compare_text_value_embedding_cuda_n(pl_data, source_id:str|None=None, items_to_compare:list|None=None, method='doc'):
-    if not source_id:
-        source_id = 'ALL'
-    
-    if 'GroupID' not in list(pl_data.columns):
-        pl_data = add_index_columns(pl_data=pl_data,
-                                    index_column_name='GroupID')
-        
-    if not items_to_compare or pl_data.shape[0] < 2:
-        pl_data = pl_data.with_columns(
-            GroupID_text = pl.lit(source_id) + pl.lit('default')
-        ).drop('GroupID')
-
-        return pl_data
-    
-    suffix_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'site_suffix.pkl'))}"
-
-    pl_data = pl_data.with_columns(
-        pl.col(items_to_compare).str.strip_chars().str.replace(rf"{suffix_regex}", '')
-    )
-
-    match method:
-        case 'json':
-            pl_data = pl_data.with_columns(
-                combined_text = pl.struct(pl.col(items_to_compare)).map_elements(lambda x: row_to_json_string(x, True))
-            )
-        case 'doc':
-            pl_data = pl_data.with_columns(
-                combined_text = pl.struct(pl.col(items_to_compare)).map_elements(lambda x: row_to_doc_string(x, True))
-            )
-
-    list_item_values = pl_data['combined_text'].to_list()
-    list_item_embedding = text_embedding(list_item_values)
-
-    start_time = time.time()
-    similarity_score = pairwise_cosine_similarity(list_item_embedding).numpy(force=True)
-    similarity_score = np.triu(similarity_score)
-    
-    list_condition_satisfied = np.transpose(np.nonzero(similarity_score > float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])))
-    for idx, pair in enumerate(tqdm(list_condition_satisfied)):
-        pl_data[int(pair[1]), 'GroupID'] = pl_data[int(pair[0]), 'GroupID']
-
-    duplicates = pl_data.group_by(
-        'record_id'
-    ).agg([pl.all()]).filter(
-        pl.col('GroupID').list.len() > 1
-    ).select(
-        to_col = pl.col('GroupID').list.get(0),
-        from_col = pl.col('GroupID')
-    ).explode('from_col').filter(
-        pl.col('to_col') != pl.col('from_col')
-    )
-    dictionary_duplicates = as_dictionary(duplicates, 'from_col', 'to_col')
-
-    pl_data = pl_data.with_columns(
-        pl.col('GroupID').replace(dictionary_duplicates)
-    ).unique(
-        'record_id',
-        keep='first'
-    )
-
-    logging.info(f'\t\tText embeddings compared - Elapsed time: {time.time() - start_time}')
-
-    pl_data = pl_data.with_columns(
-        GroupID_text = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
-    ).drop('GroupID')
-
-    return pl_data
-
 def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
     list_attribute_ratio = ast.literal_eval(text_params['ATTRIBUTE_VALUE_RATIO'])
     default_ratio = float(text_params['DEFAULT_WEIGHT_FACTOR'])
@@ -191,6 +122,9 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
     
     list_condition_satisfied = np.transpose(np.nonzero(list_embedding_matrix > float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])))
     for idx, pair in enumerate(tqdm(list_condition_satisfied)):
+        if source_id == 'ALL' and pl_data[int(pair[1]), 'source_id'] == pl_data[int(pair[0]), 'source_id']:
+            continue
+
         pl_data[int(pair[1]), 'GroupID'] = pl_data[int(pair[0]), 'GroupID']
 
     duplicates = pl_data.group_by(
@@ -221,7 +155,7 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
     return pl_data
 
 def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
-
+    start_time = time.time()
     pl_data = pl_data.with_columns(
         pl.col(items_to_compare).map_elements(lambda x: text_embedding(x)).name.map(lambda c: c+'_embedding')
     )
@@ -241,6 +175,8 @@ def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_
         if measure_cosine_similarity_cpu(str1, str2, str3, str4, threshold_value):
             pl_data[tuple_combination[1], 'GroupID'] = pl_data[tuple_combination[0], 'GroupID']
     
+    logging.info(f'\t\tText embeddings compared - Elapsed time: {time.time() - start_time}')
+
     pl_data = pl_data.with_columns(
         GroupID_text = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
     ).drop(

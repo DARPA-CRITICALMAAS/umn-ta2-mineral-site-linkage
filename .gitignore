@@ -1,4 +1,6 @@
+__pycache__/
 fusemine_dev.py
+output/
 *.sh
 *.out
 *.log
