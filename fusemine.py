@@ -63,6 +63,7 @@ def fusemine(args):
         focus_commodity = args.commodity
 
     methods = [intralink_location, ['site_name', 'commodity'], interlink_location, None]
+    # methods = [intralink_location, intralink_text, interlink_location, None]
 
     output_directory = args.same_as_directory
     if not output_directory:
@@ -81,13 +82,11 @@ def fusemine(args):
             if not path_attribute_map:
                 logging.error(f'Process exiting due to missing attribute_map')
 
-    pl_data = pl.read_csv('./tungsten.csv')
+    logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
+    start_time = time.time()
 
-    # logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
-    # start_time = time.time()
-
-    # pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
-    # logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
+    pl_data = load_minmod_kg(focus_commodity).drop_nulls(subset=['location', 'crs'])
+    logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
     try:
         pl_data = append_rawdata(pl_data)
@@ -96,13 +95,13 @@ def fusemine(args):
         logging.warning(f'\tOriginal data source has not been found. This may lead to a lower performance of FuseMine.')
         pass
 
-    # if args.tungsten:
-    #     # Filtering out USMIN Tungsten and MRDS Tungsten for evaluation prupose
-    #     pl_data = pl_data.filter(
-    #         (pl.col('source_id') == 'https://mrdata.usgs.gov/mrds') | (pl.col('source_id') == 'https://mrdata.usgs.gov/deposit')
-    #     )
+    if args.tungsten:
+        # Filtering out USMIN Tungsten and MRDS Tungsten for evaluation prupose
+        pl_data = pl_data.filter(
+            (pl.col('source_id') == 'https://mrdata.usgs.gov/mrds') | (pl.col('source_id') == 'https://mrdata.usgs.gov/deposit')
+        )
 
-    #     pl_data.write_csv('./tungsten.csv')
+        pl_data.write_csv('./tungsten.csv')
 
     # ------ Running Single Stage ------ #
     if bool_singlestage:
@@ -126,16 +125,16 @@ def fusemine(args):
                 source_id = pl_data.item(0, 'source_id')
 
                 logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
-                # try:
-                pl_data = compare_geolocation(pl_data, source_id, methods[0])
-                pl_data = compare_text_embedding(pl_data, source_id, methods[1])
+                try:
+                    pl_data = compare_geolocation(pl_data, source_id, methods[0])
+                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
 
-                pl_data = merge_grouping_results(pl_data, source_id)
-                list_grouped.append(pl_data)
+                    pl_data = merge_grouping_results(pl_data, source_id)
+                    list_grouped.append(pl_data)
                     
-                # except:
-                #     logging.info(f'\t\tSkipping due to missing or incorrect geolocation information')
-                #     continue
+                except:
+                    logging.info(f'\t\tSkipping due to missing or incorrect geolocation information')
+                    continue
 
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
@@ -216,20 +215,20 @@ def main():
     parser.add_argument('--commodity',
                         help='Specific commodity to focus on')
 
-    parser.add_argument('--single_stage', default='distance',
-                        help='Method for location-based single-stage linking (default: distance)')
+    parser.add_argument('--single_stage',
+                        help='Method for location-based single-stage linking (recommended: distance)')
 
-    parser.add_argument('--intralink', default='distance',
-                        help='Method for location-based intralinking (default: distance)')
+    parser.add_argument('--intralink', 
+                        help='Method for location-based intralinking (recommended: distance)')
 
-    parser.add_argument('--interlink', default='area',
-                        help='Method for location-based interlinking (default: area)')
+    parser.add_argument('--interlink',
+                        help='Method for location-based interlinking (recommended: area)')
 
     parser.add_argument('--same_as_directory', default='./output',
-                        help='Directory to store the same as CSV files (default: ./output)')
+                        help='Directory to store the same as CSV files (recommended: ./output)')
 
     parser.add_argument('--same_as_filename',
-                        help='Filename of the same as CSV file (default: ./<commodity>_same_as.csv)')
+                        help='Filename of the same as CSV file (recommended: ./<commodity>_sameas.csv)')
 
     parser.add_argument('--tungsten', action='store_true', 
                         help='Run evaluation with tungsten')

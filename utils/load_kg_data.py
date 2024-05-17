@@ -56,7 +56,7 @@ def run_minmod_query(query, values=False):
 def run_geokb_query(query, values=False):
     return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
 
-def minmod_kg_check(source_name:str, record_id:str):
+def minmod_kg_check(source_name:str|None=None, record_id:str|None=None):
     # Check if record id exists
     if record_id:
         query = '''
@@ -71,21 +71,59 @@ def minmod_kg_check(source_name:str, record_id:str):
 
     if source_name:
         query = '''
-        SELECT ?ms ?source_id ?record_id ?commodity
+        SELECT ?ms ?source_id ?record_id ?ms_name ?country ?state_or_province ?loc_wkt ?crs ?miq_comm ?deposit_type
         WHERE {
-            ?ms :mineral_inventory ?mi .
+            ?ms a :MineralSite .
 
-            ?ms rdfs:label|:source_id ?source_id . FILTER (STR(?source_id) = "%s")
-            ?ms rdfs:label|:record_id ?record_id . FILTER (STR(?record_id) != "")
+            ?ms :source_id ?source_id . FILTER (STR(?source_id) = "%s")
+            ?ms :record_id ?record_id . FILTER (STR(?record_id) != "")
 
-            ?mi :commodity [ :name ?commodity ] . FILTER(LCASE(STR(?commodity)) = "nickel")
+            OPTIONAL { ?ms :name ?ms_name . }
+
+            OPTIONAL { ?ms :location_info ?loc . 
+                OPTIONAL { ?loc :country ?country }
+                OPTIONAL { ?loc :state_or_province ?state_or_province }
+                OPTIONAL { ?loc :location ?loc_wkt }
+                OPTIONAL { ?loc :crs ?crs }
+            }
+
+            ?ms  :mineral_inventory ?miq .
+            ?miq :commodity/:name   ?miq_comm .
+
+            OPTIONAL { ?ms :deposit_type_candidate ?md .
+                OPTIONAL { ?md :observed_name ?deposit_type }
+            }
         }
         ''' % (source_name)
         query_resp_df = run_minmod_query(query, values=True)
 
-        pl_data = pl.from_pandas(query_resp_df)
+        if not query_resp_df.empty:
+            sites_df = pd.DataFrame([
+                {
+                    'ms_uri': row['ms.value'],
+                    'source_id':row['source_id.value'],
+                    'record_id':row['record_id.value'],
+                    'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
+                    'country': row.get('country.value', None),
+                    'state_or_province': row.get('state_or_province.value', None),
+                    'location': row.get('loc_wkt.value', None),
+                    'crs': row.get('crs.value', None),
+                    'commodity': row.get('miq_comm.value', None),
+                    'deposit_type': row.get('deposit_type.value', None)
+                }
+                for index, row in query_resp_df.iterrows()
+            ])
+
+            pl_sites = pl.from_pandas(sites_df).group_by(
+                'ms_uri'
+            ).agg([pl.all()]).with_columns(
+                pl.exclude('ms_uri', 'location').list.unique().list.join(',')
+            ).with_columns(
+                pl.col('record_id').cast(pl.Utf8),
+                pl.col('location').list.get(0)
+            )
         
-        return pl_data
+        return pl_sites
 
 
 def load_minmod_kg(commodity:str):
@@ -218,12 +256,6 @@ def load_minmod_kg(commodity:str):
         ).with_columns(
             pl.col('record_id').cast(pl.Utf8)
         )
-
-        # pl_sites = pl_sites.filter(
-        #     (pl.col('source_id') == 'MRDS') | (pl.col('source_id') == 'USMIN')
-        # )
-
-        # print(pl_sites)
 
         # ------------ GENERATES HYPERSITES ------------ #
         # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)

@@ -8,6 +8,7 @@ from shapely import wkt
 from json import loads, dump
 
 from utils.unify_coordinate_system import *
+from utils.convert_dataframe import *
 
 def clean_nones(input_object: dict | list) -> dict | list:
     """
@@ -82,7 +83,10 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
 
     logging.info(f'Data saved to {output_file_location}')
 
-def as_geojson(pl_data, output_directory: str, output_file_name: str):
+def as_geojson(pl_data, input_dataframe_type: str, output_directory: str, output_file_name: str):
+    # gdb_mineralsite = to_geopandas(df_input, input_dataframe_type)
+    # # gdb_mineralsite = gdb_mineralsite[['source_id', 'record_id', 'location']]
+    # gdb_mineralsite = gdb_mineralsite[['geometry']]
     df_processed_mineralsite = pl_data.to_pandas()
     gdb_mineralsite = gpd.GeoDataFrame(df_processed_mineralsite, 
                                        geometry=gpd.points_from_xy(df_processed_mineralsite.longitude, df_processed_mineralsite.latitude), 
@@ -134,6 +138,8 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         dump(cleaned_json_data, f, indent=4, default=str)
 
     del str_data, json_data, cleaned_json_data
+
+    logging.info(f'File saved to {output_directory} as {output_file_name}.json')
 
 def to_directory(list_pl_data, output_directory:str):
     for pl_data in list_pl_data:

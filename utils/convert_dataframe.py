@@ -30,25 +30,30 @@ def to_pandas(df_input, input_dataframe_type: str):
         case _:
             return df_input
 
-def to_geopandas(df_input, input_dataframe_type: str, geometry_column: list|str):
-    pd_input = to_pandas(df_input, input_dataframe_type)
-    crs_value = pd_input['crs'][0]
+def to_geopandas(df_input, input_dataframe_type: str, geometry_column='location'):
+    match input_dataframe_type:
+        case 'gpd':
+            return df_input
+        
+        case _:
+            pd_input = to_pandas(df_input, input_dataframe_type)
+            crs_value = pd_input['crs'][0]
 
-    if isinstance(geometry_column, str):
-        pd_input[geometry_column] = df_input[geometry_column].apply(wkt.loads)
+            try:
+                pd_input[geometry_column] = df_input[geometry_column].apply(wkt.loads)
 
-        return gpd.GeoDataFrame(
-            pd_input,
-            geometry = geometry_column,
-            crs = crs_value
-        )
-    
-    else:
-        gpd_input = gpd.GeoDataFrame(
-            pd_input,
-            geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
-        ).drop('location', axis=1)
+                return gpd.GeoDataFrame(
+                    pd_input,
+                    geometry = geometry_column,
+                    crs = crs_value
+                )
+            
+            except:
+                gpd_input = gpd.GeoDataFrame(
+                    pd_input,
+                    geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
+                ).drop('location', axis=1)
 
-        gpd_input.rename_geometry('location', inplace=True)
+                gpd_input.rename_geometry('location', inplace=True)
 
-        return gpd_input
+                return gpd_input

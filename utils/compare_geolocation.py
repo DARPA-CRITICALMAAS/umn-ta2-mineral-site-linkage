@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import configparser
+from tqdm import tqdm
 
 import numpy as np
 import statistics
@@ -16,13 +17,14 @@ from utils.dataframe_operations import *
 from utils.create_geocoordinate_representation import *
 from utils.unify_coordinate_system import *
 
+from utils.save_files import *
+
 config = configparser.ConfigParser()
 config.read('./params.ini')
 geo_params = config['geolocation.params']
 
-# TODO: function name so that it sounds like
 def compare_point_distance(gpd_data, 
-                           epsilon=float(geo_params['POINT_BUFFER_unit_meter'])):
+                           epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
@@ -30,7 +32,6 @@ def compare_point_distance(gpd_data,
     list_cluster_labels = clusters.labels_
 
     gpd_data['GroupID'] = list_cluster_labels
-
     # Converting back to original CRS system
     gpd_data = gpd_data.to_crs(crs=geo_params['DEFAULT_CRS_SYSTEM'])
     pl_data = to_polars(gpd_data, 'gpd')
@@ -51,33 +52,33 @@ def compare_point_distance(gpd_data,
 
     pl_data = pl.concat(
         [pl_data, pl_data_not_grouped],
-        how='diagonal'
-    )
+        how='diagonal_relaxed'
+    ).rename({'GroupID': 'GroupID_location'})
 
     del pl_data_not_grouped
     return pl_data
 
 def compare_buffer_overlap(gpd_data, source_id, 
-                           minimum_overlap_threshold=float(geo_params['POLYGON_AREA_OVERLAP_unit_sqmeter'])):
+                           minimum_overlap_threshold=float(geo_params['POLYGON_AREA_OVERLAP_UNIT_SQMETER'])):
     
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
     gpd_overlapped_data = gpd_data.overlay(
         gpd_data,
-        how='intersection', keep_geom_type=False
-    )
+        how='intersection'
+    )    
 
     gpd_overlapped_union = gpd_data.overlay(
         gpd_data,
-        how='union', keep_geom_type=False
+        how='union'
     )
 
-    gpd_overlapped_data['intersection_area'] = gpd_overlapped_data.area
-    gpd_overlapped_data = gpd_overlapped_data[['GroupID_1', 'GroupID_2', 'intersection_area', 'source_id_1', 'source_id_2']]
+    gpd_overlapped_data['intersection_area'] = gpd_overlapped_data['geometry'].area
+    gpd_overlapped_data = gpd_overlapped_data[['GroupID_1', 'GroupID_2', 'intersection_area', 'source_id_1', 'source_id_2', 'record_id_1', 'record_id_2']]
     pl_intersection = to_polars(gpd_overlapped_data, 'gpd').with_columns(pl.exclude('intersection_area').cast(pl.Utf8))
 
-    gpd_overlapped_union['union_area'] = gpd_overlapped_union.area
-    gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2']]
+    gpd_overlapped_union['union_area'] = gpd_overlapped_union['geometry'].area
+    gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2', 'record_id_1', 'record_id_2']]
     pl_union = to_polars(gpd_overlapped_union, 'gpd').with_columns(pl.exclude('union_area').cast(pl.Utf8))
 
     pl_IOU = pl.concat(
@@ -94,12 +95,12 @@ def compare_buffer_overlap(gpd_data, source_id,
             pl.col('source_id_1') != pl.col('source_id_2')
         )
 
-    pl_IOU = pl_IOU.filter(
-        pl.col('IOU') > minimum_overlap_threshold
-    )
+    # pl_IOU = pl_IOU.filter(
+    #     pl.col('IOU') > minimum_overlap_threshold
+    # )
     try:
         pl_IOU = pl_IOU.sort(
-            'IOU'
+            'intersection_area'
         ).with_columns(
             grouping = pl.concat_list(pl.col(['GroupID_1', 'GroupID_2'])).list.sort().list.to_struct()
         ).unnest('grouping').drop(['GroupID_1', 'GroupID_2']).rename(
@@ -120,10 +121,28 @@ def compare_buffer_overlap(gpd_data, source_id,
             maintain_order=True,
             keep='first'
         )
-        # print(pl_IOU[['source_id_1', 'source_id_2']])
 
-        pl_data = map_values(to_polars(gpd_data, 'gpd'), pl_IOU, 
-                             column_to_map='GroupID', value_map_from='GroupID_1', value_map_to='GroupID_2')
+        pl_data = to_polars(gpd_data, 'gpd').with_columns(
+            new_GroupID = pl.col('GroupID')
+        )
+
+        for idx, row in enumerate(tqdm(pl_IOU.iter_rows(named=True))):
+            group_id1 = pl_data.filter(
+                pl.col('GroupID') == row['GroupID_1']
+            ).item(0, 'new_GroupID')
+
+            group_id2 = pl_data.filter(
+                pl.col('GroupID') == row['GroupID_2']
+            ).item(0, 'new_GroupID')
+
+            pl_data = pl_data.with_columns(
+                pl.col('new_GroupID').replace({group_id1:group_id2})
+            )
+
+        pl_data = pl_data.drop('GroupID').rename({
+            'new_GroupID': 'GroupID_location'
+        })
+        
     except:
         pl_data = to_polars(gpd_data, 'gpd')
         pass
@@ -137,22 +156,32 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
     if not source_id:
         source_id = 'ALL'
 
-    pl_data = unify_crs(pl_data, crs_column='crs')
     if 'GroupID' not in list(pl_data.columns):
         pl_data = add_index_columns(pl_data=pl_data,
                                     index_column_name='GroupID')
+        
+    pl_data = unify_crs(pl_data, crs_column='crs')
 
     if not method or pl_data.shape[0] < 2:
         pl_data = pl_data.with_columns(
-            GroupID_location = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
+            GroupID_location = pl.lit(source_id) + pl.lit('default')
         ).drop('GroupID')
 
-        return to_polars(to_geopandas(pl_data, 'pl', 'location'), 'gpd')
+        try:
+            return to_polars(to_geopandas(pl_data, 'pl', 'location'), 'gpd')
+        except:
+            return pl_data
 
-    try:    
-        gpd_data = to_geopandas(pl_data, 'pl', 'location')
-    except:
-        gpd_data = to_geopandas(pl_data, 'pl', ['longitude', 'latitude'])
+    pl_location_invalid = pl_data.filter(
+        pl.col('location') == ''
+    ).with_columns(
+        GroupID_location = pl.lit(source_id) + pl.lit('default')
+    ).drop('GroupID')
+
+    pl_data = pl_data.filter(
+        pl.col('location') != ''
+    )
+    gpd_data = to_geopandas(pl_data, 'pl')
     
     start_time = time.time()
     match method:
@@ -164,9 +193,10 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             gpd_data = create_buffer_area_representation(gpd_data)
             pl_data = compare_buffer_overlap(gpd_data, source_id)
 
-    pl_data = pl_data.with_columns(
-        GroupID_location = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
-    ).drop('GroupID')
+    pl_data = pl.concat(
+        [pl_data, pl_location_invalid],
+        how='diagonal_relaxed'
+    )
 
     logging.info(f'\t\tLocation linking with {method} - Elapsed time: {time.time() - start_time}')
 

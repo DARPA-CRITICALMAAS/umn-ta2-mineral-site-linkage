@@ -24,6 +24,9 @@ def text_embedding(input_str:str|list, bool_individual=False):
     # return get_sentbert_embeddings(input_str).tolist()
 
 def create_text_attribute_representation(pl_data):
+    pl_data = pl_data.with_columns(
+        combined_text = pl.struct()
+    )
     
     return 0
 
