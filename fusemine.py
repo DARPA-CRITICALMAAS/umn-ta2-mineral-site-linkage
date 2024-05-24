@@ -19,7 +19,6 @@ from utils.convert_dataframe import *
 from utils.combine_grouping_results import *
 from utils.save_files import *
 from utils.performance_evaluation import *
-from process_rawdata import process_rawdata
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -194,18 +193,6 @@ def fusemine(args):
 
 def main():
     parser = argparse.ArgumentParser(description='Linking mineral sites within a database and across databases')
-
-    parser.add_argument('--raw_data',
-                        help='Directory or file where the raw mineral site databases are located')
-
-    parser.add_argument('--attribute_map', 
-                        help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
-
-    parser.add_argument('--schema_output_directory', 
-                        help='Directory where the processed raw mineral site database will be stored')
-
-    parser.add_argument('--schema_output_filename', 
-                        help='Filename for the processed raw mineral site database')
 
     parser.add_argument('--commodity',
                         help='Specific commodity to focus on')
