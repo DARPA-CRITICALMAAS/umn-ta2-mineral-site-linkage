@@ -44,7 +44,7 @@ The following command-line arguments are available to customize FuseMine:
 ### Example FuseMine Commands
 Before running FuseMine, ensure that all data is available on the [MinMod Knowledge Graph](https://minmod.isi.edu/) (MinMod KG). 
 
-To run FuseMine by using distance-based inra-linking and area-based inter-linking methoeds, use the following command:
+To run FuseMine by using distance-based inra-linking and area-based inter-linking methoeds, use the following command: 
 ```
 python3 fusemine.py --commodity <commodity_name> --intralink distance --interlink area
 ```
@@ -61,15 +61,16 @@ After creating a attribute map CSV, run the following command line:
 ```
 python3 fusemine.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
 ```
+[WHAT YOU NEED TO DO]
 
 ### FuseMine Parameters
 The following table lists all the parameters used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini).
 
 | Name | Description | Value |
 | --- | --- | --- |
-| `POINT_BUFFER_unit_meter` | Maximum distance between two geocoordinate points to be considered as a same site | 2500 (meters) |
-| `POLYGON_BUFFER_unit_meter` | Size of buffer to be added around a geometry | 5000 (meters) |
-| `POLYGON_AREA_OVERLAP_unit_sqmeter` | Minimum intersection-over-union (IOU) two geometries must have to be considered as a same site | 0.5 |
+| `POINT_BUFFER_UNIT_METER` | Maximum distance between two geocoordinate points to be considered as a same site | 2500 (meters) |
+| `POLYGON_BUFFER_UNIT_METER` | Size of buffer to be added around a geometry | 5000 (meters) |
+| `POLYGON_AREA_OVERLAP_UNIT_SQMETER` | Minimum intersection-over-union (IOU) two geometries must have to be considered as a same site | 0.5 |
 | `ATTRIBUTE_VALUE_THRESHOLD` | Minimum cosine similarity distance two text embeddings must have to be considered as a similar text | 0.65 |
 
 

@@ -68,25 +68,26 @@ def compare_buffer_overlap(gpd_data, source_id,
         how='intersection'
     )    
 
-    gpd_overlapped_union = gpd_data.overlay(
-        gpd_data,
-        how='union'
-    )
+    # gpd_overlapped_union = gpd_data.overlay(
+    #     gpd_data,
+    #     how='union'
+    # )
 
     gpd_overlapped_data['intersection_area'] = gpd_overlapped_data['geometry'].area
     gpd_overlapped_data = gpd_overlapped_data[['GroupID_1', 'GroupID_2', 'intersection_area', 'source_id_1', 'source_id_2', 'record_id_1', 'record_id_2']]
     pl_intersection = to_polars(gpd_overlapped_data, 'gpd').with_columns(pl.exclude('intersection_area').cast(pl.Utf8))
 
-    gpd_overlapped_union['union_area'] = gpd_overlapped_union['geometry'].area
-    gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2', 'record_id_1', 'record_id_2']]
-    pl_union = to_polars(gpd_overlapped_union, 'gpd').with_columns(pl.exclude('union_area').cast(pl.Utf8))
+    # gpd_overlapped_union['union_area'] = gpd_overlapped_union['geometry'].area
+    # gpd_overlapped_union = gpd_overlapped_union[['GroupID_1', 'GroupID_2', 'union_area', 'source_id_1', 'source_id_2', 'record_id_1', 'record_id_2']]
+    # pl_union = to_polars(gpd_overlapped_union, 'gpd').with_columns(pl.exclude('union_area').cast(pl.Utf8))
 
-    pl_IOU = pl.concat(
-        [pl_intersection, pl_union],
-        how='align'
-    ).with_columns(
-        IOU = pl.col('intersection_area') / pl.col('union_area')
-    ).filter(
+    # pl_IOU = pl.concat(
+    #     [pl_intersection, pl_union],
+    #     how='align'
+    # ).with_columns(
+    #     IOU = pl.col('intersection_area') / pl.col('union_area')
+    # )
+    pl_IOU = pl_intersection.filter(
         pl.col('GroupID_1') != pl.col('GroupID_2')
     )
 
@@ -148,7 +149,8 @@ def compare_buffer_overlap(gpd_data, source_id,
         pass
 
     # deleting for memory release
-    del gpd_overlapped_data, pl_intersection, gpd_overlapped_union, pl_union
+    del gpd_overlapped_data, pl_intersection
+    # del gpd_overlapped_union, pl_union
     
     return pl_data
 

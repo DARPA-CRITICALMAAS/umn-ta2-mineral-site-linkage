@@ -86,7 +86,7 @@ def fusemine(args):
     start_time = time.time()
 
     pl_data = load_minmod_kg(focus_commodity)
-    if pl_data == -1:
+    if pl_data.is_empty():
         logging.info(f'Program ending due to missing data')
         return -1
 
@@ -131,15 +131,19 @@ def fusemine(args):
 
                 logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
                 try:
-                    pl_data = compare_geolocation(pl_data, source_id, methods[0])
-                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
-
-                    pl_data = merge_grouping_results(pl_data, source_id)
-                    list_grouped.append(pl_data)
-                    
+                    pl_data = compare_geolocation(pl_data, source_id, methods[0])    
                 except:
-                    logging.info(f'\t\tSkipping due to missing or incorrect geolocation information')
+                    logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
                     continue
+
+                try:
+                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
+                except:
+                    logging.info(f'\t\tSkipping text based linking due to missing textual information')
+                    pass
+
+                pl_data = merge_grouping_results(pl_data, source_id)
+                list_grouped.append(pl_data)
 
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
@@ -221,16 +225,16 @@ def main():
                         help='Specific commodity to focus on')
 
     parser.add_argument('--single_stage',
-                        help='Method for location-based single-stage linking (recommended: distance)')
+                        help='Method for location-based single-stage linking')
 
     parser.add_argument('--intralink', 
-                        help='Method for location-based intralinking (recommended: distance)')
+                        help='Method for location-based intralinking')
 
     parser.add_argument('--interlink',
-                        help='Method for location-based interlinking (recommended: area)')
+                        help='Method for location-based interlinking')
 
     parser.add_argument('--same_as_directory', default='./output',
-                        help='Directory to store the same as CSV files (recommended: ./output)')
+                        help='Directory to store the same as CSV files (default: ./output)')
 
     parser.add_argument('--same_as_filename',
                         help='Filename of the same as CSV file (recommended: ./<commodity>_sameas.csv)')
