@@ -1,5 +1,9 @@
+import os
+import time
 import logging
+import argparse
 import configparser
+from datetime import datetime
 
 from utils.load_files import *
 from utils.save_files import *
@@ -10,7 +14,20 @@ config.read('./params.ini')
 path_params = config['directory.paths']
 map_params = config['mapping.prefix']
 
-def process_rawdata(path_rawdata:str, path_attribute_map:str, path_output_dir:str, path_filename:str):
+def process_rawdata(args):
+    logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO, 
+                        handlers=[
+                            logging.FileHandler(f'process_data_to_schema_{datetime.timestamp(datetime.now())}.log'),
+                            logging.StreamHandler()
+                        ])
+
+    path_rawdata = args.raw_data
+    path_attribute_map = args.attribute_map
+    path_output_dir = args.schema_output_directory
+    path_filename = args.schema_output_filename
+
+    logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
+
     start_time = time.time()
     try:
         pl_attribute_map = initiate_load(path_attribute_map)
@@ -70,3 +87,24 @@ def process_rawdata(path_rawdata:str, path_attribute_map:str, path_output_dir:st
 
     as_json(pl_data, path_output_dir, path_filename)
     logging.info(f'Processed data stored in {path_output_dir} as {path_filename}.json - Elapsed Time: {time.time() - start_time}\n')
+
+def main():
+    parser = argparse.ArgumentParser(description='Processing data to suggested mineral site schema')
+
+    parser.add_argument('--raw_data', required=True,
+                        help='Directory or file where the raw mineral site databases are located')
+
+    parser.add_argument('--attribute_map',
+                        help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
+
+    parser.add_argument('--schema_output_directory', required=True,
+                        help='Directory where the processed raw mineral site database will be stored')
+
+    parser.add_argument('--schema_output_filename', required=True,
+                        help='Filename for the processed raw mineral site database')
+
+    args = parser.parse_args()
+    process_rawdata(args)
+
+if __name__ == '__main__':
+    main()

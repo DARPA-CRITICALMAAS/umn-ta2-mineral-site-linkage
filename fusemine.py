@@ -35,11 +35,6 @@ def fusemine(args):
         logging.error(f'Must select either single_stage or two_stage (intralink, interlink). Cannot select both.')
         return -1
     
-    path_rawdata = args.raw_data
-    path_attribute_map = args.attribute_map
-    path_output_dir = args.schema_output_directory
-    schema_filename = args.schema_output_filename
-    
     if args.tungsten:
         # Default option for evaluation on Tungsten
         bool_singlestage = False
@@ -72,15 +67,6 @@ def fusemine(args):
     output_file_name = args.same_as_filename
     if not output_file_name:
         output_file_name = f'{focus_commodity}_sameas'
-        
-    if path_rawdata:
-        logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
-
-        try:
-            process_rawdata(path_rawdata, path_attribute_map, path_output_dir, schema_filename)
-        except:
-            if not path_attribute_map:
-                logging.error(f'Process exiting due to missing attribute_map')
 
     logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
     start_time = time.time()
