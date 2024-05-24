@@ -1,3 +1,4 @@
+import logging
 import requests
 
 import pandas as pd
@@ -232,55 +233,60 @@ def load_minmod_kg(commodity:str):
 
     query_resp_df = run_minmod_query(query, values=True)
 
-    if not query_resp_df.empty:
-        sites_df = pd.DataFrame([
-            {
-                'ms_uri': row['ms.value'],
-                'source_id':row['source_id.value'],
-                'record_id':row['record_id.value'],
-                'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
-                'country': row.get('country.value', None),
-                'state_or_province': row.get('state_or_province.value', None),
-                'location': row.get('loc_wkt.value', None),
-                'crs': row.get('crs.value', None),
-                'commodity': row.get('miq_comm.value', None),
-                'deposit_type': row.get('deposit_type.value', None)
-            }
-            for index, row in query_resp_df.iterrows()
-        ])
+    try:
+        if not query_resp_df.empty:
+            sites_df = pd.DataFrame([
+                {
+                    'ms_uri': row['ms.value'],
+                    'source_id':row['source_id.value'],
+                    'record_id':row['record_id.value'],
+                    'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
+                    'country': row.get('country.value', None),
+                    'state_or_province': row.get('state_or_province.value', None),
+                    'location': row.get('loc_wkt.value', None),
+                    'crs': row.get('crs.value', None),
+                    'commodity': row.get('miq_comm.value', None),
+                    'deposit_type': row.get('deposit_type.value', None)
+                }
+                for index, row in query_resp_df.iterrows()
+            ])
 
-        pl_sites = pl.from_pandas(sites_df).group_by(
-            'ms_uri'
-        ).agg([pl.all()]).with_columns(
-            pl.exclude('ms_uri').list.unique().list.join(',')
-        ).with_columns(
-            pl.col('record_id').cast(pl.Utf8)
-        )
+            pl_sites = pl.from_pandas(sites_df).group_by(
+                'ms_uri'
+            ).agg([pl.all()]).with_columns(
+                pl.exclude('ms_uri').list.unique().list.join(',')
+            ).with_columns(
+                pl.col('record_id').cast(pl.Utf8)
+            )
 
-        # ------------ GENERATES HYPERSITES ------------ #
-        # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)
+            # ------------ GENERATES HYPERSITES ------------ #
+            # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)
 
-        # df_melted = df_all_sites.melt(id_vars=['group_id'], value_vars=['ms1.value', 'ms2.value'], value_name='ms')
+            # df_melted = df_all_sites.melt(id_vars=['group_id'], value_vars=['ms1.value', 'ms2.value'], value_name='ms')
 
-        # df_all_sites_groups = df_melted[['ms', 'group_id']].drop_duplicates()
-        # merged_df_all_sites = pd.merge(sites_df, df_all_sites_groups, how='left', on='ms')
+            # df_all_sites_groups = df_melted[['ms', 'group_id']].drop_duplicates()
+            # merged_df_all_sites = pd.merge(sites_df, df_all_sites_groups, how='left', on='ms')
 
-        # max_group_id = merged_df_all_sites['group_id'].fillna(0).max()
-        # merged_df_all_sites['group_id'] = merged_df_all_sites['group_id'].fillna(pd.Series(range(int(max_group_id) + 1, len(merged_df_all_sites) + int(max_group_id) + 1)))
-        # sorted_df_all_sites_all_dep = merged_df_all_sites.sort_values(by=['group_id', 'ms_name'])
+            # max_group_id = merged_df_all_sites['group_id'].fillna(0).max()
+            # merged_df_all_sites['group_id'] = merged_df_all_sites['group_id'].fillna(pd.Series(range(int(max_group_id) + 1, len(merged_df_all_sites) + int(max_group_id) + 1)))
+            # sorted_df_all_sites_all_dep = merged_df_all_sites.sort_values(by=['group_id', 'ms_name'])
 
-        # sorted_df_all_sites_all_dep.reset_index(drop=True, inplace=True)
-        # sorted_df_all_sites_all_dep.set_index('ms', inplace=True)
-        # sorted_df_all_sites_all_dep['info_count'] = sorted_df_all_sites_all_dep[['country', 'state_or_province', 'loc_wkt']].apply(lambda x: ((x != '') & (x.notna())).sum(), axis=1)
-        # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep.sort_values(by='info_count', ascending=False)
-        # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep[~sorted_df_all_sites_all_dep.index.duplicated(keep='first')]
-        # sorted_df_all_sites_all_dep.drop(columns=['info_count'], inplace=True)
-        # sorted_df_all_sites_all_dep.reset_index(inplace=True)
+            # sorted_df_all_sites_all_dep.reset_index(drop=True, inplace=True)
+            # sorted_df_all_sites_all_dep.set_index('ms', inplace=True)
+            # sorted_df_all_sites_all_dep['info_count'] = sorted_df_all_sites_all_dep[['country', 'state_or_province', 'loc_wkt']].apply(lambda x: ((x != '') & (x.notna())).sum(), axis=1)
+            # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep.sort_values(by='info_count', ascending=False)
+            # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep[~sorted_df_all_sites_all_dep.index.duplicated(keep='first')]
+            # sorted_df_all_sites_all_dep.drop(columns=['info_count'], inplace=True)
+            # sorted_df_all_sites_all_dep.reset_index(inplace=True)
 
-        # sorted_df_all_sites_all_dep.to_csv(f'{output_directory}/{commodity}_mineral_sites_hypersites.csv', index=False, mode='w')
+            # sorted_df_all_sites_all_dep.to_csv(f'{output_directory}/{commodity}_mineral_sites_hypersites.csv', index=False, mode='w')
 
-        return pl_sites
-        # return separate_data(pl_sites)
+            return pl_sites
+            # return separate_data(pl_sites)
+        
+    except:
+        logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
+        return pl.DataFrame()
     
 def separate_data(pl_sites):
     list_all_data_sources = set(pl_sites['source_id'].to_list())
