@@ -19,7 +19,6 @@ from utils.convert_dataframe import *
 from utils.combine_grouping_results import *
 from utils.save_files import *
 from utils.performance_evaluation import *
-from process_rawdata import process_rawdata
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -34,11 +33,6 @@ def fusemine(args):
     if args.single_stage and (args.intralink or args.interlink):
         logging.error(f'Must select either single_stage or two_stage (intralink, interlink). Cannot select both.')
         return -1
-    
-    path_rawdata = args.raw_data
-    path_attribute_map = args.attribute_map
-    path_output_dir = args.schema_output_directory
-    schema_filename = args.schema_output_filename
     
     if args.tungsten:
         # Default option for evaluation on Tungsten
@@ -72,15 +66,6 @@ def fusemine(args):
     output_file_name = args.same_as_filename
     if not output_file_name:
         output_file_name = f'{focus_commodity}_sameas'
-        
-    if path_rawdata:
-        logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
-
-        try:
-            process_rawdata(path_rawdata, path_attribute_map, path_output_dir, schema_filename)
-        except:
-            if not path_attribute_map:
-                logging.error(f'Process exiting due to missing attribute_map')
 
     logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
     start_time = time.time()
@@ -133,8 +118,25 @@ def fusemine(args):
                 try:
                     pl_data = compare_geolocation(pl_data, source_id, methods[0])    
                 except:
-                    logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
-                    continue
+                    try:
+                        pl_data = pl_data.with_columns(
+                            pl.col('country').str.replace(r"(?i)[^A-Za-z0-9]", '')
+                        ).group_by(
+                            pl.col('country')
+                        ).agg(
+                            [pl.all()]
+                        )
+
+                        pl_data = add_index_columns(pl_data=pl_data,
+                                          index_column_name='GroupID_location')
+                        
+                        pl_data = pl_data.explode(
+                            pl.exclude(['country', 'GroupID_location'])
+                        )
+
+                    except:
+                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
+                        continue
 
                 try:
                     pl_data = compare_text_embedding(pl_data, source_id, methods[1])
@@ -148,7 +150,7 @@ def fusemine(args):
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
         # --------- Interlink --------- #
-        if bool_interlink:
+        if bool_interlink: 
             if intralinked_file:
                 logging.info(f'Loading intralinked file on local')
 
@@ -208,18 +210,6 @@ def fusemine(args):
 
 def main():
     parser = argparse.ArgumentParser(description='Linking mineral sites within a database and across databases')
-
-    parser.add_argument('--raw_data',
-                        help='Directory or file where the raw mineral site databases are located')
-
-    parser.add_argument('--attribute_map', 
-                        help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
-
-    parser.add_argument('--schema_output_directory', 
-                        help='Directory where the processed raw mineral site database will be stored')
-
-    parser.add_argument('--schema_output_filename', 
-                        help='Filename for the processed raw mineral site database')
 
     parser.add_argument('--commodity',
                         help='Specific commodity to focus on')
