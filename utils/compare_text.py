@@ -33,7 +33,7 @@ def string_match_on_attribute(pl_data, item_to_string_match:str):
         pl.col(pl.Utf8).str.strip_chars()
     ).with_columns(
         all_combined = pl.concat_str(
-            pl.all().fill_null('').str.replace_all("[^A-Za-z0-9]", "")           
+            pl.all().fill_null('').str.replace_all("[^A-Za-z0-9]", "")
         )
     ).filter(
         pl.col('all_combined').str.contains(rf'(?i){item_to_string_match}')

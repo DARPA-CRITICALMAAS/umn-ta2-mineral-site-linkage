@@ -32,8 +32,10 @@ def process_rawdata(args):
     try:
         pl_attribute_map = initiate_load(path_attribute_map)
         pl_attribute_map = pl_attribute_map.drop_nulls(subset=['corresponding_attribute_label'])
+        logging.info(f'Using attribute map at {path_attribute_map}')
     except:
         logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
+        # List up identified attributes
         pass
 
     group_by_column = pl_attribute_map.filter(
@@ -43,6 +45,7 @@ def process_rawdata(args):
     # list_record_id_archive = initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
     # list_record_id_archive['record_id'].append(group_by_column)
     # as_pkl(list_record_id_archive, os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
+
     # For the case where the input is a directory
     file_names = pl_attribute_map.unique(
         'file_name'

@@ -118,8 +118,25 @@ def fusemine(args):
                 try:
                     pl_data = compare_geolocation(pl_data, source_id, methods[0])    
                 except:
-                    logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
-                    continue
+                    try:
+                        pl_data = pl_data.with_columns(
+                            pl.col('country').str.replace(r"(?i)[^A-Za-z0-9]", '')
+                        ).group_by(
+                            pl.col('country')
+                        ).agg(
+                            [pl.all()]
+                        )
+
+                        pl_data = add_index_columns(pl_data=pl_data,
+                                          index_column_name='GroupID_location')
+                        
+                        pl_data = pl_data.explode(
+                            pl.exclude(['country', 'GroupID_location'])
+                        )
+
+                    except:
+                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
+                        continue
 
                 try:
                     pl_data = compare_text_embedding(pl_data, source_id, methods[1])
@@ -133,7 +150,7 @@ def fusemine(args):
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
         # --------- Interlink --------- #
-        if bool_interlink:
+        if bool_interlink: 
             if intralinked_file:
                 logging.info(f'Loading intralinked file on local')
 

@@ -55,15 +55,7 @@ To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessm
 python3 fusemine.py --tungsten
 ```
 
-To populate additional raw structured data to MinMod KG, create the attribute map file (.CSV), which maps headers of raw structured data to [MinMod KG schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2). Here is an example of attribute map CSV: [`sample_mapfile.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
-
-After creating a attribute map CSV, run the following command line:
-```
-python3 fusemine.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
-```
-[WHAT YOU NEED TO DO]
-
-### FuseMine Parameters
+#### FuseMine Parameters
 The following table lists all the parameters used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini).
 
 | Name | Description | Value |
@@ -73,6 +65,14 @@ The following table lists all the parameters used in the pipeline. These values 
 | `POLYGON_AREA_OVERLAP_UNIT_SQMETER` | Minimum intersection-over-union (IOU) two geometries must have to be considered as a same site | 0.5 |
 | `ATTRIBUTE_VALUE_THRESHOLD` | Minimum cosine similarity distance two text embeddings must have to be considered as a similar text | 0.65 |
 
+### Raw Data Processing
+To populate additional raw structured data to MinMod KG, create the attribute map file (.CSV), which maps headers of raw structured data to [MinMod KG schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2). Here is an example of attribute map CSV: [`sample_mapfile.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv).
+
+After creating an attribute map CSV, run the following command line:
+```
+python3 process_data_to_schema.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
+```
+Upload the processed JSON file to the [MinMod Data Repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/tree/main/data). Once the data is merged to main, it takes roughly 2 hours for the update to be reflected on the KG.
 
 <!-- Raw data process requires an attribute map which is structured as follows:
 | attribute_label | corresponding_attribute_label | file_name |
