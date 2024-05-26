@@ -26,19 +26,13 @@ pip install -r requirements.txt
 
 ## Usage
 ### FuseMine Arguments
-
 The following command-line arguments are available to customize FuseMine:
-
-- `--raw_data`: Directory or file where the raw mineral site databases are located.
-- `--attribute_map`: CSV file with label mapping information (see sample_mapfile.csv for reference).
-- `--schema_output_directory`: Directory where the processed raw mineral site database will be stored.
-- `--schema_output_filename`: Filename for the processed raw mineral site database.
 - `--commodity`: Specific commodity to focus on.
-- `--single_stage`: Method for location-based single-stage linking (default: `distance`).
-- `--intralink`: Method for location-based intralinking (default: `distance`).
-- `--interlink`: Method for location-based interlinking (default: `area`).
+- `--single_stage`: Method for location-based single-stage linking.
+- `--intralink`: Method for location-based intralinking.
+- `--interlink`: Method for location-based interlinking.
 - `--same_as_directory`: Directory to store the same as CSV files (default: `./output`).
-- `--same_as_filename`: Filename of the same as CSV file (default: `./<commodity>_same_as.csv`).
+- `--same_as_filename`: Filename of the same as CSV file (default: `./<commodity>_sameas.csv`).
 - `--tungsten`: Run evaluation with tungsten.
 
 ### Example FuseMine Commands
@@ -54,6 +48,8 @@ To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessm
 ```
 python3 fusemine.py --tungsten
 ```
+
+<!-- and Great Basic Area Tungsten assessment data [(et al., year)](link) -->
 
 #### FuseMine Parameters
 The following table lists all the parameters used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini).
@@ -72,21 +68,10 @@ After creating an attribute map CSV, run the following command line:
 ```
 python3 process_data_to_schema.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
 ```
+The following command-line arguments are required for data preprocessing:
+- `--raw_data`: Directory or file where the raw mineral site databases are located.
+- `--attribute_map`: CSV file with label mapping information (see sample_mapfile.csv for reference).
+- `--schema_output_directory`: Directory where the processed raw mineral site database will be stored.
+- `--schema_output_filename`: Filename for the processed raw mineral site database.
+
 Upload the processed JSON file to the [MinMod Data Repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/tree/main/data). Once the data is merged to main, it takes roughly 2 hours for the update to be reflected on the KG.
-
-<!-- Raw data process requires an attribute map which is structured as follows:
-| attribute_label | corresponding_attribute_label | file_name |
-| --- | --- | --- |
-| target attribute label required by mineral site schema | attribute label in the raw data | file_name |
-
-Consider the following when creating the attribute map file:
-- If the attribute spans across multiple files (e.g., `record_id` is available in `A.csv` and `commodity` is available in `B.csv`), please indicate the corresponding file name in the `file_name` field.
-- If there are multiple attributes in the raw data representing the same target attribute (e.g., both `commod1` and `commod2` represents `commodity`), please indicate all attributes on separate rows with identical `attribute_label`.
-- If the attribute is not availble in the raw data (e.g., `crs` is EPSG:4326 but there is no column representing `crs` in the data), fill in the `corresponding_attribute_label` with the required information, but leave `file_name` empty. -->
-
-<!-- If the attribute spans across multiple files /home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/sample_mapfile.csv -->
-
-<!-- ### Run Interlinking on Intralinked Data -->
-
-
-<!-- ground reference -->
