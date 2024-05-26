@@ -30,7 +30,7 @@ def fusemine(args):
                         ])
     logging.info(f'FuseMine is running on {device}')
 
-    if args.single_stage and (args.intralink or args.interlink):
+    if args.single_stage and (args.intralink_location or args.interlink_location):
         logging.error(f'Must select either single_stage or two_stage (intralink, interlink). Cannot select both.')
         return -1
     
@@ -47,11 +47,11 @@ def fusemine(args):
         focus_commodity = 'tungsten'
     else:
         bool_singlestage = True if args.single_stage else False
-        bool_intralink = True if args.intralink else False
-        bool_interlink = True if args.interlink else False        
+        bool_intralink = True if args.intralink_location else False
+        bool_interlink = True if args.interlink_location else False        
 
-        intralink_location = args.intralink or args.single_stage
-        interlink_location = args.interlink
+        intralink_location = args.intralink_location or args.single_stage
+        interlink_location = args.interlink_location
         intralinked_file = None
 
         focus_commodity = args.commodity
@@ -147,6 +147,8 @@ def fusemine(args):
                 pl_data = merge_grouping_results(pl_data, source_id)
                 list_grouped.append(pl_data)
 
+                # as_pkl(pl_data, )
+
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
         # --------- Interlink --------- #
@@ -217,17 +219,26 @@ def main():
     parser.add_argument('--single_stage',
                         help='Method for location-based single-stage linking')
 
-    parser.add_argument('--intralink', 
+    parser.add_argument('--intralink_location', 
                         help='Method for location-based intralinking')
+    
+    parser.add_argument('--intralink_text', nargs='*',
+                        help='Attributes for text-based intralinking')
+    
+    parser.add_argument('--intralinked_files',
+                        help='Path to intralinked files')
 
-    parser.add_argument('--interlink',
+    parser.add_argument('--interlink_location',
                         help='Method for location-based interlinking')
+    
+    parser.add_argument('--interlink_text', nargs='*',
+                        help='Attributes for text-based interlinking')
 
     parser.add_argument('--same_as_directory', default='./output',
                         help='Directory to store the same as CSV files (default: ./output)')
 
     parser.add_argument('--same_as_filename',
-                        help='Filename of the same as CSV file (recommended: ./<commodity>_sameas.csv)')
+                        help='Filename of the same as CSV file (default: ./<commodity>_sameas.csv)')
 
     parser.add_argument('--tungsten', action='store_true', 
                         help='Run evaluation with tungsten')

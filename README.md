@@ -44,12 +44,10 @@ python3 fusemine.py --commodity <commodity_name> --intralink distance --interlin
 ```
 The output file will be stored in the default location (`./outputs/`). 
 
-To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data [(Goldman et al., 2020)](https://www.sciencebase.gov/catalog/item/5f1f058682cef313ed8e9e91), use the following:
+To evaluate the performance of FuseMine on Idaho/Montana region Tungsten assessment data [(Goldman et al., 2020)](https://www.sciencebase.gov/catalog/item/5f1f058682cef313ed8e9e91) and Great Basic region Tungsten assessment data [(Solano et al., 2021)](https://doi.org/10.5066/P9D1KQGR), use the following:
 ```
 python3 fusemine.py --tungsten
 ```
-
-<!-- and Great Basic Area Tungsten assessment data [(et al., year)](link) -->
 
 #### FuseMine Parameters
 The following table lists all the parameters used in the pipeline. These values can be modified in the [`params.ini`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/params.ini).
