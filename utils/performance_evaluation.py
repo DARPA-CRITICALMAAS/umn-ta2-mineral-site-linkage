@@ -13,7 +13,7 @@ def perf_accuracy(pl_ground_truth, pl_prediction) -> float:
         groups = pl.col('record_id'),
     )['groups'].to_list()
 
-    logging.info(f'Count of groups in ground truth: {len(list_prediction_groups)}')
+    logging.info(f'Count of groups in prediction: {len(list_prediction_groups)}')
 
     matching = 0
     for item in list_prediction_groups:
