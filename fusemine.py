@@ -3,6 +3,7 @@ import time
 import logging
 from datetime import datetime
 
+import pickle
 import torch
 import argparse
 import configparser
@@ -25,7 +26,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def fusemine(args):
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO, 
                         handlers=[
-                            logging.FileHandler(f'fusemine_{datetime.timestamp(datetime.now())}.log'),
+                            logging.FileHandler(f'logs/fusemine_{datetime.timestamp(datetime.now())}.log'),
                             logging.StreamHandler()
                         ])
     logging.info(f'FuseMine is running on {device}')
@@ -56,8 +57,7 @@ def fusemine(args):
 
         focus_commodity = args.commodity
 
-    methods = [intralink_location, ['site_name', 'commodity'], interlink_location, None]
-    # methods = [intralink_location, intralink_text, interlink_location, None]
+    methods = [intralink_location, ['site_name', 'commodity'], interlink_location, ['site_name', 'commodity']]
 
     output_directory = args.same_as_directory
     if not output_directory:
@@ -71,6 +71,7 @@ def fusemine(args):
     start_time = time.time()
 
     pl_data = load_minmod_kg(focus_commodity)
+    print(pl_data)
     if pl_data.is_empty():
         logging.info(f'Program ending due to missing data')
         return -1
@@ -78,12 +79,7 @@ def fusemine(args):
     pl_data = pl_data.drop_nulls(subset=['location', 'crs'])
     logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
-    try:
-        pl_data = append_rawdata(pl_data)
-        logging.info(f'\tOriginal data source has been found. Additional fields have been appended.')
-    except:
-        logging.warning(f'\tOriginal data source has not been found. This may lead to a lower performance of FuseMine.')
-        pass
+    pl_data = split_str_column(pl_data, 'site_name').explode('site_name')
 
     if args.tungsten:
         # Filtering out USMIN Tungsten and MRDS Tungsten for evaluation prupose
@@ -97,7 +93,6 @@ def fusemine(args):
     if bool_singlestage:
         pl_data = compare_geolocation(pl_data, method=methods[0])
         pl_data = compare_text_embedding(pl_data, 'ALL', method=methods[1])
-
         pl_data = merge_grouping_results(pl_data, 'ALL')
 
     else:
@@ -116,26 +111,20 @@ def fusemine(args):
 
                 logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
                 try:
-                    pl_data = compare_geolocation(pl_data, source_id, methods[0])    
+                    pl_data = compare_geolocation(pl_data, source_id, methods[0])
+                    pl_data = pl_data.with_columns(
+                        link_method = pl.lit('GEO')
+                    )
+
                 except:
                     try:
+                        pl_data = compare_textual_location(pl_data, source_id)
                         pl_data = pl_data.with_columns(
-                            pl.col('country').str.replace(r"(?i)[^A-Za-z0-9]", '')
-                        ).group_by(
-                            pl.col('country')
-                        ).agg(
-                            [pl.all()]
-                        )
-
-                        pl_data = add_index_columns(pl_data=pl_data,
-                                          index_column_name='GroupID_location')
-                        
-                        pl_data = pl_data.explode(
-                            pl.exclude(['country', 'GroupID_location'])
+                            link_method = pl.lit('TXT')
                         )
 
                     except:
-                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation information')
+                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
                         continue
 
                 try:
@@ -162,14 +151,38 @@ def fusemine(args):
                 how='diagonal'
             )
 
-            pl_data = compare_geolocation(pl_data, method=methods[2])
-            pl_data = compare_text_embedding(pl_data, methods[3])
+            # pl_data.write_csv('./before_anything.csv')
 
-            pl_data = merge_grouping_results(pl_data, 'ALL')
+            pl_loc = pl_data.filter(
+                pl.col('link_method') == 'GEO'
+            )
+            pl_txt = pl_data.filter(
+                pl.col('link_method') == 'TXT'
+            ).drop(['latitude', 'longitude'])
+
+            pl_loc = compare_geolocation(pl_loc, 'ALL', method=methods[2])
+            pl_loc = compare_text_embedding(pl_loc, 'ALL', items_to_compare=methods[3])
+            pl_loc = merge_grouping_results(pl_loc, 'ALL').drop(['latitude', 'longitude'])
+
+            pl_data = pl.concat(
+                [pl_loc, pl_txt],   
+                how='diagonal'
+            ).drop(['location']).with_columns(
+                loc_GroupID = pl.col('GroupID')
+            )
+
+            del pl_loc, pl_txt
+
+            pl_data = compare_textual_location(pl_data, 'GROUP')
+            pl_data = compare_text_embedding(pl_data, 'GROUP', items_to_compare=methods[3])
+            pl_data = merge_grouping_results(pl_data, 'GROUP', condition='True')
 
             logging.info(f'Interlinking completed - Elapsed Time: {time.time() - start_time}s')
 
-    as_csv(pl_data, output_directory, output_file_name, True)
+    try:
+        as_csv(pl_data, output_directory, f'{output_file_name}', True)
+    except:
+        logging.info(f'Failed to save sameas links')
 
     # --------- Evaluation --------- #
     if args.tungsten:

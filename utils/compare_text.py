@@ -85,9 +85,9 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
         return pl_data
     
     suffix_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'site_suffix.pkl'))}"
-
+    
     pl_data = pl_data.with_columns(
-        pl.col(items_to_compare).str.strip_chars().str.replace(rf"{suffix_regex}", '')
+        pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"{suffix_regex}", '')
     )
 
     if device == 'cpu':
@@ -110,6 +110,7 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
         start_time = time.time()
         similarity_score = pairwise_cosine_similarity(list_item_embedding).numpy(force=True)
         similarity_score = np.triu(similarity_score)
+
         try:
             normalized_similarity = list_attribute_ratio[idx] * similarity_score
         except:
@@ -125,26 +126,30 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
         if source_id == 'ALL' and pl_data[int(pair[1]), 'source_id'] == pl_data[int(pair[0]), 'source_id']:
             continue
 
+        if source_id == 'GROUP' and pl_data[int(pair[1]), 'link_method'] == pl_data[int(pair[0]), 'link_method']:
+            continue
+
         pl_data[int(pair[1]), 'GroupID'] = pl_data[int(pair[0]), 'GroupID']
 
-    duplicates = pl_data.group_by(
-        'record_id'
-    ).agg([pl.all()]).filter(
-        pl.col('GroupID').list.len() > 1
-    ).select(
-        to_col = pl.col('GroupID').list.get(0),
-        from_col = pl.col('GroupID')
-    ).explode('from_col').filter(
-        pl.col('to_col') != pl.col('from_col')
-    )
-    dictionary_duplicates = as_dictionary(duplicates, 'from_col', 'to_col')
+    if source_id != 'ALL' and source_id != 'GROUP':
+        duplicates = pl_data.group_by(
+            'record_id'
+        ).agg([pl.all()]).filter(
+            pl.col('GroupID').list.len() > 1
+        ).select(
+            to_col = pl.col('GroupID').list.get(0),
+            from_col = pl.col('GroupID')
+        ).explode('from_col').filter(
+            pl.col('to_col') != pl.col('from_col')
+        )
+        dictionary_duplicates = as_dictionary(duplicates, 'from_col', 'to_col')
 
-    pl_data = pl_data.with_columns(
-        pl.col('GroupID').replace(dictionary_duplicates)
-    ).unique(
-        'record_id',
-        keep='first'
-    )
+        pl_data = pl_data.with_columns(
+            pl.col('GroupID').replace(dictionary_duplicates)
+        ).unique(
+            'record_id',
+            keep='first'
+        )
 
     logging.info(f'\t\tText embeddings compared - Elapsed time: {time.time() - start_time}')
 
@@ -182,5 +187,34 @@ def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_
     ).drop(
         ['GroupID', items_to_compare[0]+'_embedding', items_to_compare[1]+'_embedding']
     )
+
+    return pl_data
+
+def compare_textual_location(pl_data, source_id:str|None=None):
+    start_time = time.time()
+
+    if not source_id:
+        source_id = 'ALL'
+
+    pl_data = pl_data.group_by(
+        pl.col('country')
+    ).agg(
+        [pl.all()]
+    )
+
+    pl_data = add_index_columns(pl_data=pl_data,
+                                index_column_name='tmp_location')
+    
+    pl_data = pl_data.with_columns(
+        GroupID_location = pl.lit(source_id) + pl.col('tmp_location').cast(pl.Utf8)
+    ).drop(['tmp_location'])
+    
+    pl_data = pl_data.explode(
+        pl.exclude(['country', 'GroupID_location'])
+    )
+
+    pl_data.write_csv('./textual_location.csv')
+
+    logging.info(f'\t\tLocation linking with country name - {time.time() - start_time}')
 
     return pl_data

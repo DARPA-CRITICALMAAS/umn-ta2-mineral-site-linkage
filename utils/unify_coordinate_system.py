@@ -38,10 +38,13 @@ def unify_crs(pl_data, crs_column:str):
                 crs = pl.lit(geo_params['DEFAULT_CRS_SYSTEM'])
             )
 
-        if d.item(0, 'crs') == geo_params['DEFAULT_CRS_SYSTEM']:
-            continue
+        # if d.item(0, 'crs') == geo_params['DEFAULT_CRS_SYSTEM']:
+        #     print('here')
+        #     continue
 
-        gpd_data = to_geopandas(d, 'pl', 'location').to_crs(geo_params['DEFAULT_CRS_SYSTEM'])
+        gpd_data = to_geopandas(d, 'pl', 'location')
+        if d.item(0, 'crs') != geo_params['DEFAULT_CRS_SYSTEM']:
+            gpd_data = gpd_data.to_crs(geo_params['DEFAULT_CRS_SYSTEM'])
         d = to_polars(gpd_data, 'gpd')
         list_data.append(d)
 

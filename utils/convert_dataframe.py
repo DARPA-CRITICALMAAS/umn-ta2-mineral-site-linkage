@@ -40,7 +40,7 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column='location'
             crs_value = pd_input['crs'][0]
 
             try:
-                pd_input[geometry_column] = df_input[geometry_column].apply(wkt.loads)
+                pd_input[geometry_column] = pd_input[geometry_column].apply(wkt.loads)
 
                 return gpd.GeoDataFrame(
                     pd_input,

@@ -1,5 +1,6 @@
 import os
 import logging
+import configparser
 
 import pickle
 import polars as pl
@@ -9,29 +10,12 @@ from json import loads, dump
 
 from utils.unify_coordinate_system import *
 from utils.convert_dataframe import *
+from utils.dataframe_operations import *
+from utils.load_files import *
 
-def clean_nones(input_object: dict | list) -> dict | list:
-    """
-    Recursively remove all None values from either a dictionary or a list, and returns a new dictionary or list without the None values
-
-    : param: input_object = either a dictionary or a list type that may or may not consist of a None value
-    : return:= either a dictionary or a list type (same as the input) that does not consists of any None values
-    """
-
-    # List case
-    if isinstance(input_object, list):
-        return [clean_nones(x) for x in input_object if x is not None and x != ""]
-    
-    # Dictionary case
-    elif isinstance(input_object, dict):
-        return {
-            key: clean_nones(value)
-            for key, value in input_object.items()
-            if value is not None and value != ""
-        }
-
-    else:
-        return input_object
+config = configparser.ConfigParser()
+config.read('./params.ini')
+path_params = config['directory.paths']
 
 def as_pkl(input_data, output_file_location:str) -> int:
     with open(output_file_location, 'wb') as handle:
@@ -107,32 +91,42 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
     : param: output_file_name = 
     """
     if 'latitude' in list(pl_data.columns) or 'longitude' in list(pl_data.columns):
-        crs_value = get_epsg(pl_data.item(0, 'crs'))    # Convert CRS to EPSG value
+        # pl_value_map = initiate_load(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params['PATH_CRS_MAPFILE']))
+        # dict_epsg = as_dictionary(pl_value_map, 'name', 'minmod_id')
+
+        # crs_value = get_epsg(pl_data.item(0, 'crs'))    # Convert CRS to EPSG value
+        # print(crs_value)
+        crs_value = pl_data.item(0, 'crs')['observed_name']
+        pl_data = pl_data.with_columns(
+            pl.col(['latitude', 'longitude']).cast(pl.Float64)
+        )
         geometry = gpd.points_from_xy(pl_data['longitude'], pl_data['latitude'], crs=crs_value)
         list_geometry = [wkt.dumps(g, trim=True) for g in geometry.tolist()]
 
+        # print(crs_value)
+        # crs_value = dict_epsg[crs_value]
+        # print(crs_value)
         pl_data = pl_data.drop(
-            ['latitude', 'longitude', 'crs']
+            ['latitude', 'longitude']
         ).with_columns(
-            location = pl.Series(list_geometry),
-            crs = pl.lit(crs_value)
+            location = pl.Series(list_geometry)
         )
     
-    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'mineral_inventory', 'deposit_type_candidate']))
+    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'aliases', 'mineral_inventory', 'deposit_type_candidate', 'site_type']))
     attribute_location_info = list(set(pl_data.columns) & set(['location', 'crs', 'country', 'state_or_province']))
 
     pl_data = pl_data.select(
         pl.col(attribute_record_identifiers),
-        location_info = pl.struct(pl.col(attribute_location_info)),
+        location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(x, 'location', 'crs', 'POINT EMPTY')),
     )
 
     str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
     json_data = loads(str_data)
-    cleaned_json_data = clean_nones(json_data)
+    cleaned_json_data = clean_nones(clean_nones(json_data))
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    output_file_location = os.path.join(output_directory, output_file_name+'.json')
+    output_file_location = os.path.join(output_directory, f'{output_file_name}.json')
 
     with open(output_file_location, 'w') as f:
         dump(cleaned_json_data, f, indent=4, default=str)

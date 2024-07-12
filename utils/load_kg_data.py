@@ -1,6 +1,9 @@
+import os
 import logging
 import requests
+import configparser
 
+import spacy
 import pandas as pd
 import polars as pl
 import networkx as nx
@@ -9,7 +12,14 @@ from shapely.wkt import loads
 from shapely.errors import WKTReadingError
 import warnings
 
+nlp = spacy.load('en_core_web_sm')
+
 warnings.filterwarnings("ignore")
+
+config = configparser.ConfigParser()
+config.read('./params.ini')
+
+path_params = config['directory.paths']
 
 def safe_wkt_load(wkt_string):
     try:
@@ -23,7 +33,9 @@ def run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=Fal
     final_query = '''
     PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX : <https://minmod.isi.edu/resource/>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    PREFIX : <https://minmod.isi.edu/ontology/>
+    PREFIX mndr: <https://minmod.isi.edu/resource/>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     PREFIX gkbi: <https://geokb.wikibase.cloud/entity/>
@@ -57,207 +69,109 @@ def run_minmod_query(query, values=False):
 def run_geokb_query(query, values=False):
     return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
 
-def minmod_kg_check(source_name:str|None=None, record_id:str|None=None):
-    # Check if record id exists
-    if record_id:
-        query = '''
-        SELECT ?ms
-        WHERE {
-            ?ms rdfs:label|:record_id ?record_id . FILTER(STR(?record_id) == "%s")
-        }
-        ''' % (source_name)
-        query_resp_df = run_minmod_query(query, values=True)
-        
-        return query_resp_df
-
-    if source_name:
-        query = '''
-        SELECT ?ms ?source_id ?record_id ?ms_name ?country ?state_or_province ?loc_wkt ?crs ?miq_comm ?deposit_type
-        WHERE {
-            ?ms a :MineralSite .
-
-            ?ms :source_id ?source_id . FILTER (STR(?source_id) = "%s")
-            ?ms :record_id ?record_id . FILTER (STR(?record_id) != "")
-
-            OPTIONAL { ?ms :name ?ms_name . }
-
-            OPTIONAL { ?ms :location_info ?loc . 
-                OPTIONAL { ?loc :country ?country }
-                OPTIONAL { ?loc :state_or_province ?state_or_province }
-                OPTIONAL { ?loc :location ?loc_wkt }
-                OPTIONAL { ?loc :crs ?crs }
-            }
-
-            ?ms  :mineral_inventory ?miq .
-            ?miq :commodity/:name   ?miq_comm .
-
-            OPTIONAL { ?ms :deposit_type_candidate ?md .
-                OPTIONAL { ?md :observed_name ?deposit_type }
-            }
-        }
-        ''' % (source_name)
-        query_resp_df = run_minmod_query(query, values=True)
-
-        if not query_resp_df.empty:
-            sites_df = pd.DataFrame([
-                {
-                    'ms_uri': row['ms.value'],
-                    'source_id':row['source_id.value'],
-                    'record_id':row['record_id.value'],
-                    'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
-                    'country': row.get('country.value', None),
-                    'state_or_province': row.get('state_or_province.value', None),
-                    'location': row.get('loc_wkt.value', None),
-                    'crs': row.get('crs.value', None),
-                    'commodity': row.get('miq_comm.value', None),
-                    'deposit_type': row.get('deposit_type.value', None)
-                }
-                for index, row in query_resp_df.iterrows()
-            ])
-
-            pl_sites = pl.from_pandas(sites_df).group_by(
-                'ms_uri'
-            ).agg([pl.all()]).with_columns(
-                pl.exclude('ms_uri', 'location').list.unique().list.join(',')
-            ).with_columns(
-                pl.col('record_id').cast(pl.Utf8),
-                pl.col('location').list.get(0)
-            )
-        
-        return pl_sites
-
-
 def load_minmod_kg(commodity:str):
-    # commodity = args.commodity
-    # query = ''' SELECT ?ms1 ?ms2
-    #             WHERE {
-    #                 ?ms1 a :MineralSite .
-    #                 ?ms2 a :MineralSite .
-    
-    #                 ?ms1 owl:sameAs ?ms2 .
-    #             } '''
-    # df_all_sites = run_minmod_query(query, values=True)
-    # G = nx.from_pandas_edgelist(df_all_sites, source='ms1.value', target='ms2.value')
+    pl_commodity = pl.read_csv(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params['PATH_COMMODITY_MAPFILE']))
+    commodity_QID = pl_commodity.filter(
+        pl.col('CommodityinMRDS').str.to_lowercase() == commodity.lower()
+    ).item(0, 'minmod_id')
 
-    # # Find connected components
-    # groups = nx.connected_components(G)
-
-    # # Create a mapping from value to group ID
-    # group_mapping = {}
-    # for group_id, group in enumerate(groups, start=1):
-    #     for value in group:
-    #         group_mapping[value] = group_id
-
-    # # Map group IDs to the dataframe
-    # df_all_sites['group_id'] = df_all_sites['ms1.value'].map(group_mapping)
-
-    # ------------------ Hyper Site (aggregated group of sites) to Mineral Site ------------------
-
-    # get all Mineral Sites
-    # query = '''
-    # SELECT ?ms ?source_id ?record_id ?ms_name
-    # WHERE {
-
-    #     ?ms :mineral_inventory ?mi .
-    #     ?ms :deposit_type_candidate ?md .
-    #     OPTIONAL { ?ms rdfs:label|:name ?ms_name . FILTER (STR(?ms_name) != "") }
-    #     OPTIONAL { ?ms rdfs:label|:source_id ?source_id . FILTER(LCASE(STR(?source_id)) = "mrds") }
-    #     OPTIONAL { ?ms rdfs:label|:record_id ?record_id . FILTER (STR(?record_id) != "") }
-    # }
-    # '''
-
-    # query_resp_df = run_minmod_query(query, values=True)
-
-    # pl_data = pl.from_pandas(query_resp_df).filter(
-    #     pl.col('record_id.value') == '10100737'
-    # )
-    # print(pl_data)
-    # pl_data = pl.from_pandas(query_resp_df).filter(
-    #     pl.col('record_id.value') == '10100737'
-    # )
-
-    # Get commodity specific Mineral Sites
-    # query = '''
-    # SELECT ?ms ?source_id ?record_id ?ms_name ?country ?loc_wkt ?crs ?state_or_province ?commod ?miq_comm
-
-    # WHERE {
-    #     ?ms a :MineralSite .
-    #     ?ms :mineral_inventory ?mi .
-    #     ?ms :deposit_type_candidate ?md .
-
-    #     OPTIONAL { ?ms :name ?ms_name }
-    #     OPTIONAL { ?ms :source_id ?source_id }
-    #     OPTIONAL { ?ms :record_id ?record_id }
-
-    #     ?mi :observed_commodity ?commod . FILTER(LCASE(STR(?commod)) = "%s")
-    # }
-
-    # ''' % (commodity)
-
-    query = ''' SELECT ?ms ?source_id ?record_id ?ms_name ?country ?state_or_province ?loc_wkt ?crs ?miq_comm ?deposit_type
-        WHERE {
-            ?ms a :MineralSite .
-            ?ms :mineral_inventory ?mi .
-
-            ?ms :source_id ?source_id .
-            ?ms :record_id ?record_id .
-            OPTIONAL { ?ms :name ?ms_name . }
-
-            OPTIONAL { ?ms :location_info ?loc . 
-                OPTIONAL { ?loc :country ?country }
-                OPTIONAL { ?loc :state_or_province ?state_or_province }
-                OPTIONAL { ?loc :location ?loc_wkt }
-                OPTIONAL { ?loc :crs ?crs }
-            }
-
-            ?mi :commodity [ :name ?commod ] . FILTER(LCASE(STR(?commod)) = "%s")
-
-            ?ms  :mineral_inventory ?miq .
-            ?miq :commodity/:name   ?miq_comm .
-
-            OPTIONAL { ?ms :deposit_type_candidate ?md .
-                OPTIONAL { ?md :observed_name ?deposit_type }
-            }
-        }
-        ''' % (commodity)
-
-    # OPTIONAL { ?ms :location_info ?loc . 
-    #             OPTIONAL { ?loc :country ?country }
-    #             OPTIONAL { ?loc :state_or_province ?state_or_province }
-    #             OPTIONAL { ?loc :location ?loc_wkt }
-    #             OPTIONAL { ?loc :crs ?crs }
-    #         }
-            #     OPTIONAL { ?ms  :mineral_inventory ?miq .
-            #     OPTIONAL { ?miq :commodity/:name   ?miq_comm }
-            # }
-
-    query_resp_df = run_minmod_query(query, values=True)
+    del pl_commodity
 
     try:
-        if not query_resp_df.empty:
-            sites_df = pd.DataFrame([
-                {
-                    'ms_uri': row['ms.value'],
-                    'source_id':row['source_id.value'],
-                    'record_id':row['record_id.value'],
-                    'site_name': row['ms_name.value'] if len(str(row['ms_name.value'])) > 0 else row['ms.value'].split('/')[-1],
-                    'country': row.get('country.value', None),
-                    'state_or_province': row.get('state_or_province.value', None),
-                    'location': row.get('loc_wkt.value', None),
-                    'crs': row.get('crs.value', None),
-                    'commodity': row.get('miq_comm.value', None),
-                    'deposit_type': row.get('deposit_type.value', None)
+        query = """
+            SELECT ?ms ?source_id ?record_id ?ms_name ?aliases ?country ?state_or_province ?loc_wkt ?crs
+            WHERE {
+                ?ms a :MineralSite ;
+                    :source_id ?source_id ;
+                    :record_id ?record_id .
+                
+                OPTIONAL { ?ms rdfs:label ?ms_name . }
+                OPTIONAL { ?ms skos:altLabel ?aliases . }
+                OPTIONAL { 
+                    ?ms :location_info ?loc . 
+                    OPTIONAL { ?loc :country/:normalized_uri/rdfs:label ?country . }
+                    OPTIONAL { ?loc :state_or_province/:normalized_uri/rdfs:label ?state_or_province . }
+                    OPTIONAL { ?loc :location ?loc_wkt . }
+                    OPTIONAL { ?loc :crs/:normalized_uri/rdfs:label ?crs . }
                 }
-                for index, row in query_resp_df.iterrows()
-            ])
 
-            pl_sites = pl.from_pandas(sites_df).group_by(
-                'ms_uri'
-            ).agg([pl.all()]).with_columns(
-                pl.exclude('ms_uri').list.unique().list.join(',')
-            ).with_columns(
-                pl.col('record_id').cast(pl.Utf8)
-            )
+                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+            }
+        """ % (commodity_QID)
+        pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
+        pl_ms = pl_ms.rename(
+            {'ms.value': 'ms_uri',
+            'source_id.value': 'source_id',
+            'record_id.value': 'record_id',
+            'ms_name.value': 'ms_name',
+            'aliases.value': 'other_names',
+            'country.value': 'country',
+            'state_or_province.value': 'state_or_province',
+            'loc_wkt.value': 'loc_wkt',
+            'crs.value': 'crs'}
+        ).group_by(
+            'ms_uri'
+        ).agg([pl.all()]).with_columns(
+            pl.exclude('ms_uri').list.unique().list.join(',')
+        ).with_columns(
+            pl.col('record_id').cast(pl.Utf8)
+        ).with_columns(
+            site_name = pl.struct(pl.col('ms_name')).map_elements(lambda x: clean_site_name(x))
+        ).drop('ms_name')
+
+        query = """
+            SELECT ?ms ?miq_comm
+            WHERE {
+                ?ms a :MineralSite .
+
+                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+                ?ms :mineral_inventory/:commodity/:normalized_uri/rdfs:label ?miq_comm .
+            }
+        """ % (commodity_QID)
+        pl_comm = pl.from_pandas(run_minmod_query(query, values=True))
+        pl_comm = pl_comm.rename(
+            {'ms.value': 'ms_uri',
+            'miq_comm.value': 'miq_comm'}
+        ).group_by(
+            'ms_uri'
+        ).agg([pl.all()]).with_columns(
+            pl.exclude('ms_uri').list.unique().list.join(',')
+        )
+
+        query = """
+            SELECT ?ms ?deposit_type
+            WHERE {
+                ?ms a :MineralSite .
+
+                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+
+                OPTIONAL {
+                    ?ms :deposit_type_candidate/:observed_name ?deposit_type .
+                }
+            }
+        """ % (commodity_QID)
+        pl_dep_type = pl.from_pandas(run_minmod_query(query, values=True))
+        pl_dep_type = pl_dep_type.rename(
+            {'ms.value': 'ms_uri',
+            'deposit_type.value': 'deposit_type'}
+        ).group_by(
+            'ms_uri'
+        ).agg([pl.all()]).with_columns(
+            pl.exclude('ms_uri').list.unique().list.join(',')
+        )
+
+        pl_sites = pl.concat(
+            [pl_ms, pl_comm, pl_dep_type],
+            how='align'
+        )
+
+        return pl_sites
+            
+            # .with_columns(
+            #     site_name = pl.col('tmp_name') + pl.lit(',') + pl.col('aliases')
+            # ).drop('ms_name', 'tmp_name', 'aliases')
+
+            # pl_sites.write_csv('./check.csv')
 
             # ------------ GENERATES HYPERSITES ------------ #
             # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)
@@ -281,13 +195,28 @@ def load_minmod_kg(commodity:str):
 
             # sorted_df_all_sites_all_dep.to_csv(f'{output_directory}/{commodity}_mineral_sites_hypersites.csv', index=False, mode='w')
 
-            return pl_sites
+            # del sites_df, query_resp_df, pl_commodity, commodity_QID
+            # return pl_sites
             # return separate_data(pl_sites)
         
     except:
         logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
         return pl.DataFrame()
-    
+
+def clean_site_name(input_data: dict) -> str:
+    site_name = input_data['ms_name']
+
+    if 'Technical Report' in site_name:
+        doc = nlp(site_name)
+        if doc.ents:
+            for ent in doc.ents:
+                if (ent.label_ == 'ORG') & ('project' in ent.text.lower()):
+                    site_name = (ent.text).lstrip("the ")
+
+        del doc
+                    
+    return site_name
+
 def separate_data(pl_sites):
     list_all_data_sources = set(pl_sites['source_id'].to_list())
 

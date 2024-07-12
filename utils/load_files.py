@@ -8,8 +8,15 @@ import polars as pl
 import polars.selectors as cs
 import geopandas as gpd
 
-def as_dictionary(input_data, key_column:str, value_column: str) -> dict:
-    return dict(zip(input_data[key_column], input_data[value_column]))
+def as_dictionary(input_data, key_column:str|list, value_column: str) -> dict:
+    if isinstance(key_column, str):
+        return dict(zip(input_data[key_column], input_data[value_column]))
+    
+    dict_output = {}
+    for k in key_column:
+        dict_output.update(dict(zip(input_data[k], input_data[value_column])))
+    
+    return dict_output
 
 def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value_column=None, list_target_filename:str|None=None, list_exclude_filename:list|None=None):
     file_basename = os.path.splitext(os.path.basename(input_filename))[0]

@@ -3,6 +3,9 @@ import time
 import logging
 import configparser
 
+import ast
+import binascii
+import regex as re
 from itertools import groupby
 import polars as pl
 
@@ -10,7 +13,10 @@ from utils.load_files import as_dictionary
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
+
 prefix_params = config['mapping.prefix']
+path_params = config['directory.paths']
+mapping_columns = config['mapping.columns']
 
 def map_attribute_labels(pl_rawdata, pl_attribute_map, key_column:str, value_column:str):
     attr_in_rawdata = set(pl_rawdata.columns)
@@ -30,10 +36,14 @@ def map_attribute_labels(pl_rawdata, pl_attribute_map, key_column:str, value_col
             pl.col(key_column) == attribute
         )[value_column].to_list()
         
-        for label in list_attribute_labels:
+        for idx, label in enumerate(list_attribute_labels):
+            tmp_column_name = f'{label}_{binascii.hexlify(os.urandom(idx+10)).decode("utf-8")}'
+
             pl_mapped_data = pl_mapped_data.with_columns(
-                pl.lit(attribute).cast(pl.Utf8).alias(label)
+                pl.lit(attribute).cast(pl.Utf8).alias(tmp_column_name)
             )
+
+            dict_attribute_map.update({tmp_column_name: label})
 
         dict_attribute_map.pop(attribute)
 
@@ -62,7 +72,7 @@ def map_attribute_labels(pl_rawdata, pl_attribute_map, key_column:str, value_col
 
     return pl_mapped_data
 
-def append_to_list(list_to_be_modified:list, target_column:str, item:str, column_as:str,  mapped_value:str, bool_additional:bool, additional_item:str|None=None, additional_value:dict|str|list|None=None):
+def append_to_list(list_to_be_modified:list, target_column:str, item:str, column_as:str,  mapped_value:str, bool_additional:bool, additional_item:str|list|None=None, additional_value:dict|str|list|None=None):
     if bool_additional:
         list_to_be_modified.append({
             target_column:item,
@@ -73,7 +83,9 @@ def append_to_list(list_to_be_modified:list, target_column:str, item:str, column
     else:
         list_to_be_modified.append({
             target_column:item,
-            column_as:mapped_value
+            column_as:mapped_value,
+            'confidence':1,
+            'source':'raw_data_extraction'
         })
 
     return list_to_be_modified
@@ -157,7 +169,7 @@ def map_values(pl_rawdata, pl_value_map,
 
 def map_node_values(pl_rawdata, pl_value_map, 
                column_to_map: str, map_column_as:str, value_map_from: list|str, value_map_to: str, bool_optional: bool, bool_code=False,
-               prefix: str|None=None, other_column_to_include:str|None=None, store_original_value: str|None=None):
+               prefix: str|None=None, other_column_to_include:str|list|None=None, store_original_value: str|None=None):
     
     if store_original_value:
         pl_rawdata = pl_rawdata.with_columns(
@@ -192,9 +204,13 @@ def map_node_values(pl_rawdata, pl_value_map,
     )
 
     if other_column_to_include:
+        if isinstance(other_column_to_include, str):
+            list_columns_to_struct = [store_original_value, other_column_to_include]
+
         pl_rawdata = pl_rawdata.with_columns(
-            tmp = pl.struct(pl.col([store_original_value, other_column_to_include])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, bool_code, other_column_to_include))
+            tmp = pl.struct(pl.col(list_columns_to_struct)).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, bool_code, other_column_to_include))
         )
+
     else:
         pl_rawdata = pl_rawdata.with_columns(
             tmp = pl.struct(pl.col([store_original_value])).map_elements(lambda x: map_to_nodes(x, store_original_value, map_column_as, pl_value_map, value_map_to, bool_optional, bool_code))
@@ -232,7 +248,7 @@ def merge_in_align(pl_data1, pl_data2):
         how='align'
     )
 
-def split_str_column(pl_data, column_name:str|None=None, bool_replace_numbers=False):
+def split_str_column(pl_data, column_name:str|list|None=None, bool_replace_numbers=False):
     if column_name:
         if not bool_replace_numbers:
             pl_data = pl_data.with_columns(
@@ -252,3 +268,194 @@ def identify_list_items_overlap(struct_items:dict, target_list:list):
 
     return overlapping
 
+def clean_to_null(struct_items:dict) -> dict:
+    if not struct_items['commodity']:
+        return {'commodity': None,
+                'reference': None,}
+    
+    return struct_items
+
+def data_to_none(input_object: dict, col_decision: str, col_affected: str|list, condition:str|None=None) -> dict:
+    bool_need_to_none = False
+    if condition:
+        if input_object[col_decision] == condition:
+            bool_need_to_none = True
+    if not condition:
+        if not input_object[col_decision]:
+            bool_need_to_none = True
+
+    if bool_need_to_none:
+        input_object[col_decision] = None
+        if isinstance(col_affected, list):
+            for i in col_affected:
+                input_object[i] = None
+        else:
+            input_object[col_affected] = None
+
+    return input_object
+
+def clean_nones(input_object: dict | list) -> dict | list:
+    """
+    Recursively remove all None values from either a dictionary or a list, and returns a new dictionary or list without the None values
+
+    : param: input_object = either a dictionary or a list type that may or may not consist of a None value
+    : return:= either a dictionary or a list type (same as the input) that does not consists of any None values
+    """
+
+    # List case
+    if isinstance(input_object, list):
+        return [clean_nones(x) for x in input_object if x is not None and x != ""]
+    
+    # Dictionary case
+    elif isinstance(input_object, dict):
+        cleaned_dict = {
+            key: clean_nones(value)
+            for key, value in input_object.items()
+            if value and value is not None and value != ""
+        }
+
+        if not cleaned_dict:
+            return None
+
+        return cleaned_dict
+
+    else:
+        return input_object
+
+########## NEW ##################
+def normalize_dataframe(pl_data):
+    for entity in ['deposit_type_candidate', 'state_or_province', 'country', 'crs', 'commodity']:
+        try:
+            pl_map = pl.read_csv(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params[f'PATH_{entity.upper()}_MAPFILE']))
+            if entity == 'commodity':
+                pl_commod_code = pl.read_csv(os.path.join(path_params['PATH_RSRC_DIR'], path_params['PATH_MRDS_COMMODITY_CODE_FILE']))
+
+                pl_map = pl.concat(
+                    [pl_map, pl_commod_code],
+                    how='align'
+                )
+
+            column_from = ast.literal_eval(mapping_columns[f'{entity.upper()}'])
+            
+            dict_map = {}
+            if isinstance(column_from, str):
+                column_from = [column_from]
+
+            for i in column_from:
+                pl_map = pl_map.with_columns(
+                    pl.col(i).str.to_lowercase().str.strip_chars()
+                )
+
+                try:
+                    dict_map.update(dict(zip(pl_map[i], pl_map['minmod_id'])))
+                except:
+                    try:
+                        col_to_find = 'minmodid'
+
+                        for i in list(pl_map.columns):
+                            col_to_check = re.sub('[^a-zA-Z]', '', i).lower()
+
+                            if col_to_find == col_to_check:
+                                dict_map.update(dict(zip(pl_map[i], pl_map[i])))
+                                break
+
+                    except:
+                        pass
+
+
+            pl_data = pl_data.with_columns(
+                pl.struct(pl.col(entity)).map_elements(lambda x: map_values(x, entity, dict_map), skip_nulls=False)
+            )
+
+        except:
+            pass
+
+    return pl_data
+
+def map_values(value_item:dict, schema_title:str, dict_map:dict) -> dict|list:
+    entity_values = value_item[schema_title]
+    
+    items_in_list = []
+    if isinstance(entity_values, list):
+        list_entities = []
+        items_in_list = []
+        for v in entity_values:
+            if not v:
+                continue
+            if v.strip() == '':
+                continue
+
+            dict_matchinfo, items_in_list = create_matchinfo(v, dict_map, items_in_list)
+
+            if dict_matchinfo:
+                list_entities.append(dict_matchinfo)
+
+        if len(list_entities) == 0:
+            return [{}]
+        
+
+        return list_entities
+    
+    item, items_in_list = create_matchinfo(entity_values, dict_map, items_in_list)
+
+    return item
+
+def create_matchinfo(observed_name:str, dict_map:dict, list_uris:list):
+    if not observed_name or observed_name == '':
+        return {
+            'observed_name': None,
+            'confidence': None,
+            'source': None,
+            'normalized_uri': None
+        }, list_uris
+    
+    observed_name = observed_name.strip()
+
+    normalized_uri, confidence = map_to_uri(observed_name.lower(), dict_map)
+
+    dict_matchinfo = {
+        'observed_name': observed_name,
+        'confidence': confidence,
+        'source': 'UMN Matching System v1',
+    }
+
+    if normalized_uri:
+        if normalized_uri not in list_uris:
+            dict_matchinfo.update({'normalized_uri': prefix_params['MINMOD_PREFIX'] + normalized_uri})
+            list_uris.append(normalized_uri)
+        else:
+            dict_matchinfo = None
+    else:
+        dict_matchinfo.update({'normalized_uri': None})
+
+    # dict_matchinfo = {
+    #     k: v for k, v in dict_matchinfo.items() if v is not None
+    # }
+
+    return dict_matchinfo, list_uris
+
+def map_to_uri(observed_name:str, dict_map:dict)->str:
+    normalized_uri, confidence = exact_match_case(observed_name, dict_map)
+    if normalized_uri:
+        return normalized_uri, confidence
+
+    # normalized_uri, confidence = fuzzy_match_case(observed_name)
+    # if normalized_uri:
+    #     return normalized_uri, confidence
+    
+    # return None, 0.5
+    return None, confidence
+
+def exact_match_case(observed_name:str, dict_map:dict):
+    try:
+        normalized_uri = dict_map[observed_name]
+        return normalized_uri, 1.0
+    
+    except:
+        return None, 1.0
+
+def fuzzy_match_case(observed_name:str):
+    normalized_uri = observed_name
+    confidence = 0.7
+
+    return normalized_uri, confidence
