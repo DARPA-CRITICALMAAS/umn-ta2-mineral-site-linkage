@@ -122,7 +122,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
 
     str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
     json_data = loads(str_data)
-    cleaned_json_data = clean_nones(clean_nones(json_data))
+    cleaned_json_data = clean_nones(clean_nones(clean_nones(json_data)))
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)

@@ -99,6 +99,7 @@ def load_minmod_kg(commodity:str):
             }
         """ % (commodity_QID)
         pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
+        pl_ms.write_csv('./checking.csv')
         pl_ms = pl_ms.rename(
             {'ms.value': 'ms_uri',
             'source_id.value': 'source_id',
@@ -107,7 +108,7 @@ def load_minmod_kg(commodity:str):
             'aliases.value': 'other_names',
             'country.value': 'country',
             'state_or_province.value': 'state_or_province',
-            'loc_wkt.value': 'loc_wkt',
+            'loc_wkt.value': 'location',
             'crs.value': 'crs'}
         ).group_by(
             'ms_uri'
@@ -131,7 +132,7 @@ def load_minmod_kg(commodity:str):
         pl_comm = pl.from_pandas(run_minmod_query(query, values=True))
         pl_comm = pl_comm.rename(
             {'ms.value': 'ms_uri',
-            'miq_comm.value': 'miq_comm'}
+            'miq_comm.value': 'commodity'}
         ).group_by(
             'ms_uri'
         ).agg([pl.all()]).with_columns(

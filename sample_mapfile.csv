@@ -1,15 +1,14 @@
 attribute_label,corresponding_attribute_label,file_name
-source_id,"https://mrdata.usgs.gov/mrds",
-record_id,dep_id,
-name,site,
-aliases,
-commodity,commodities_main,
-commodity,commodities_other,
-latitude,latitude,
-longitude,longitude,
+source_id,"https://mrdata.usgs.gov/sedau",
+record_id,recno,main
+name,depname,main
+aliases,value,names
+commodity,value,minerals
+commodity,"Ag, Au",
+latitude,latitude,main
+longitude,longitude,main
 crs,"WGS84",
-country,"United States",
-state_or_province,"Alaska",
-deposit_type,dep_type,
-site_type,dev_stat,
-uri,"https://mrdata.usgs.gov/mrds",
+country,country,main
+state_or_province,state,main
+deposit_type_candidate,,
+uri,"https://mrdata.usgs.gov/sedau",

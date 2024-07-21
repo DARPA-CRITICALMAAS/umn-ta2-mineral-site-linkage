@@ -248,17 +248,28 @@ def merge_in_align(pl_data1, pl_data2):
         how='align'
     )
 
+def remove_space(list_items):
+    cleaned_list = []
+    for i in list_items:
+        cleaned_list.append(i.strip())
+
+    return cleaned_list
+
 def split_str_column(pl_data, column_name:str|list|None=None, bool_replace_numbers=False):
     if column_name:
         if not bool_replace_numbers:
             pl_data = pl_data.with_columns(
-                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\(\)\s-]', ',').str.split(',')
+                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\(\)\s-]', ',')
             )
 
         else:
             pl_data = pl_data.with_columns(
-                pl.col(column_name).str.replace_all(r'[^A-Za-z\s-]', ',').str.split(',')
+                pl.col(column_name).str.replace_all(r'[^A-Za-z\s-]', ',')
             )
+
+        pl_data = pl_data.with_columns(
+            pl.col(column_name).str.split(',').apply(remove_space)
+        )
 
     return pl_data
 
@@ -368,6 +379,7 @@ def normalize_dataframe(pl_data):
             )
 
         except:
+            print(entity)
             pass
 
     return pl_data

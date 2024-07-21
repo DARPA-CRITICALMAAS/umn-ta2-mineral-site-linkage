@@ -73,7 +73,11 @@ def load_directory(input_directory:str, list_target_filename:list|None=None, lis
 
     pl_data = pl.DataFrame()
     for file in files_in_directory:
+        filename = os.path.splitext(file)[0]
         loaded_data = initiate_load(os.path.join(input_directory, file), list_target_filename=list_target_filename)
+        loaded_data = loaded_data.rename(
+            lambda x: f'{filename}_' + x
+        )
         
         if not loaded_data.is_empty():
             if pl_data.is_empty():
