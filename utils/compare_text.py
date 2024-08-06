@@ -162,6 +162,23 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
 
     return pl_data
 
+def serialize_data(struct_input:dict) -> str:
+    list_keys = list(struct_input.keys())
+    
+    serialized_string = ''
+
+    for k in list_keys:
+        if struct_input[k]:
+            serialized_string += f'[ATT] {k} [VAL] {struct_input[k]} '
+
+    serialized_string = serialized_string.rstrip()
+    print(serialized_string)
+    
+    return 0
+
+def compare_text_value_test(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
+    return pl_data
+
 def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
     start_time = time.time()
     pl_data = pl_data.with_columns(

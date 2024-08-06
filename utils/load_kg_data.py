@@ -77,96 +77,106 @@ def load_minmod_kg(commodity:str):
 
     del pl_commodity
 
+    # try:
+    query = """
+        SELECT ?ms ?source_id ?record_id ?ms_name ?aliases ?country ?state_or_province ?loc_wkt ?crs
+        WHERE {
+            ?ms a :MineralSite ;
+                :source_id ?source_id ;
+                :record_id ?record_id .
+            
+            OPTIONAL { ?ms rdfs:label ?ms_name . }
+            OPTIONAL { ?ms skos:altLabel ?aliases . }
+            OPTIONAL { 
+                ?ms :location_info ?loc . 
+                OPTIONAL { ?loc :country/:normalized_uri/rdfs:label ?country . }
+                OPTIONAL { ?loc :state_or_province/:normalized_uri/rdfs:label ?state_or_province . }
+                OPTIONAL { ?loc :location ?loc_wkt . }
+                OPTIONAL { ?loc :crs/:normalized_uri/rdfs:label ?crs . }
+            }
+
+            ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+        }
+    """ % (commodity_QID)
+
+    pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_ms = pl_ms.rename(
+        {'ms.value': 'ms_uri',
+        'source_id.value': 'source_id',
+        'record_id.value': 'record_id',
+        'ms_name.value': 'ms_name',
+        'country.value': 'country',
+        'state_or_province.value': 'state_or_province',
+        'loc_wkt.value': 'location',
+        'crs.value': 'crs'}
+    )
     try:
-        query = """
-            SELECT ?ms ?source_id ?record_id ?ms_name ?aliases ?country ?state_or_province ?loc_wkt ?crs
-            WHERE {
-                ?ms a :MineralSite ;
-                    :source_id ?source_id ;
-                    :record_id ?record_id .
-                
-                OPTIONAL { ?ms rdfs:label ?ms_name . }
-                OPTIONAL { ?ms skos:altLabel ?aliases . }
-                OPTIONAL { 
-                    ?ms :location_info ?loc . 
-                    OPTIONAL { ?loc :country/:normalized_uri/rdfs:label ?country . }
-                    OPTIONAL { ?loc :state_or_province/:normalized_uri/rdfs:label ?state_or_province . }
-                    OPTIONAL { ?loc :location ?loc_wkt . }
-                    OPTIONAL { ?loc :crs/:normalized_uri/rdfs:label ?crs . }
-                }
-
-                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
-            }
-        """ % (commodity_QID)
-        pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
-        pl_ms.write_csv('./checking.csv')
         pl_ms = pl_ms.rename(
-            {'ms.value': 'ms_uri',
-            'source_id.value': 'source_id',
-            'record_id.value': 'record_id',
-            'ms_name.value': 'ms_name',
-            'aliases.value': 'other_names',
-            'country.value': 'country',
-            'state_or_province.value': 'state_or_province',
-            'loc_wkt.value': 'location',
-            'crs.value': 'crs'}
-        ).group_by(
-            'ms_uri'
-        ).agg([pl.all()]).with_columns(
-            pl.exclude('ms_uri').list.unique().list.join(',')
-        ).with_columns(
-            pl.col('record_id').cast(pl.Utf8)
-        ).with_columns(
-            site_name = pl.struct(pl.col('ms_name')).map_elements(lambda x: clean_site_name(x))
-        ).drop('ms_name')
+            {'aliases.value': 'other_names'}
+        )
+    except:
+        pass
+    
+    pl_ms = pl_ms.group_by(
+        'ms_uri'
+    ).agg([pl.all()])
 
-        query = """
-            SELECT ?ms ?miq_comm
-            WHERE {
-                ?ms a :MineralSite .
+    pl_ms = pl_ms.with_columns(
+        pl.exclude('ms_uri').list.unique().list.join(',')
+    ).with_columns(
+        pl.col('record_id').cast(pl.Utf8)
+    ).with_columns(
+        site_name = pl.struct(pl.col('ms_name')).map_elements(lambda x: clean_site_name(x))
+    ).drop('ms_name')
 
-                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
-                ?ms :mineral_inventory/:commodity/:normalized_uri/rdfs:label ?miq_comm .
+
+    query = """
+        SELECT ?ms ?miq_comm
+        WHERE {
+            ?ms a :MineralSite .
+
+            ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+            ?ms :mineral_inventory/:commodity/:normalized_uri/rdfs:label ?miq_comm .
+        }
+    """ % (commodity_QID)
+    pl_comm = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_comm = pl_comm.rename(
+        {'ms.value': 'ms_uri',
+        'miq_comm.value': 'commodity'}
+    ).group_by(
+        'ms_uri'
+    ).agg([pl.all()]).with_columns(
+        pl.exclude('ms_uri').list.unique().list.join(',')
+    )
+
+    query = """
+        SELECT ?ms ?deposit_type
+        WHERE {
+            ?ms a :MineralSite .
+
+            ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
+
+            OPTIONAL {
+                ?ms :deposit_type_candidate/:observed_name ?deposit_type .
             }
-        """ % (commodity_QID)
-        pl_comm = pl.from_pandas(run_minmod_query(query, values=True))
-        pl_comm = pl_comm.rename(
-            {'ms.value': 'ms_uri',
-            'miq_comm.value': 'commodity'}
-        ).group_by(
-            'ms_uri'
-        ).agg([pl.all()]).with_columns(
-            pl.exclude('ms_uri').list.unique().list.join(',')
-        )
+        }
+    """ % (commodity_QID)
+    pl_dep_type = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_dep_type = pl_dep_type.rename(
+        {'ms.value': 'ms_uri',
+        'deposit_type.value': 'deposit_type'}
+    ).group_by(
+        'ms_uri'
+    ).agg([pl.all()]).with_columns(
+        pl.exclude('ms_uri').list.unique().list.join(',')
+    )
 
-        query = """
-            SELECT ?ms ?deposit_type
-            WHERE {
-                ?ms a :MineralSite .
+    pl_sites = pl.concat(
+        [pl_ms, pl_comm, pl_dep_type],
+        how='align'
+    )
 
-                ?ms :mineral_inventory/:commodity/:normalized_uri mndr:%s.
-
-                OPTIONAL {
-                    ?ms :deposit_type_candidate/:observed_name ?deposit_type .
-                }
-            }
-        """ % (commodity_QID)
-        pl_dep_type = pl.from_pandas(run_minmod_query(query, values=True))
-        pl_dep_type = pl_dep_type.rename(
-            {'ms.value': 'ms_uri',
-            'deposit_type.value': 'deposit_type'}
-        ).group_by(
-            'ms_uri'
-        ).agg([pl.all()]).with_columns(
-            pl.exclude('ms_uri').list.unique().list.join(',')
-        )
-
-        pl_sites = pl.concat(
-            [pl_ms, pl_comm, pl_dep_type],
-            how='align'
-        )
-
-        return pl_sites
+    return pl_sites
             
             # .with_columns(
             #     site_name = pl.col('tmp_name') + pl.lit(',') + pl.col('aliases')
@@ -200,9 +210,9 @@ def load_minmod_kg(commodity:str):
             # return pl_sites
             # return separate_data(pl_sites)
         
-    except:
-        logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
-        return pl.DataFrame()
+    # except:
+    #     logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
+    #     return pl.DataFrame()
 
 def clean_site_name(input_data: dict) -> str:
     site_name = input_data['ms_name']

@@ -26,12 +26,10 @@ geo_params = config['geolocation.params']
 def compare_point_distance(gpd_data, source_id:str,
                            epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
     gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
-    print('one')
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
     list_cluster_labels = clusters.labels_
-    print('two')
 
     gpd_data['GroupID'] = list_cluster_labels
     # Converting back to original CRS system
@@ -39,7 +37,6 @@ def compare_point_distance(gpd_data, source_id:str,
     gpd_data = gpd_data.to_crs(crs=geo_params['DEFAULT_CRS_SYSTEM'])
     pl_data = to_polars(gpd_data, 'gpd')
     total_data_length = pl_data.shape[0]
-    print('three')
 
     pl_data_not_grouped = pl_data.filter(
         pl.col('GroupID') == -1
@@ -60,7 +57,6 @@ def compare_point_distance(gpd_data, source_id:str,
     ).rename(
         {'GroupID': 'GroupID_location'}
     )
-    print('four')
 
     del pl_data_not_grouped
     return pl_data

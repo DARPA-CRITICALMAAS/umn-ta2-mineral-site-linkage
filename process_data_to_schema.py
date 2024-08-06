@@ -39,7 +39,7 @@ def process_rawdata(args):
 
     try:
         group_by_column = pl_attribute_map.filter(
-            pl.col('label') == 'record_id'
+            pl.col('attribute_label') == 'record_id'
         ).item(0, 'corresponding_attribute_label')
     except:
         group_by_column = None
@@ -65,6 +65,7 @@ def process_rawdata(args):
         pl_data = pl_data.with_row_index("record_id")
 
     columns_to_split = list(set(pl_data.columns) & {'commodity', 'deposit_type_candidate', 'aliases'})
+
     pl_data = split_str_column(pl_data, columns_to_split)
 
     # Get EPSG code or CRS
@@ -81,7 +82,7 @@ def process_rawdata(args):
     pl_data = pl_data.explode('commodity')
 
     pl_data = pl_data.with_columns(
-        mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(x, 'commodity', 'reference'))
+        mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(input_object=x, col_decision='commodity', col_affected='reference', col_sub='observed_name'))
     ).drop(['uri', 'document', 'commodity', 'reference'])
 
     pl_data = pl_data.group_by('record_id').agg(

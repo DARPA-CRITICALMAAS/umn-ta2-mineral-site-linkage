@@ -30,7 +30,7 @@ def merge_grouping_results(pl_grouped, source_id:str, condition:str|None=None):
                     link_count = pl.col('link_method').list.len()
                 ).filter(
                     pl.col('unique_count') == 2,
-                    pl.col('link_count') >= 2,
+                    pl.col('link_count') == 2,
                 ).drop(['link_count', 'unique_count'])
 
                 pl_multi = add_index_columns(pl_multi, 'tmpID')
