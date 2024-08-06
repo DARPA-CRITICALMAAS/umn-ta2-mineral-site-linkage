@@ -71,7 +71,9 @@ def fusemine(args):
     start_time = time.time()
 
     pl_data = load_minmod_kg(focus_commodity)
-    print(pl_data)
+    # pl_data = pl.read_csv(f'./{focus_commodity}_datafile_filtered.csv')
+    # pl_data.write_csv('./nickel_datafile.csv')
+    
     if pl_data.is_empty():
         logging.info(f'Program ending due to missing data')
         return -1
@@ -109,32 +111,38 @@ def fusemine(args):
             for idx, pl_data in enumerate(list_pl_by_source):
                 source_id = pl_data.item(0, 'source_id')
 
-                logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
-                try:
-                    pl_data = compare_geolocation(pl_data, source_id, methods[0])
-                    pl_data = pl_data.with_columns(
-                        link_method = pl.lit('GEO')
-                    )
+                logging.info(f'\t{source_id}')
+                # logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
 
-                except:
+                list_pl_by_crs = pl_data.partition_by('crs')
+
+                for pl_crs in list_pl_by_crs:
                     try:
-                        pl_data = compare_textual_location(pl_data, source_id)
-                        pl_data = pl_data.with_columns(
-                            link_method = pl.lit('TXT')
+                        pl_crs = compare_geolocation(pl_crs, source_id, methods[0])
+                        pl_crs = pl_crs.with_columns(
+                            link_method = pl.lit('GEO')
                         )
 
                     except:
-                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
-                        continue
+                        try:
+                            pl_crs = compare_textual_location(pl_crs, source_id)
+                            pl_crs = pl_crs.with_columns(
+                                link_method = pl.lit('TXT')
+                            )
+                        except:
+                            logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
+                            continue
+
+                pl_data = pl.concat(list_pl_by_crs, how='diagonal_relaxed')
 
                 try:
-                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
+                    pl_crs = compare_text_embedding(pl_crs, source_id, methods[1])
                 except:
                     logging.info(f'\t\tSkipping text based linking due to missing textual information')
                     pass
 
-                pl_data = merge_grouping_results(pl_data, source_id)
-                list_grouped.append(pl_data)
+                pl_crs = merge_grouping_results(pl_crs, source_id)
+                list_grouped.append(pl_crs)
 
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
@@ -160,9 +168,10 @@ def fusemine(args):
                 pl.col('link_method') == 'TXT'
             ).drop(['latitude', 'longitude'])
 
-            pl_loc = compare_geolocation(pl_loc, 'ALL', method=methods[2])
-            pl_loc = compare_text_embedding(pl_loc, 'ALL', items_to_compare=methods[3])
-            pl_loc = merge_grouping_results(pl_loc, 'ALL').drop(['latitude', 'longitude'])
+            if not pl_loc.is_empty():
+                pl_loc = compare_geolocation(pl_loc, 'ALL', method=methods[2])
+                pl_loc = compare_text_embedding(pl_loc, 'ALL', items_to_compare=methods[3])
+                pl_loc = merge_grouping_results(pl_loc, 'ALL').drop(['latitude', 'longitude'])
 
             pl_data = pl.concat(
                 [pl_loc, pl_txt],   
@@ -212,12 +221,15 @@ def fusemine(args):
             pl.col(['record_id', 'GroupID'])
         )
 
+        pl_ground_truth.write_csv('./ground_truth.csv')
+
         pl_prediction = pl_data.filter(
             pl.col('eval_uri').is_in(list_source_overlap)
         ).sort('eval_uri').select(
             record_id = pl.col('eval_uri'),
             GroupID = pl.col('GroupID')
         )
+        pl_prediction.write_csv('./prediction.csv')
 
         print_evaluation_table('ver 0.2', pl_ground_truth, pl_prediction)
 

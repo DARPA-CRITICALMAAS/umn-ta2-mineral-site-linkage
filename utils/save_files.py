@@ -117,12 +117,12 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
 
     pl_data = pl_data.select(
         pl.col(attribute_record_identifiers),
-        location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(x, 'location', 'crs', 'POINT EMPTY')),
+        location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(input_object=x, col_decision='location', col_affected='crs', condition='POINT EMPTY')),
     )
 
     str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
     json_data = loads(str_data)
-    cleaned_json_data = clean_nones(clean_nones(json_data))
+    cleaned_json_data = clean_nones(clean_nones(clean_nones(json_data)))
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)

@@ -40,13 +40,13 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column='location'
             crs_value = pd_input['crs'][0]
 
             try:
-                pd_input[geometry_column] = pd_input[geometry_column].apply(wkt.loads)
+                pd_input[geometry_column] = pd_input[geometry_column].apply(lambda x: wkt.loads(x))
 
                 return gpd.GeoDataFrame(
                     pd_input,
                     geometry = geometry_column,
                     crs = crs_value
-                )
+                    )
             
             except:
                 gpd_input = gpd.GeoDataFrame(

@@ -11,9 +11,12 @@ from utils.unify_coordinate_system import *
 from utils.dataframe_operations import *
 
 def process_rawdata(args):
+    if not os.path.exists('./logs'):
+        os.makedirs('./logs')
+
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO, 
                         handlers=[
-                            logging.FileHandler(f'process_data_to_schema_{datetime.timestamp(datetime.now())}.log'),
+                            logging.FileHandler(f'./logs/process_data_to_schema_{datetime.timestamp(datetime.now())}.log'),
                             logging.StreamHandler()
                         ])
 
@@ -34,9 +37,12 @@ def process_rawdata(args):
         logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
         pass
 
-    group_by_column = pl_attribute_map.filter(
-        pl.col('attribute_label') == 'record_id'
-    ).item(0, 'corresponding_attribute_label')
+    try:
+        group_by_column = pl_attribute_map.filter(
+            pl.col('attribute_label') == 'record_id'
+        ).item(0, 'corresponding_attribute_label')
+    except:
+        group_by_column = None
 
     # # list_record_id_archive = initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'attribute_archive.pkl'))
     # # list_record_id_archive['record_id'].append(group_by_column)
@@ -55,8 +61,11 @@ def process_rawdata(args):
         pl_data = initiate_load(path_rawdata, False)
 
     pl_data = map_attribute_labels(pl_data, pl_attribute_map, 'corresponding_attribute_label', 'attribute_label')
+    if not group_by_column:
+        pl_data = pl_data.with_row_index("record_id")
 
     columns_to_split = list(set(pl_data.columns) & {'commodity', 'deposit_type_candidate', 'aliases'})
+
     pl_data = split_str_column(pl_data, columns_to_split)
 
     # Get EPSG code or CRS
@@ -73,7 +82,7 @@ def process_rawdata(args):
     pl_data = pl_data.explode('commodity')
 
     pl_data = pl_data.with_columns(
-        mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(x, 'commodity', 'reference'))
+        mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(input_object=x, col_decision='commodity', col_affected='reference', col_sub='observed_name'))
     ).drop(['uri', 'document', 'commodity', 'reference'])
 
     pl_data = pl_data.group_by('record_id').agg(

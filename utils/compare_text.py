@@ -85,9 +85,12 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
         return pl_data
     
     suffix_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'site_suffix.pkl'))}"
+    commodity_regex = f"(?i){initiate_load(os.path.join(path_params['PATH_RSRC_DIR'], 'commodities.pkl'))}"
     
     pl_data = pl_data.with_columns(
         pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"{suffix_regex}", '')
+    ).with_columns(
+        pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"{commodity_regex}", '')
     )
 
     if device == 'cpu':
@@ -159,6 +162,23 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
 
     return pl_data
 
+def serialize_data(struct_input:dict) -> str:
+    list_keys = list(struct_input.keys())
+    
+    serialized_string = ''
+
+    for k in list_keys:
+        if struct_input[k]:
+            serialized_string += f'[ATT] {k} [VAL] {struct_input[k]} '
+
+    serialized_string = serialized_string.rstrip()
+    print(serialized_string)
+    
+    return 0
+
+def compare_text_value_test(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
+    return pl_data
+
 def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
     start_time = time.time()
     pl_data = pl_data.with_columns(
@@ -212,8 +232,6 @@ def compare_textual_location(pl_data, source_id:str|None=None):
     pl_data = pl_data.explode(
         pl.exclude(['country', 'GroupID_location'])
     )
-
-    pl_data.write_csv('./textual_location.csv')
 
     logging.info(f'\t\tLocation linking with country name - {time.time() - start_time}')
 

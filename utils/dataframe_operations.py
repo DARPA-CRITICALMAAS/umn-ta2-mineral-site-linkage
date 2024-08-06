@@ -248,17 +248,28 @@ def merge_in_align(pl_data1, pl_data2):
         how='align'
     )
 
+def remove_space(list_items):
+    cleaned_list = []
+    for i in list_items:
+        cleaned_list.append(i.strip())
+
+    return cleaned_list
+
 def split_str_column(pl_data, column_name:str|list|None=None, bool_replace_numbers=False):
     if column_name:
         if not bool_replace_numbers:
             pl_data = pl_data.with_columns(
-                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\(\)\s-]', ',').str.split(',')
+                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\(\)\s-]', ',')
             )
 
         else:
             pl_data = pl_data.with_columns(
-                pl.col(column_name).str.replace_all(r'[^A-Za-z\s-]', ',').str.split(',')
+                pl.col(column_name).str.replace_all(r'[^A-Za-z\s-]', ',')
             )
+
+        pl_data = pl_data.with_columns(
+            pl.col(column_name).str.split(',').apply(remove_space)
+        )
 
     return pl_data
 
@@ -275,14 +286,21 @@ def clean_to_null(struct_items:dict) -> dict:
     
     return struct_items
 
-def data_to_none(input_object: dict, col_decision: str, col_affected: str|list, condition:str|None=None) -> dict:
+def data_to_none(input_object: dict, col_decision: str, col_affected: str|list, col_sub:str|None=None, condition:str|None=None) -> dict:
     bool_need_to_none = False
+
+    item_to_check = input_object[col_decision]
+    if col_sub:
+        item_to_check = item_to_check[col_sub]
+
     if condition:
-        if input_object[col_decision] == condition:
+        if item_to_check == condition:
             bool_need_to_none = True
     if not condition:
-        if not input_object[col_decision]:
+        if not item_to_check:
             bool_need_to_none = True
+        # if input_object[col_decision].strip() == '':
+        #     bool_need_to_none = True
 
     if bool_need_to_none:
         input_object[col_decision] = None
@@ -304,7 +322,14 @@ def clean_nones(input_object: dict | list) -> dict | list:
 
     # List case
     if isinstance(input_object, list):
-        return [clean_nones(x) for x in input_object if x is not None and x != ""]
+        list_objects = []
+        for x in input_object:
+            if x is not None and x !="":
+                cleaned_item = clean_nones(x)
+                if cleaned_item:
+                    list_objects.append(clean_nones(x))
+        
+        return list_objects
     
     # Dictionary case
     elif isinstance(input_object, dict):
@@ -368,6 +393,7 @@ def normalize_dataframe(pl_data):
             )
 
         except:
+            print(entity)
             pass
 
     return pl_data
