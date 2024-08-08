@@ -168,7 +168,7 @@ def load_minmod_kg(commodity:str):
     ).group_by(
         'ms_uri'
     ).agg([pl.all()]).with_columns(
-        pl.exclude('ms_uri').list.unique().list.join(',')
+        pl.exclude('ms_uri').list.unique().list.sort().list.join(',')
     )
 
     pl_sites = pl.concat(

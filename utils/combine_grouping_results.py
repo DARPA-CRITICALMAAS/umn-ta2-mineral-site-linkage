@@ -27,11 +27,13 @@ def merge_grouping_results(pl_grouped, source_id:str, condition:str|None=None):
                 pl_grouped = pl_grouped.rename({'loc_GroupID': 'GroupID'})
                 pl_multi = pl_grouped.with_columns(
                     unique_count = pl.col('link_method').list.unique().list.len(),
-                    link_count = pl.col('link_method').list.len()
+                    link_count = pl.col('link_method').list.len(),
+                    count_geo = pl.col('link_method').list.count_matches('GEO'),
+                    count_txt = pl.col('link_method').list.count_matches('TXT'),
                 ).filter(
-                    pl.col('unique_count') == 2,
-                    pl.col('link_count') == 2,
-                ).drop(['link_count', 'unique_count'])
+                    (pl.col('unique_count') == 2) & (pl.col('count_geo') == 1)
+                    #pl.col('count_geo') == 1,
+                ).drop(['link_count', 'unique_count', 'count_geo', 'count_txt'])
 
                 pl_multi = add_index_columns(pl_multi, 'tmpID')
                 pl_multi = pl_multi.with_columns(
