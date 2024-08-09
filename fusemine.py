@@ -71,7 +71,7 @@ def fusemine(args):
     start_time = time.time()
 
     pl_data = load_minmod_kg(focus_commodity)
-    # pl_data = pl.read_csv(f'./{focus_commodity}_datafile_filtered.csv')
+    pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
     # pl_data.write_csv('./nickel_datafile.csv')
     
     if pl_data.is_empty():

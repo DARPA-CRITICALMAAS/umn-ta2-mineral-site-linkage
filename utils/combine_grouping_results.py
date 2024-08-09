@@ -31,7 +31,8 @@ def merge_grouping_results(pl_grouped, source_id:str, condition:str|None=None):
                     count_geo = pl.col('link_method').list.count_matches('GEO'),
                     count_txt = pl.col('link_method').list.count_matches('TXT'),
                 ).filter(
-                    (pl.col('unique_count') == 2) & (pl.col('count_geo') == 1)
+                    (pl.col('unique_count') == 2) | (pl.col('count_txt') >= 2),
+                    # & (pl.col('count_geo') == 1)
                     #pl.col('count_geo') == 1,
                 ).drop(['link_count', 'unique_count', 'count_geo', 'count_txt'])
 
