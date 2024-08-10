@@ -44,14 +44,19 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
         )
         logging.info(f'\t{pl_data.shape[0]} grouped sites')
         
+        list_products = pl_data['ms_uri'].to_list()
+
+        tmp_pd = pd.DataFrame(list_products, columns=['ms_uri_1', 'ms_uri_2'])
+        pl_data = pl.from_pandas(tmp_pd)
+
         # Converting data to two column csv
-        pl_data = pl_data.select(
-            ms_uri_1 = pl.col('ms_uri')
-        ).with_columns(
-            ms_uri_2 = pl.col('ms_uri_1').list.get(0)
-        ).explode(
-            'ms_uri_1'
-        )
+        # pl_data = pl_data.select(
+        #     ms_uri_1 = pl.col('ms_uri')
+        # ).with_columns(
+        #     ms_uri_2 = pl.col('ms_uri_1').list.get(0)
+        # ).explode(
+        #     'ms_uri_1'
+        # )
 
     # Saving to {output_directory}/{output_file_name}
     _, file_extension = os.path.splitext(output_file_name)

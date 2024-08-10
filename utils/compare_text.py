@@ -129,7 +129,7 @@ def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to
         if source_id == 'ALL' and pl_data[int(pair[1]), 'source_id'] == pl_data[int(pair[0]), 'source_id']:
             continue
 
-        if source_id == 'GROUP' and pl_data[int(pair[1]), 'link_method'] == pl_data[int(pair[0]), 'link_method']:
+        if source_id == 'GROUP' and pl_data[int(pair[1]), 'link_method'] == 'GEO' and pl_data[int(pair[0]), 'link_method'] == 'GEO':
             continue
 
         pl_data[int(pair[1]), 'GroupID'] = pl_data[int(pair[0]), 'GroupID']
