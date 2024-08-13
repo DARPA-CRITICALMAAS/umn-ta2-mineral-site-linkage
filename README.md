@@ -1,6 +1,10 @@
 # FuseMine
 ## Overview
-FuseMine is a pipeline designed for data reconciliation across multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from reports (e.g., output from TA2 InferLink/USC). FuseMine facilitates the reconciliation of mineral sites by leveraging both location-based data and semantic similarities in textual attributes such as site name and commodity.
+<!-- FuseMine is a pipeline designed for data reconciliation across multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from reports (e.g., output from TA2 InferLink/USC). FuseMine facilitates the reconciliation of mineral sites by leveraging both location-based data and semantic similarities in textual attributes such as site name and commodity. -->
+
+FuseMine is a comprehensive pipeline designed to link data across multiple mineral site databases, such as USMIN and MRDS, and mineral site records extracted from reports and tables through tools created by TA2 Inferlink and USC. It facilitates the reconciliation process by utilizing both geospatial data and semantic similarities in textual attributes, such as site name and commodity. 
+
+FuseMine offers two primary functions: data processing and data reconciliation. In the data processing phase, raw structured data is converted into a [standardized schema](https://github.com/DARPA-CRITICALMAAS/schemas/tree/main/ta2) compatible with the Knowledge Graph (KG), where TA2 stores all processed data. During the data reconciliation phase, FuseMine queries the KG based on the commodity and links records representing the same mineral site. 
 
 ## Installation
 1. Clone this repository
