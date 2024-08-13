@@ -23,7 +23,7 @@ conda activate fusemine
 3. Installation instructions for PyTorch can be found [here](https://pytorch.org/get-started/locally/). Installing with CUDA support is highly recommended but not required for running FuseMine.
 
 
-4. Install the necessary pakcage libraries by running the following command line:
+4. Install the necessary package libraries by running the following command line:
 ```
 pip install -r requirements.txt
 ```
