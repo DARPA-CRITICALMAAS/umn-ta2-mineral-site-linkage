@@ -7,6 +7,7 @@ import polars as pl
 import geopandas as gpd
 from shapely import wkt
 from json import loads, dump
+from itertools import product
 
 from utils.unify_coordinate_system import *
 from utils.convert_dataframe import *
@@ -44,10 +45,17 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
         )
         logging.info(f'\t{pl_data.shape[0]} grouped sites')
         
-        list_products = pl_data['ms_uri'].to_list()
+        list_groups = pl_data['ms_uri'].to_list()
+        
+        list_uris_combination = []
 
-        tmp_pd = pd.DataFrame(list_products, columns=['ms_uri_1', 'ms_uri_2'])
+        for i in list_groups:
+            list_uris_combination.extend(product(i, repeat=2))
+
+        tmp_pd = pd.DataFrame(list_uris_combination, columns=['ms_uri_1', 'ms_uri_2'])
         pl_data = pl.from_pandas(tmp_pd)
+
+        print(pl_data)
 
         # Converting data to two column csv
         # pl_data = pl_data.select(

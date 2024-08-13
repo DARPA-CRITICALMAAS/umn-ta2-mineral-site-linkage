@@ -183,7 +183,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             return pl_data
 
     pl_location_invalid = pl_data.filter(
-        pl.col('crs') == ''
+        (pl.col('crs') == '') | (pl.col('location') == '')
     ).with_columns(
         GroupID_location = pl.lit(source_id) + pl.lit('default')
     ).drop('GroupID')
@@ -197,7 +197,6 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
     match method:
         case 'distance':
             gpd_data = create_coordinate_point_representation(gpd_data)
-            print('here')
             pl_data = compare_point_distance(gpd_data, source_id)
         
         case 'area':
