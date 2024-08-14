@@ -91,6 +91,10 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
         pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"{suffix_regex}", '')
     ).with_columns(
         pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"{commodity_regex}", '')
+    ).with_columns(
+        pl.col(items_to_compare).str.strip_chars().str.replace_all(rf"-", ' ').str.strip_chars()
+    ).with_columns(
+        pl.col(items_to_compare).str.replace_all(r"\s+", ' ')
     )
 
     if device == 'cpu':

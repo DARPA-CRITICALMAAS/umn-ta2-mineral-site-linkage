@@ -18,6 +18,10 @@ config = configparser.ConfigParser()
 config.read('./params.ini')
 path_params = config['directory.paths']
 
+def create_directory(directory_path:str):
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
 def as_pkl(input_data, output_file_location:str) -> int:
     with open(output_file_location, 'wb') as handle:
         pickle.dump(handle, input_data, protocol=pickle.HIGHEST_PROTOCOL)
