@@ -61,5 +61,4 @@ def print_evaluation_table(fusemine_version:str, pl_ground_truth, pl_prediction)
             [fusemine_version, accuracy_score]]
 
     print(tabulate(table, headers, tablefmt="outline", floatfmt=".4f"))
-    print(f'Link-level Accuracy: {link_acc_score}')
     print(f'Link-level F1: {link_f1_score}')

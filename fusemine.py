@@ -73,7 +73,7 @@ def fusemine(args):
     start_time = time.time()
 
     pl_data = load_minmod_kg(focus_commodity)
-    # pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
+    pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
     
     if pl_data.is_empty():
         logging.info(f'Program ending due to missing data')
