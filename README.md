@@ -1,4 +1,4 @@
-# FuseMine
+# [FuseMine](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/FuseMine%20Usage%20Documentation.pdf)
 ## Overview
 <!-- FuseMine is a pipeline designed for data reconciliation across multiple mineral site databases (e.g., USMIN and MRDS) and mineral sites extracted from reports (e.g., output from TA2 InferLink/USC). FuseMine facilitates the reconciliation of mineral sites by leveraging both location-based data and semantic similarities in textual attributes such as site name and commodity. -->
 
