@@ -97,11 +97,11 @@ def compare_text_embedding(pl_data, source_id:str|None=None, items_to_compare:li
         pl.col(items_to_compare).str.replace_all(r"\s+", ' ')
     )
 
-    if device == 'cpu':
-        return compare_text_value_embedding_cpu(pl_data, source_id, items_to_compare)
+    # if device == 'cpu':
+    #     return compare_text_value_embedding_cpu(pl_data, source_id, items_to_compare)
 
-    else:
-        return compare_text_value_embedding_cuda(pl_data, source_id, items_to_compare)
+    # else:
+    return compare_text_value_embedding_cuda(pl_data, source_id, items_to_compare)
 
 def compare_text_value_embedding_cuda(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
     list_attribute_ratio = ast.literal_eval(text_params['ATTRIBUTE_VALUE_RATIO'])
