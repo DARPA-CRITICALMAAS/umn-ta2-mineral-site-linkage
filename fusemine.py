@@ -194,6 +194,13 @@ def fusemine(args):
     except:
         logging.info(f'Failed to save sameas links')
 
+    # --------- Data Quality Check --------- #
+    pl_raw_data = pl.read_csv(f'./{focus_commodity}_datafile.csv')
+    pl_data = pl_data.select(
+        pl.col(['ms_uri', 'GroupID'])
+    )
+    pl_data.write_csv('./tungsten_grouped.csv')
+
     # --------- Evaluation --------- #
     if args.tungsten:
         pl_data = pl_data.with_columns(
