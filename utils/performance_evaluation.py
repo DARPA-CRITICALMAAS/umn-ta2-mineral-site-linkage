@@ -1,8 +1,21 @@
+import os
+import time
 import logging
+import configparser
+
 import polars as pl
 from tabulate import tabulate
 from itertools import combinations
 from sklearn.metrics import f1_score, accuracy_score
+
+import geopandas as gpd
+from shapely import wkt
+from math import radians
+from sklearn.metrics.pairwise import haversine_distances, euclidean_distances
+
+config = configparser.ConfigParser()
+config.read('./params.ini')
+geo_params = config['geolocation.params']
 
 def perf_accuracy(pl_ground_truth, pl_prediction) -> float:
     list_ground_truth_groups = pl_ground_truth.group_by('GroupID').agg([pl.all()]).with_columns(
@@ -62,3 +75,13 @@ def print_evaluation_table(fusemine_version:str, pl_ground_truth, pl_prediction)
 
     print(tabulate(table, headers, tablefmt="outline", floatfmt=".4f"))
     print(f'Link-level F1: {link_f1_score}')
+
+def data_check():
+    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    
+    # Dissolving based on GroupID and creating an integer convex hull around it
+    gpd_polygon = gpd_data.dissolve(
+        'GroupID'
+    ).convex_hull.centroid
+    
+    return 0

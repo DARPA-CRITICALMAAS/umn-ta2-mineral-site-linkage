@@ -60,6 +60,13 @@ def process_rawdata(args):
     else:
         pl_data = initiate_load(path_rawdata, False)
 
+    pl_attribute_map = pl_attribute_map.rename({'corresponding_attribute_label': 'tmp_attribute_label'}).with_columns(
+        pl.when((pl.col('file_name').is_null()) | (pl.col('tmp_attribute_label') == group_by_column))
+        .then(pl.col('tmp_attribute_label'))
+        .otherwise(pl.col('file_name') + pl.lit('_') + pl.col('tmp_attribute_label'))
+        .alias('corresponding_attribute_label')
+    ).drop('tmp_attribute_label')
+
     pl_data = map_attribute_labels(pl_data, pl_attribute_map, 'corresponding_attribute_label', 'attribute_label')
     if not group_by_column:
         pl_data = pl_data.with_row_index("record_id")
