@@ -3,6 +3,7 @@ import time
 import logging
 from datetime import datetime
 
+import ast
 import pickle
 import torch
 import argparse
@@ -15,6 +16,7 @@ from utils.append_rawdata import *
 from utils.load_kg_data import *
 from utils.compare_geolocation import *
 from utils.compare_text import *
+from utils.convert_dataframe import *
 
 from utils.convert_dataframe import *
 from utils.combine_grouping_results import *
@@ -45,21 +47,29 @@ def fusemine(args):
 
         intralink_location = 'distance'
         interlink_location = 'area'
-        intralinked_file = None
 
         focus_commodity = 'tungsten'
+
+    elif args.subset_file:
+        bool_singlestage = False
+        bool_intralink = False
+        bool_interlink = True
+
+        intralink_location = 'distance'
+        interlink_location = 'distance'
+
     else:
         bool_singlestage = True if args.single_stage else False
         bool_intralink = True if args.intralink else False
         bool_interlink = True if args.interlink else False        
 
-        intralink_location = args.intralink or args.single_stage
+        intralink_location = args.intralink
         interlink_location = args.interlink
-        intralinked_file = None
-
         focus_commodity = args.commodity
 
-    methods = [intralink_location, ['site_name', 'commodity'], interlink_location, ['site_name', 'commodity']]
+    intralinked_file = None
+
+    methods = [intralink_location, ['site_name', 'commodity'], interlink_location, ['site_name']]
 
     output_directory = args.same_as_directory
     if not output_directory:
@@ -67,20 +77,92 @@ def fusemine(args):
 
     output_file_name = args.same_as_filename
     if not output_file_name:
-        output_file_name = f'{focus_commodity}_sameas'
+        try:
+            output_file_name = f'{focus_commodity}_sameas'
+        except:
+            output_file_name = 'output'
 
-    logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
-    start_time = time.time()
+    subset_uris = []
+    list_grouped = []
 
-    pl_data = load_minmod_kg(focus_commodity)
-    pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
-    
-    if pl_data.is_empty():
-        logging.info(f'Program ending due to missing data')
-        return -1
+    if args.subset_file:        
+        try:
+            pl_subset = initiate_load(args.subset_file)
+            pl_subset = add_index_columns(pl_subset, index_column_name='ms_uri').with_columns(
+                pl.col('ms_uri').cast(pl.Utf8)
+            )
 
-    pl_data = pl_data.drop_nulls(subset=['location', 'crs'])
-    logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
+            logging.info(f'Loaded subset file at {args.subset_file}')
+        except:
+            logging.info(f'Cannot load subset file. Ending program.')
+            return -1
+
+        try:
+            pl_subset_map = initiate_load(args.subset_map)
+            pl_subset_map = pl_subset_map.drop_nulls(subset=['corresponding_attribute_label'])
+            logging.info(f'Using subset attribute map at {args.subset_map}')
+        except:
+            logging.info('Cannot locate subset attribute map. Ending program.')
+            return -1
+        
+        try:
+            pl_kg = initiate_load(args.kg_file)
+            pl_kg = add_index_columns(pl_kg, index_column_name='uri').with_columns(
+                ms_uri = pl.lit('KG_') + pl.col('uri').cast(pl.Utf8)
+            )
+
+            pl_data_map = initiate_load('./resource/dict_kg_map.pkl')
+
+            pl_data = pl_kg.rename(pl_data_map).select(
+                pl.col('ms_uri'),
+                pl.col(list(pl_data_map.values())),
+                crs = pl.lit('EPSG:4326'),
+                link_method = pl.when(pl.col('location').is_null)
+                .then(pl.lit('TXT'))
+                .otherwise(pl.lit('GEO')).alias('link_method'),
+                source_id = pl.lit('KG')
+            ).drop('uri')
+
+            del pl_loc, pl_txt
+            
+            logging.info(f'Loaded KG file at {args.subset_file}')
+        except:
+            logging.info('Cannot locate KG file. Ending program.')
+            return -1
+
+        pl_subset = pl_subset.select(
+            pl.col('ms_uri'),
+            pl.col(pl_subset_map['corresponding_attribute_label'].to_list()),
+            crs = pl.lit('EPSG:4326'),
+            source_id = pl.lit('SUBSET')
+        )
+
+        dict_map = dict(zip(pl_subset_map['corresponding_attribute_label'].to_list(), pl_subset_map['attribute_label'].to_list()))
+        pl_subset = pl_subset.rename(dict_map).with_columns(
+            link_method = pl.lit('GEO')
+        )
+        pl_subset = to_polars(to_geopandas(pl_subset, 'pl'), 'gpd')
+
+        del dict_map
+
+        list_grouped = [pl_data, pl_subset]
+
+        subset_uris = pl_subset['ms_uri'].to_list()
+        interlink_location = 'distance'
+
+    else:
+        logging.info(f'Loading MinMod knowledge graph data for {focus_commodity}')
+        start_time = time.time()
+
+        pl_data = load_minmod_kg(focus_commodity)
+        pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
+        
+        if pl_data.is_empty():
+            logging.info(f'Program ending due to missing data')
+            return -1
+
+        pl_data = pl_data.drop_nulls(subset=['location', 'crs'])
+        logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
     pl_data = split_str_column(pl_data, 'site_name').explode('site_name')
 
@@ -100,8 +182,8 @@ def fusemine(args):
 
     else:
         # ------ Data Separation ------ #
-        list_pl_by_source = pl_data.partition_by('source_id')
-        list_grouped = []
+        if not args.subset_file:
+            list_pl_by_source = pl_data.partition_by('source_id')
 
         # --------- Intralink --------- #
         if bool_intralink:
@@ -113,9 +195,9 @@ def fusemine(args):
                 source_id = pl_data.item(0, 'source_id')
 
                 logging.info(f'\t{source_id}')
-                # logging.info(f'\t{source_id} - {pl_data.shape[0]} records')
 
                 list_pl_by_crs = pl_data.partition_by('crs')
+                list_pls = []
 
                 for pl_crs in list_pl_by_crs:
                     try:
@@ -123,6 +205,7 @@ def fusemine(args):
                         pl_crs = pl_crs.with_columns(
                             link_method = pl.lit('GEO')
                         )
+                        list_pls.append(pl_crs)
 
                     except:
                         try:
@@ -130,20 +213,24 @@ def fusemine(args):
                             pl_crs = pl_crs.with_columns(
                                 link_method = pl.lit('TXT')
                             )
+                            list_pls.append(pl_crs)
                         except:
                             logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
                             continue
 
-                pl_data = pl.concat(list_pl_by_crs, how='diagonal_relaxed')
+                pl_data = pl.concat(list_pls, how='diagonal_relaxed')
 
                 try:
-                    pl_crs = compare_text_embedding(pl_crs, source_id, methods[1])
+                    pl_data = compare_text_embedding(pl_data, source_id, methods[1])
                 except:
                     logging.info(f'\t\tSkipping text based linking due to missing textual information')
                     pass
 
-                pl_crs = merge_grouping_results(pl_crs, source_id)
-                list_grouped.append(pl_crs)
+                if source_id == 'https://mrdata.usgs.gov/mrds':
+                    pl_data.write_csv('./mrds.csv')
+
+                pl_data = merge_grouping_results(pl_data, source_id)
+                list_grouped.append(pl_data)
 
             logging.info(f'Intralinking on {len(list_grouped)} sources completed - Elapsed Time: {time.time() - intralink_start_time}s')
 
@@ -160,11 +247,12 @@ def fusemine(args):
                 how='diagonal'
             )
 
-            # pl_data.write_csv('./before_anything.csv')
+            pl_data.write_csv('./intermediate.csv')
 
             pl_loc = pl_data.filter(
                 pl.col('link_method') == 'GEO'
             )
+
             pl_txt = pl_data.filter(
                 pl.col('link_method') == 'TXT'
             ).drop(['latitude', 'longitude'])
@@ -189,17 +277,45 @@ def fusemine(args):
 
             logging.info(f'Interlinking completed - Elapsed Time: {time.time() - start_time}s')
 
+    if args.subset_file:
+        grp_subset = pl_data.filter(pl.col('ms_uri').is_in(subset_uris))['GroupID'].to_list()
+        uri_subset = pl_data.filter(
+            (pl.col('GroupID').is_in(grp_subset)) & (pl.col('ms_uri').str.contains('KG'))
+        )['ms_uri']
+
+        pl_data = pl_kg.filter(
+            pl.col('ms_uri').is_in(uri_subset)
+        )
+
+        del grp_subset, uri_subset
+
+        as_csv(pl_data, output_directory, f'{output_file_name}', False)
+        return 0
+
     try:
         as_csv(pl_data, output_directory, f'{output_file_name}', True)
     except:
         logging.info(f'Failed to save sameas links')
 
     # --------- Data Quality Check --------- #
-    pl_raw_data = pl.read_csv(f'./{focus_commodity}_datafile.csv')
-    pl_data = pl_data.select(
-        pl.col(['ms_uri', 'GroupID'])
-    )
-    pl_data.write_csv('./tungsten_grouped.csv')
+    # pl_raw_data = pl.read_csv(f'./{focus_commodity}_datafile.csv')
+    # pl_data = pl_data.select(
+    #     pl.col('ms_uri').str.split(','),
+    #     pl.col('GroupID')
+    # ).explode('ms_uri')
+
+    # pl_data = pl.concat(
+    #     [pl_data, pl_raw_data],
+    #     how='align'
+    # ).filter(
+    #     pl.col('location') != ""
+    # )
+    # del pl_raw_data
+
+    # gpd_output = to_geopandas(pl_data, 'pl', geometry_column='location')
+    # del pl_data
+
+    # pl_data.write_csv(f'./{focus_commodity}_grouped.csv')
 
     # --------- Evaluation --------- #
     if args.tungsten:
@@ -246,6 +362,15 @@ def main():
 
     parser.add_argument('--commodity',
                         help='Specific commodity to focus on')
+    
+    parser.add_argument('--subset_file',
+                        help='Target subset to be idenfied in the KG')
+
+    parser.add_argument('--subset_map',
+                        help='Map columns of subset file to the KG format')
+    
+    parser.add_argument('--kg_file',
+                        help='File representing data on the KG')
 
     parser.add_argument('--single_stage',
                         help='Method for location-based single-stage linking')

@@ -10,6 +10,7 @@ import pandas as pd
 import polars as pl
 import geopandas as gpd
 from shapely import wkt
+from pyproj import CRS
 from sklearn.cluster import HDBSCAN
 
 from utils.convert_dataframe import *
@@ -25,7 +26,7 @@ geo_params = config['geolocation.params']
 
 def compare_point_distance(gpd_data, source_id:str,
                            epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
-    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    # gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
@@ -181,7 +182,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             return to_polars(to_geopandas(pl_data, 'pl', 'location'), 'gpd')
         except:
             return pl_data
-
+        
     pl_location_invalid = pl_data.filter(
         (pl.col('crs') == '') | (pl.col('location') == '')
     ).with_columns(

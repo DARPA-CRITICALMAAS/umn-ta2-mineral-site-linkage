@@ -485,3 +485,11 @@ def fuzzy_match_case(observed_name:str):
     confidence = 0.7
 
     return normalized_uri, confidence
+
+def string_to_list(string_list:str) -> list|str:
+    list_string = ast.literal_eval(string_list)
+
+    if isinstance(list_string, list):
+        return list_string
+    
+    return [string_list]

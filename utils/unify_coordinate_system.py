@@ -5,6 +5,7 @@ import configparser
 
 import requests
 from bs4 import BeautifulSoup as bs
+from pyproj import CRS
 
 from utils.convert_dataframe import *
 
@@ -54,3 +55,11 @@ def unify_crs(pl_data, crs_column:str):
     )
 
     return pl_data
+
+def check_coodinate_range(crs:str, lat:float, long:float) -> bool:
+    min_lat, min_lon, max_lat, max_lon = CRS.from_user_input(crs).area_of_use.bounds
+
+    if (min_lat <= lat <= max_lat) & (min_lon <= long <= max_lon):
+        return True
+
+    return False

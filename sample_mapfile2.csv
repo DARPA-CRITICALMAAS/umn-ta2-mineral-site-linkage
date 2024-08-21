@@ -1,0 +1,15 @@
+attribute_label,corresponding_attribute_label,file_name
+source_id,"https://mrdata.usgs.gov/ree",
+record_id,rec_id,main
+name,depname,main
+aliases,,
+commodity,commod,main
+commodity,name,minerals
+latitude,latitude,main
+longitude,longitude,main
+crs,"WGS84",
+country,country,main
+state_or_province,stprov,main
+deposit_type_candidate,deptype,main
+site_type,,
+uri,"https://mrdata.usgs.gov/ree",

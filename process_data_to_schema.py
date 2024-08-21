@@ -34,8 +34,10 @@ def process_rawdata(args):
         pl_attribute_map = pl_attribute_map.drop_nulls(subset=['corresponding_attribute_label'])
         logging.info(f'Using attribute map at {path_attribute_map}')
     except:
-        logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
-        pass
+        logging.info('Cannot locate attribute map. Ending program')
+        # logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
+        # pass
+        return -1
 
     try:
         group_by_column = pl_attribute_map.filter(

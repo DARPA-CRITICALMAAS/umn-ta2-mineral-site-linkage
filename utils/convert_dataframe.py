@@ -52,7 +52,12 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column='location'
                 gpd_input = gpd.GeoDataFrame(
                     pd_input,
                     geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
-                ).drop('location', axis=1)
+                )
+                
+                try: 
+                    gpd_input = gpd_input.drop('location', axis=1)
+                except:
+                    pass
 
                 gpd_input.rename_geometry('location', inplace=True)
 

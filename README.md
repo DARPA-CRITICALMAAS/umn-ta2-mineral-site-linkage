@@ -15,11 +15,12 @@ git clone https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage.git
 cd umn-ta2-mineral-site-linkage
 ```
 
-2. Memory requirement depends on the size of the data; however, FuseMine recommends allocating at least 10GB of memory for any task. The code requires `python >= 3.10` and `pytorch >= 2.0`. The following is the example command line for creating a conda environment with `fusemine` name and `python=3.10`
+2. Memory requirement depends on the size of the data; however, FuseMine recommends allocating at least 10GB of memory for any task. The code requires `3.10 <= python < 3.12` and `pytorch >= 2.0`. The following is the example command line for creating a conda environment with `fusemine` name and `python=3.10`
 
 ```
 conda create -n fusemine python=3.10
 conda activate fusemine
+conda install pip
 ```
 
 3. Installation instructions for PyTorch can be found [here](https://pytorch.org/get-started/locally/). Installing with CUDA support is highly recommended but not required for running FuseMine.

@@ -31,6 +31,12 @@ def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value
         case '.csv':
             input_data = pl.read_csv(input_filename, ignore_errors=True)
 
+        case '.xls':
+            input_data = pl.read_excel(input_filename)
+    
+        case '.xlsx':
+            input_data = pl.read_excel(input_filename)
+
         case '.gdb':
             input_data = gpd.read_file(
                 input_filename, 
