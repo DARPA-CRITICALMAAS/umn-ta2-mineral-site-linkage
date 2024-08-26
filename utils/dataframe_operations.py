@@ -5,11 +5,15 @@ import configparser
 
 import ast
 import binascii
+import statistics
+import strsim
 import regex as re
 from itertools import groupby
 import polars as pl
 
 from utils.load_files import as_dictionary
+# from tum.lib.unit_and_commodity import CommodityCompatibleLinker, UnitAndCommodityTrustedLinker
+# from tum.config import CRITICAL_MAAS_DIR
 
 config = configparser.ConfigParser()
 config.read('./params.ini')
@@ -268,7 +272,7 @@ def split_str_column(pl_data, column_name:str|list|None=None, bool_replace_numbe
             )
 
         pl_data = pl_data.with_columns(
-            pl.col(column_name).str.split(',').apply(remove_space)
+            pl.col(column_name).str.split(',').map_elements(remove_space)
         )
 
     return pl_data
@@ -347,6 +351,37 @@ def clean_nones(input_object: dict | list) -> dict | list:
     else:
         return input_object
 
+# predefined_ent_dir = CRITICAL_MAAS_DIR / "kgdata/data/predefined-entities"
+# unit_commodity_linker = UnitAndCommodityTrustedLinker.get_instance(
+#     predefined_ent_dir,
+#     CRITICAL_MAAS_DIR
+#     / "ta2-table-understanding/data/units_and_commodities.json",
+# )
+# commodity_linker = CommodityCompatibleLinker(unit_commodity_linker)
+# country_linker = EntityLinking.get_instance(predefined_ent_dir, "country")
+# state_linker = EntityLinking.get_instance(predefined_ent_dir, "country")
+# crs_linker = EntityLinking.get_instance(predefined_ent_dir, "country")
+
+# def get_candidate(linker, observed_name):
+#     output = {
+#         "observed_name": observed_name,
+#         "confidence": 0.0,
+#         "source": "UMN_Matching_v2",
+#     }
+    
+#     ent_score = linker.link(observed_name)
+
+#     if ent_score is not None:
+#         output["normalized_uri"] = ent_score[0].id
+#         output["confidence"] = ent_score[1]
+
+#     return output
+
+# link_commodity = partial(get_candidate, commodity_linker)
+# link_country = partial(get_candidate, country_linker)
+# link_crs = partial(get_candidate, crs_linker)
+# link_state = partial(get_candidate, state_linker)
+
 ########## NEW ##################
 def normalize_dataframe(pl_data):
     for entity in ['deposit_type_candidate', 'state_or_province', 'country', 'crs', 'commodity']:
@@ -393,7 +428,6 @@ def normalize_dataframe(pl_data):
             )
 
         except:
-            print(entity)
             pass
 
     return pl_data
@@ -432,7 +466,7 @@ def create_matchinfo(observed_name:str, dict_map:dict, list_uris:list):
             'observed_name': None,
             'confidence': None,
             'source': None,
-            'normalized_uri': None
+            'normalized_uri': None,
         }, list_uris
     
     observed_name = observed_name.strip()
@@ -452,7 +486,7 @@ def create_matchinfo(observed_name:str, dict_map:dict, list_uris:list):
         else:
             dict_matchinfo = None
     else:
-        dict_matchinfo.update({'normalized_uri': None})
+        dict_matchinfo.update({'normalized_uri': ''})
 
     # dict_matchinfo = {
     #     k: v for k, v in dict_matchinfo.items() if v is not None
@@ -465,11 +499,6 @@ def map_to_uri(observed_name:str, dict_map:dict)->str:
     if normalized_uri:
         return normalized_uri, confidence
 
-    # normalized_uri, confidence = fuzzy_match_case(observed_name)
-    # if normalized_uri:
-    #     return normalized_uri, confidence
-    
-    # return None, 0.5
     return None, confidence
 
 def exact_match_case(observed_name:str, dict_map:dict):
@@ -478,13 +507,73 @@ def exact_match_case(observed_name:str, dict_map:dict):
         return normalized_uri, 1.0
     
     except:
-        return None, 1.0
+        try:
+            normalized_uri, confidence = fuzzy_match_case(observed_name, dict_map)
+            # print(normalized_uri, confidence)
 
-def fuzzy_match_case(observed_name:str):
-    normalized_uri = observed_name
-    confidence = 0.7
+            return normalized_uri, confidence
+        
+        except:
+            return None, 0.001
 
-    return normalized_uri, confidence
+def fuzzy_match_case(observed_name:str, dict_map:dict):
+    chartok = strsim.CharacterTokenizer()
+    charseqtok = strsim.WhitespaceCharSeqTokenizer()
+
+    text_t1 = chartok.tokenize(observed_name)
+    text_t2 = charseqtok.tokenize(observed_name)
+    text_t3 = charseqtok.unique_tokenize(observed_name)
+
+    normalized_uri = None
+    final_confidence = 0.001
+
+    for entity_label in list(dict_map.keys()):
+        entity_label_t1 = chartok.tokenize(entity_label)
+        entity_label_t2 = charseqtok.tokenize(entity_label)
+        entity_label_t3 = charseqtok.unique_tokenize(entity_label)
+
+        out2 = [
+            strsim.levenshtein_similarity(text_t1, entity_label_t1),
+            strsim.jaro_winkler_similarity(text_t1, entity_label_t1),
+            strsim.monge_elkan_similarity(text_t2, entity_label_t2),
+            (
+                sym_monge_score := strsim.symmetric_monge_elkan_similarity(
+                    text_t2, entity_label_t2
+                )
+            ),
+            (hyjac_score := strsim.hybrid_jaccard_similarity(text_t3, entity_label_t3)),
+            does_ordinal_match(observed_name, entity_label, sym_monge_score, 0.7),
+            does_ordinal_match(observed_name, entity_label, hyjac_score, 0.7),
+        ]
+        confidence = statistics.mean(out2)
+
+        if (final_confidence < confidence) & (0.4 < confidence):
+            normalized_uri = dict_map[entity_label]
+            final_confidence = confidence
+
+    return normalized_uri, final_confidence
+
+def does_ordinal_match(s1: str, s2: str, sim: float, threshold: float) -> float:
+    """Test for strings containing ordinal categorical values such as Su-30 vs Su-25, 29th Awards vs 30th Awards. 
+    (From entity linking in minmodkg)
+
+    Args:
+        s1: Cell Label
+        s2: Entity Label
+    """
+    if sim < threshold:
+        return 0.4
+
+    digit_tokens_1 = re.findall(r"\d+", s1)
+    digit_tokens_2 = re.findall(r"\d+", s2)
+
+    if digit_tokens_1 == digit_tokens_2:
+        return 1.0
+
+    if len(digit_tokens_1) == 0 or len(digit_tokens_2) == 0:
+        return 0.4
+
+    return 0.0
 
 def string_to_list(string_list:str) -> list|str:
     list_string = ast.literal_eval(string_list)

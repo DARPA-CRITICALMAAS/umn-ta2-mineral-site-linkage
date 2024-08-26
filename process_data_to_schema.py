@@ -70,8 +70,11 @@ def process_rawdata(args):
     ).drop('tmp_attribute_label')
 
     pl_data = map_attribute_labels(pl_data, pl_attribute_map, 'corresponding_attribute_label', 'attribute_label')
+
     if not group_by_column:
-        pl_data = pl_data.with_row_index("record_id")
+        pl_data = pl_data.with_row_index("record_id").with_columns(
+            pl.col('record_id').cast(pl.Utf8)
+        )
 
     columns_to_split = list(set(pl_data.columns) & {'commodity', 'deposit_type_candidate', 'aliases'})
 
@@ -79,8 +82,21 @@ def process_rawdata(args):
 
     # Get EPSG code or CRS
     pl_data = pl_data.with_columns(
-        pl.col('crs').map_elements(lambda x: get_epsg(x))
+        pl.col('crs').map_elements(lambda x: get_epsg(x), return_dtype=pl.Utf8)
     )
+
+  #  unit_commodity_linker = UnitAndCommodityTrustedLinker.get_instance(
+  #      CRITICAL_MAAS_DIR / "kgdata/data/predefined-entities",
+  #      CRITICAL_MAAS_DIR
+  #      / "ta2-table-understanding/data/units_and_commodities.json",
+   # )
+#    linker = 
+
+ #   pl_data = pl_data.with_columns(
+  #      pl.col('commodity').map_elements(lambda x: linker.link(x))
+   # )
+
+
     pl_data = normalize_dataframe(pl_data)
 
     pl_data = pl_data.with_columns(

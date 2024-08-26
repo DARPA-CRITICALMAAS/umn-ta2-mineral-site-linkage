@@ -62,18 +62,58 @@
 
 # print(pl_data)
 
-import polars as pl
-import pickle
+import strsim
+import regex as re
+import statistics
 
-# pl_data = pl.read_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/intermediate.csv')
-# print(set(pl_data['link_method'].to_list()))
+def does_ordinal_match(s1: str, s2: str, sim: float, threshold: float) -> float:
+    """Test for strings containing ordinal categorical values such as Su-30 vs Su-25, 29th Awards vs 30th Awards.
 
-dict_kg_map = {
-    'names': 'site_name',
-    'country': 'country',
-    'province':'state_or_province',
-    'centroid_epsg_4326': 'location',
-}
+    Args:
+        s1: Cell Label
+        s2: Entity Label
+    """
+    if sim < threshold:
+        return 0.4
 
-with open('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/resource/dict_kg_map.pkl', 'wb') as handle:
-    pickle.dump(dict_kg_map, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    digit_tokens_1 = re.findall(r"\d+", s1)
+    digit_tokens_2 = re.findall(r"\d+", s2)
+
+    if digit_tokens_1 == digit_tokens_2:
+        return 1.0
+
+    if len(digit_tokens_1) == 0 or len(digit_tokens_2) == 0:
+        return 0.4
+
+    return 0.0
+
+chartok = strsim.CharacterTokenizer()
+charseqtok = strsim.WhitespaceCharSeqTokenizer()
+
+text = 'fluorspar'
+entity_label = 'fluorine'
+
+text_t1 = chartok.tokenize(text)
+entity_label_t1 = chartok.tokenize(entity_label)
+
+text_t2 = charseqtok.tokenize(text)
+entity_label_t2 = charseqtok.tokenize(entity_label)
+
+text_t3 = charseqtok.unique_tokenize(text)
+entity_label_t3 = charseqtok.unique_tokenize(entity_label)
+
+out2 = [
+    strsim.levenshtein_similarity(text_t1, entity_label_t1),
+    strsim.jaro_winkler_similarity(text_t1, entity_label_t1),
+    strsim.monge_elkan_similarity(text_t2, entity_label_t2),
+    (
+        sym_monge_score := strsim.symmetric_monge_elkan_similarity(
+            text_t2, entity_label_t2
+        )
+    ),
+    (hyjac_score := strsim.hybrid_jaccard_similarity(text_t3, entity_label_t3)),
+    does_ordinal_match(text, entity_label, sym_monge_score, 0.7),
+    does_ordinal_match(text, entity_label, hyjac_score, 0.7),
+]
+
+print(statistics.mean(out2))

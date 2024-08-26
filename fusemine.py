@@ -116,16 +116,13 @@ def fusemine(args):
             pl_data = pl_kg.rename(pl_data_map).select(
                 pl.col('ms_uri'),
                 pl.col(list(pl_data_map.values())),
+                # pl.when(pl.col('location').is_null()).then(pl.lit('GEO')).otherwise(pl.lit('TXT')).alias('link_method'),
+                link_method = pl.lit('GEO'),
                 crs = pl.lit('EPSG:4326'),
-                link_method = pl.when(pl.col('location').is_null)
-                .then(pl.lit('TXT'))
-                .otherwise(pl.lit('GEO')).alias('link_method'),
                 source_id = pl.lit('KG')
-            ).drop('uri')
-
-            del pl_loc, pl_txt
+            ).drop('uri').drop_nulls('location')
             
-            logging.info(f'Loaded KG file at {args.subset_file}')
+            logging.info(f'Loaded KG file at {args.kg_file}')
         except:
             logging.info('Cannot locate KG file. Ending program.')
             return -1

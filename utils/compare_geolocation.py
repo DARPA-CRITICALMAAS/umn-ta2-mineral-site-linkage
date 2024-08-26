@@ -26,7 +26,7 @@ geo_params = config['geolocation.params']
 
 def compare_point_distance(gpd_data, source_id:str,
                            epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
-    # gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
@@ -98,16 +98,12 @@ def compare_buffer_overlap(gpd_data, source_id,
     pl_IOU = pl_intersection.filter(
         pl.col('GroupID_1') != pl.col('GroupID_2')
     )
-    # pl_IOU.write_csv('./check.csv')
 
     if source_id == 'ALL':
         pl_IOU = pl_IOU.filter(
             pl.col('source_id_1') != pl.col('source_id_2')
         )
 
-    # pl_IOU = pl_IOU.filter(
-    #     pl.col('IOU') > minimum_overlap_threshold
-    # )
     try:
         pl_IOU = pl_IOU.sort(
             'intersection_area'

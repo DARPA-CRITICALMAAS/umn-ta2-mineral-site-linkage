@@ -137,7 +137,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(input_object=x, col_decision='location', col_affected='crs', condition='POINT EMPTY')),
     )
 
-    str_data = "{\"MineralSite\":" + pl_data.write_json(pretty=True, row_oriented=True) + "}"
+    str_data = "{\"MineralSite\":" + pl_data.write_json() + "}"
     json_data = loads(str_data)
     cleaned_json_data = clean_nones(clean_nones(clean_nones(json_data)))
 

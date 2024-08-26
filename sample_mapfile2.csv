@@ -1,15 +1,14 @@
 attribute_label,corresponding_attribute_label,file_name
-source_id,"https://mrdata.usgs.gov/ree",
-record_id,rec_id,main
-name,depname,main
+source_id,"https://doi.org/10.5066/P9K1HBNT",
+record_id,,
+name,Deposit,
 aliases,,
-commodity,commod,main
-commodity,name,minerals
-latitude,latitude,main
-longitude,longitude,main
+commodity,CritMin,
+latitude,Lat_WGS84,
+longitude,Long_WGS84,
 crs,"WGS84",
-country,country,main
-state_or_province,stprov,main
-deposit_type_candidate,deptype,main
+country,"United States",
+state_or_province,State,
+deposit_type_candidate,,
 site_type,,
-uri,"https://mrdata.usgs.gov/ree",
+uri,"https://doi.org/10.5066/P9K1HBNT",
