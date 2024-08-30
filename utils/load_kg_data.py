@@ -217,7 +217,7 @@ def load_minmod_kg(commodity:str):
 def clean_site_name(input_data: dict) -> str:
     site_name = input_data['ms_name']
 
-    if 'Technical Report' in site_name:
+    if ('Technical Report' in site_name) or ('Preliminary Economic' in site_name):
         doc = nlp(site_name)
         if doc.ents:
             for ent in doc.ents:

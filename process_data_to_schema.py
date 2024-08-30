@@ -78,24 +78,18 @@ def process_rawdata(args):
 
     columns_to_split = list(set(pl_data.columns) & {'commodity', 'deposit_type_candidate', 'aliases'})
 
+    pl_data = pl_data.with_columns(
+        pl.col('commodity')
+        .str.replace('REE', 'Lanthanum, Praseodymium, Samarium, Gadolinium, Thulium, Holmium, Cerium, Europium, Ytterbium, Erbium, Yttrium, Neodymium, Terbium, Dysprosium, Lutetium')
+        .str.replace('PGE', 'Platinum, Palladium, Rhodium, Ruthenium, Iridium, Osmium')
+    )
+
     pl_data = split_str_column(pl_data, columns_to_split)
 
     # Get EPSG code or CRS
     pl_data = pl_data.with_columns(
         pl.col('crs').map_elements(lambda x: get_epsg(x), return_dtype=pl.Utf8)
     )
-
-  #  unit_commodity_linker = UnitAndCommodityTrustedLinker.get_instance(
-  #      CRITICAL_MAAS_DIR / "kgdata/data/predefined-entities",
-  #      CRITICAL_MAAS_DIR
-  #      / "ta2-table-understanding/data/units_and_commodities.json",
-   # )
-#    linker = 
-
- #   pl_data = pl_data.with_columns(
-  #      pl.col('commodity').map_elements(lambda x: linker.link(x))
-   # )
-
 
     pl_data = normalize_dataframe(pl_data)
 

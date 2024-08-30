@@ -289,6 +289,11 @@ def fusemine(args):
         as_csv(pl_data, output_directory, f'{output_file_name}', False)
         return 0
 
+    pl_tmp = pl_data.select(
+        pl.col(['ms_uri', 'GroupID'])
+    )
+    pl_tmp.write_csv('./nickled_linked.csv')
+
     try:
         as_csv(pl_data, output_directory, f'{output_file_name}', True)
     except:

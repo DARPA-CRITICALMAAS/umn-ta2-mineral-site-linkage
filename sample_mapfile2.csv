@@ -1,14 +1,14 @@
 attribute_label,corresponding_attribute_label,file_name
-source_id,"https://doi.org/10.5066/P9K1HBNT",
-record_id,,
-name,Deposit,
+source_id,"https://mrdata.usgs.gov/major-deposits",
+record_id,gid,deposit
+name,dep_name,deposit
 aliases,,
-commodity,CritMin,
-latitude,Lat_WGS84,
-longitude,Long_WGS84,
+commodity,commodity,deposit
+latitude,latitude,deposit
+longitude,longitude,deposit
 crs,"WGS84",
-country,"United States",
-state_or_province,State,
-deposit_type_candidate,,
+country,country,deposit
+state_or_province,state,deposit
+deposit_type_candidate,dep_type,deposit
 site_type,,
-uri,"https://doi.org/10.5066/P9K1HBNT",
+uri,"https://mrdata.usgs.gov/major-deposits",

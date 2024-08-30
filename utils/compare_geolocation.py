@@ -26,7 +26,7 @@ geo_params = config['geolocation.params']
 
 def compare_point_distance(gpd_data, source_id:str,
                            epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
-    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    gpd_data = gpd_data.to_crs(crs=geo_params['DISTANCE_CRS_SYSTEM'])
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
@@ -65,7 +65,8 @@ def compare_point_distance(gpd_data, source_id:str,
 def compare_buffer_overlap(gpd_data, source_id, 
                            minimum_overlap_threshold=float(geo_params['POLYGON_AREA_OVERLAP_UNIT_SQMETER'])):
     
-    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    gpd_data = gpd_data.to_crs(crs=geo_params['AREA_CRS_SYSTEM'])
+    gpd_data = gpd_data.loc[gpd_data.geometry.is_valid]
 
     gpd_overlapped_data = gpd.overlay(
         gpd_data, gpd_data,
