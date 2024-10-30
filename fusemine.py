@@ -152,7 +152,6 @@ def fusemine(args):
         start_time = time.time()
 
         pl_data = load_minmod_kg(focus_commodity)
-        pl_data.write_csv(f'./{focus_commodity}_datafile.csv')
         
         if pl_data.is_empty():
             logging.info(f'Program ending due to missing data')
@@ -161,15 +160,11 @@ def fusemine(args):
         pl_data = pl_data.drop_nulls(subset=['location', 'crs'])
         logging.info(f'{pl_data.shape[0]} records loaded - Elapsed Time: {time.time() - start_time}s')
 
-    pl_data = split_str_column(pl_data, 'site_name').explode('site_name')
-
     if args.tungsten:
         # Filtering out USMIN Tungsten and MRDS Tungsten for evaluation prupose
         pl_data = pl_data.filter(
             (pl.col('source_id') == 'https://mrdata.usgs.gov/mrds') | (pl.col('source_id') == 'https://mrdata.usgs.gov/deposit')
         )
-
-        pl_data.write_csv('./tungsten.csv')
 
     # ------ Running Single Stage ------ #
     if bool_singlestage:
@@ -244,8 +239,6 @@ def fusemine(args):
                 how='diagonal'
             )
 
-            pl_data.write_csv('./intermediate.csv')
-
             pl_loc = pl_data.filter(
                 pl.col('link_method') == 'GEO'
             )
@@ -292,7 +285,6 @@ def fusemine(args):
     pl_tmp = pl_data.select(
         pl.col(['ms_uri', 'GroupID'])
     )
-    pl_tmp.write_csv('./nickled_linked.csv')
 
     try:
         as_csv(pl_data, output_directory, f'{output_file_name}', True)

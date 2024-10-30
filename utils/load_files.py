@@ -29,7 +29,7 @@ def initiate_load(input_filename: str, bool_asdict=False, key_column=None, value
 
     match file_extension:
         case '.csv':
-            input_data = pl.read_csv(input_filename, ignore_errors=True)
+            input_data = pl.read_csv(input_filename, ignore_errors=True, truncate_ragged_lines=True)
 
         case '.xls':
             input_data = pl.read_excel(input_filename)

@@ -201,10 +201,11 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             gpd_data = create_buffer_area_representation(gpd_data)
             pl_data = compare_buffer_overlap(gpd_data, source_id)
 
-    pl_data = pl.concat(
-        [pl_data, pl_location_invalid],
-        how='diagonal_relaxed'
-    )
+    if not pl_location_invalid.is_empty():
+        pl_data = pl.concat(
+            [pl_data, pl_location_invalid],
+            how='diagonal_relaxed'
+        )
 
     logging.info(f'\t\tLocation linking with {method} - Elapsed time: {time.time() - start_time}')
 

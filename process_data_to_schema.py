@@ -96,13 +96,21 @@ def process_rawdata(args):
     pl_data = pl_data.with_columns(
         document = pl.struct(pl.col('uri'))
     ).with_columns(
-        reference = pl.struct(pl.col('document'))
+        pl.col('country').map_elements(lambda x: [x]),
+        pl.col('state_or_province').map_elements(lambda x: [x]),
+        reference = pl.struct(pl.col('document')),
     )
     pl_data = pl_data.explode('commodity')
 
+    # print(pl_data.columns)
+
+    # with open('/users/2/pyo00005/HOME/CriticalMAAS/mid_point_data.pkl', 'wb') as handle:
+    #     pickle.dump(pl_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
     pl_data = pl_data.with_columns(
         mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(input_object=x, col_decision='commodity', col_affected='reference', col_sub='observed_name'))
-    ).drop(['uri', 'document', 'commodity', 'reference'])
+    ).drop(['uri', 'document', 'commodity'])
 
     pl_data = pl_data.group_by('record_id').agg(
         [pl.all()]

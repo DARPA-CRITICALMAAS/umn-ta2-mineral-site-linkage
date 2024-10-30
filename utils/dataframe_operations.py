@@ -263,7 +263,7 @@ def split_str_column(pl_data, column_name:str|list|None=None, bool_replace_numbe
     if column_name:
         if not bool_replace_numbers:
             pl_data = pl_data.with_columns(
-                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\(\)\s-]', ',')
+                pl.col(column_name).str.replace_all(r'[^A-Za-z0-9\s-]', ',')
             )
 
         else:
@@ -294,6 +294,10 @@ def data_to_none(input_object: dict, col_decision: str, col_affected: str|list, 
     bool_need_to_none = False
 
     item_to_check = input_object[col_decision]
+    
+    if not item_to_check:
+        return {'commodity': None, 'reference': None}
+    
     if col_sub:
         item_to_check = item_to_check[col_sub]
 
@@ -469,6 +473,8 @@ def create_matchinfo(observed_name:str, dict_map:dict, list_uris:list):
             'normalized_uri': None,
         }, list_uris
     
+    if 'potential' in observed_name:
+        observed_name = re.sub('potential', '', observed_name)
     observed_name = observed_name.strip()
 
     normalized_uri, confidence = map_to_uri(observed_name.lower(), dict_map)

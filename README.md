@@ -15,22 +15,10 @@ git clone https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage.git
 cd umn-ta2-mineral-site-linkage
 ```
 
-2. Memory requirement depends on the size of the data; however, FuseMine recommends allocating at least 10GB of memory for any task. The code requires `3.10 <= python < 3.12` and `pytorch >= 2.0`. The following is the example command line for creating a conda environment with `fusemine` name and `python=3.10`
-
+2. Memory requirement depends on the size of the data; however, FuseMine recommends allocating at least 10GB of memory for any task. Install the necessary package libraries by running the following command line:
 ```
-conda create -n fusemine python=3.10
-conda activate fusemine
-conda install pip
+poetry install
 ```
-
-3. Installation instructions for PyTorch can be found [here](https://pytorch.org/get-started/locally/). Installing with CUDA support is highly recommended but not required for running FuseMine.
-
-
-4. Install the necessary package libraries by running the following command line:
-```
-pip install -r requirements.txt
-```
-
 *Note: FuseMine requires an active network connection throughout its execution.*
 
 ## Usage
@@ -42,7 +30,7 @@ To populate additional raw structured data to MinMod KG, create the attribute ma
 
 After creating the attribute map CSV, use the following command to process the data:
 ```
-python3 process_data_to_schema.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
+poetry run python3 process_data_to_schema.py --raw_data <path_to_raw_CSV> --attribute_map <path_to_attribute_map> --schema_output_directory <path_to_output_directory> --schema_output_filename <output_file_name>
 ```
 #### Description of Arguments
 <!-- The following command-line arguments are required for data preprocessing: -->
@@ -58,7 +46,7 @@ Before running FuseMine, ensure that all data is available on the [MinMod Knowle
 
 To perform data reconciliation using distance-based intralinking and area-based interlinking methods, execute the following command: 
 ```
-python3 fusemine.py --commodity <commodity_name> --intralink distance --interlink area
+poetry run python3 fusemine.py --commodity <commodity_name> --intralink distance --interlink area
 ```
 
 #### Description of Arguments

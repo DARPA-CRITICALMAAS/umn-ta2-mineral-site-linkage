@@ -14,6 +14,9 @@ config.read('./params.ini')
 geo_params = config['geolocation.params']
 
 def get_epsg(search_epsg:str) -> str:
+    if 'EPSG' in search_epsg:
+        return search_epsg
+    
     page = requests.get(f"https://epsg.io/?q={search_epsg}%20%20kind%3AGEOGCRS")
     soup = bs(page.content, "html.parser")
 

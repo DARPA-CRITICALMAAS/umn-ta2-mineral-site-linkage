@@ -8,6 +8,7 @@ import geopandas as gpd
 from shapely import wkt
 from json import loads, dump
 from itertools import product
+from datetime import datetime, timezone
 
 from utils.unify_coordinate_system import *
 from utils.convert_dataframe import *
@@ -123,13 +124,19 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         # print(crs_value)
         # crs_value = dict_epsg[crs_value]
         # print(crs_value)
+
         pl_data = pl_data.drop(
             ['latitude', 'longitude']
         ).with_columns(
-            location = pl.Series(list_geometry)
+            location = pl.Series(list_geometry),
         )
     
-    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'aliases', 'mineral_inventory', 'deposit_type_candidate', 'site_type']))
+    todays_date = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    pl_data = pl_data.with_columns(
+        pl.col('reference').map_elements(lambda x: [x]),
+        modified_at = pl.lit(todays_date),
+    )
+    attribute_record_identifiers = list(set(pl_data.columns) & set(['source_id', 'record_id', 'name', 'aliases', 'mineral_inventory', 'deposit_type_candidate', 'site_type', 'modified_at', 'created_by', 'reference']))
     attribute_location_info = list(set(pl_data.columns) & set(['location', 'crs', 'country', 'state_or_province']))
 
     pl_data = pl_data.select(
@@ -137,7 +144,7 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(input_object=x, col_decision='location', col_affected='crs', condition='POINT EMPTY')),
     )
 
-    str_data = "{\"MineralSite\":" + pl_data.write_json() + "}"
+    str_data = pl_data.write_json()
     json_data = loads(str_data)
     cleaned_json_data = clean_nones(clean_nones(clean_nones(json_data)))
 
