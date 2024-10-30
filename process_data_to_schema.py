@@ -34,8 +34,10 @@ def process_rawdata(args):
         pl_attribute_map = pl_attribute_map.drop_nulls(subset=['corresponding_attribute_label'])
         logging.info(f'Using attribute map at {path_attribute_map}')
     except:
-        logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
-        pass
+        logging.info('Cannot locate attribute map. Ending program')
+        # logging.info('Cannot locate attribute map. Using attribute label identification to process data. This may lead to incorrect results.')
+        # pass
+        return -1
 
     try:
         group_by_column = pl_attribute_map.filter(
@@ -68,29 +70,47 @@ def process_rawdata(args):
     ).drop('tmp_attribute_label')
 
     pl_data = map_attribute_labels(pl_data, pl_attribute_map, 'corresponding_attribute_label', 'attribute_label')
+
     if not group_by_column:
-        pl_data = pl_data.with_row_index("record_id")
+        pl_data = pl_data.with_row_index("record_id").with_columns(
+            pl.col('record_id').cast(pl.Utf8)
+        )
 
     columns_to_split = list(set(pl_data.columns) & {'commodity', 'deposit_type_candidate', 'aliases'})
+
+    pl_data = pl_data.with_columns(
+        pl.col('commodity')
+        .str.replace('REE', 'Lanthanum, Praseodymium, Samarium, Gadolinium, Thulium, Holmium, Cerium, Europium, Ytterbium, Erbium, Yttrium, Neodymium, Terbium, Dysprosium, Lutetium')
+        .str.replace('PGE', 'Platinum, Palladium, Rhodium, Ruthenium, Iridium, Osmium')
+    )
 
     pl_data = split_str_column(pl_data, columns_to_split)
 
     # Get EPSG code or CRS
     pl_data = pl_data.with_columns(
-        pl.col('crs').map_elements(lambda x: get_epsg(x))
+        pl.col('crs').map_elements(lambda x: get_epsg(x), return_dtype=pl.Utf8)
     )
+
     pl_data = normalize_dataframe(pl_data)
 
     pl_data = pl_data.with_columns(
         document = pl.struct(pl.col('uri'))
     ).with_columns(
-        reference = pl.struct(pl.col('document'))
+        pl.col('country').map_elements(lambda x: [x]),
+        pl.col('state_or_province').map_elements(lambda x: [x]),
+        reference = pl.struct(pl.col('document')),
     )
     pl_data = pl_data.explode('commodity')
 
+    # print(pl_data.columns)
+
+    # with open('/users/2/pyo00005/HOME/CriticalMAAS/mid_point_data.pkl', 'wb') as handle:
+    #     pickle.dump(pl_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
     pl_data = pl_data.with_columns(
         mineral_inventory = pl.struct(pl.col(['commodity', 'reference'])).map_elements(lambda x: data_to_none(input_object=x, col_decision='commodity', col_affected='reference', col_sub='observed_name'))
-    ).drop(['uri', 'document', 'commodity', 'reference'])
+    ).drop(['uri', 'document', 'commodity'])
 
     pl_data = pl_data.group_by('record_id').agg(
         [pl.all()]

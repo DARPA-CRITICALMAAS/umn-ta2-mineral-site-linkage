@@ -183,37 +183,6 @@ def serialize_data(struct_input:dict) -> str:
 def compare_text_value_test(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
     return pl_data
 
-def compare_text_value_embedding_cpu(pl_data, source_id:str|None=None, items_to_compare:list|None=None):
-    start_time = time.time()
-    pl_data = pl_data.with_columns(
-        pl.col(items_to_compare).map_elements(lambda x: text_embedding(x)).name.map(lambda c: c+'_embedding')
-    )
-
-    # Create combinations of index of every row
-    list_indexes = list(range(pl_data.shape[0]))
-    idx_combinations = combinations(list_indexes, 2)
-    threshold_value = float(text_params['ATTRIBUTE_VALUE_THRESHOLD'])
-
-    for tuple_combination in tqdm(idx_combinations):
-        str1 = pl_data.item(tuple_combination[0], items_to_compare[0]+'_embedding')
-        str2 = pl_data.item(tuple_combination[1], items_to_compare[0]+'_embedding')
-
-        str3 = pl_data.item(tuple_combination[0], items_to_compare[1]+'_embedding')
-        str4 = pl_data.item(tuple_combination[1], items_to_compare[1]+'_embedding')
-
-        if measure_cosine_similarity_cpu(str1, str2, str3, str4, threshold_value):
-            pl_data[tuple_combination[1], 'GroupID'] = pl_data[tuple_combination[0], 'GroupID']
-    
-    logging.info(f'\t\tText embeddings compared - Elapsed time: {time.time() - start_time}')
-
-    pl_data = pl_data.with_columns(
-        GroupID_text = pl.lit(source_id) + pl.col('GroupID').cast(pl.Utf8)
-    ).drop(
-        ['GroupID', items_to_compare[0]+'_embedding', items_to_compare[1]+'_embedding']
-    )
-
-    return pl_data
-
 def compare_textual_location(pl_data, source_id:str|None=None):
     start_time = time.time()
 

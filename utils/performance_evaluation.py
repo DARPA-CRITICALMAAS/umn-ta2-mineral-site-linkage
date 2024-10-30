@@ -61,6 +61,12 @@ def perf_accuracy(pl_ground_truth, pl_prediction) -> float:
         else:
             quant_predi.append(0)
 
+    print(matching)
+    print(len(list_ground_truth_groups))
+
+    print(len(quant_truth))
+    print(quant_predi.count(0))
+
     return matching / len(list_ground_truth_groups), f1_score(quant_truth, quant_predi), f1_score(quant_truth, quant_predi, average='weighted')
 
 def print_evaluation_table(fusemine_version:str, pl_ground_truth, pl_prediction):

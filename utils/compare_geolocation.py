@@ -10,6 +10,7 @@ import pandas as pd
 import polars as pl
 import geopandas as gpd
 from shapely import wkt
+from pyproj import CRS
 from sklearn.cluster import HDBSCAN
 
 from utils.convert_dataframe import *
@@ -25,7 +26,7 @@ geo_params = config['geolocation.params']
 
 def compare_point_distance(gpd_data, source_id:str,
                            epsilon=float(geo_params['POINT_BUFFER_UNIT_METER'])):
-    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    gpd_data = gpd_data.to_crs(crs=geo_params['DISTANCE_CRS_SYSTEM'])
 
     coords = np.array(list(zip(gpd_data.location.x, gpd_data.location.y)))
     clusters = HDBSCAN(min_cluster_size=2, cluster_selection_epsilon=epsilon).fit(coords)
@@ -64,7 +65,8 @@ def compare_point_distance(gpd_data, source_id:str,
 def compare_buffer_overlap(gpd_data, source_id, 
                            minimum_overlap_threshold=float(geo_params['POLYGON_AREA_OVERLAP_UNIT_SQMETER'])):
     
-    gpd_data = gpd_data.to_crs(crs=geo_params['METRIC_CRS_SYSTEM'])
+    gpd_data = gpd_data.to_crs(crs=geo_params['AREA_CRS_SYSTEM'])
+    gpd_data = gpd_data.loc[gpd_data.geometry.is_valid]
 
     gpd_overlapped_data = gpd.overlay(
         gpd_data, gpd_data,
@@ -97,16 +99,12 @@ def compare_buffer_overlap(gpd_data, source_id,
     pl_IOU = pl_intersection.filter(
         pl.col('GroupID_1') != pl.col('GroupID_2')
     )
-    # pl_IOU.write_csv('./check.csv')
 
     if source_id == 'ALL':
         pl_IOU = pl_IOU.filter(
             pl.col('source_id_1') != pl.col('source_id_2')
         )
 
-    # pl_IOU = pl_IOU.filter(
-    #     pl.col('IOU') > minimum_overlap_threshold
-    # )
     try:
         pl_IOU = pl_IOU.sort(
             'intersection_area'
@@ -181,7 +179,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             return to_polars(to_geopandas(pl_data, 'pl', 'location'), 'gpd')
         except:
             return pl_data
-
+        
     pl_location_invalid = pl_data.filter(
         (pl.col('crs') == '') | (pl.col('location') == '')
     ).with_columns(
@@ -203,10 +201,11 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             gpd_data = create_buffer_area_representation(gpd_data)
             pl_data = compare_buffer_overlap(gpd_data, source_id)
 
-    pl_data = pl.concat(
-        [pl_data, pl_location_invalid],
-        how='diagonal_relaxed'
-    )
+    if not pl_location_invalid.is_empty():
+        pl_data = pl.concat(
+            [pl_data, pl_location_invalid],
+            how='diagonal_relaxed'
+        )
 
     logging.info(f'\t\tLocation linking with {method} - Elapsed time: {time.time() - start_time}')
 
