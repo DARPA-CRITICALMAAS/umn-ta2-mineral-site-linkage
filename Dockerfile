@@ -11,5 +11,6 @@ COPY pyproject.toml poetry.lock ./
 RUN pip install poetry
 RUN poetry install
 
-CMD ["poetry", "run", "python", "./fusemine.py", "./process_data_to_schema.py"] 
-# Or enter the name of your unique directory and parameter set.
+ENTRYPOINT ["poetry", "run", "python", "./fusemine.py"]
+CMD ["--commodity"] 
+# Or enter the name of your unique directory and parameter set.f

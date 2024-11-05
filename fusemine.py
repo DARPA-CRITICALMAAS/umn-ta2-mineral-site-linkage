@@ -369,10 +369,10 @@ def main():
     parser.add_argument('--single_stage',
                         help='Method for location-based single-stage linking')
 
-    parser.add_argument('--intralink', 
+    parser.add_argument('--intralink', default='distance',
                         help='Method for location-based intralinking')
 
-    parser.add_argument('--interlink',
+    parser.add_argument('--interlink', default='area',
                         help='Method for location-based interlinking')
 
     parser.add_argument('--same_as_directory', default='./output',
