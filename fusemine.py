@@ -222,9 +222,6 @@ def fusemine(args):
                     logging.info(f'\t\tSkipping text based linking due to missing textual information')
                     pass
 
-                if source_id == 'database::https://mrdata.usgs.gov/mrds':
-                    pl_data.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/mrds.csv')
-
                 pl_data = merge_grouping_results(pl_data, source_id)
                 list_grouped.append(pl_data)
 
