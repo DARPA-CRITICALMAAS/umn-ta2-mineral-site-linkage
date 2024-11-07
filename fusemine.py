@@ -17,8 +17,8 @@ from utils.load_kg_data import *
 from utils.compare_geolocation import *
 from utils.compare_text import *
 from utils.convert_dataframe import *
+from utils.unify_coordinate_system import *
 
-from utils.convert_dataframe import *
 from utils.combine_grouping_results import *
 from utils.save_files import *
 from utils.performance_evaluation import *
@@ -166,6 +166,9 @@ def fusemine(args):
             (pl.col('source_id') == 'https://mrdata.usgs.gov/mrds') | (pl.col('source_id') == 'https://mrdata.usgs.gov/deposit')
         )
 
+    # ----- Convert all CRS to 4326 ----- #
+    pl_data = unify_crs(pl_data, 'crs')
+
     # ------ Running Single Stage ------ #
     if bool_singlestage:
         pl_data = compare_geolocation(pl_data, method=methods[0])
@@ -188,27 +191,28 @@ def fusemine(args):
 
                 logging.info(f'\t{source_id}')
 
-                list_pl_by_crs = pl_data.partition_by('crs')
+                # list_pl_by_crs = pl_data.partition_by('crs')
                 list_pls = []
 
-                for pl_crs in list_pl_by_crs:
+                # for pl_crs in list_pl_by_crs:
+                pl_crs = pl_data
+                try:
+                    pl_crs = compare_geolocation(pl_crs, source_id, methods[0])
+                    pl_crs = pl_crs.with_columns(
+                        link_method = pl.lit('GEO')
+                    )
+                    list_pls.append(pl_crs)
+
+                except:
                     try:
-                        pl_crs = compare_geolocation(pl_crs, source_id, methods[0])
+                        pl_crs = compare_textual_location(pl_crs, source_id)
                         pl_crs = pl_crs.with_columns(
-                            link_method = pl.lit('GEO')
+                            link_method = pl.lit('TXT')
                         )
                         list_pls.append(pl_crs)
-
                     except:
-                        try:
-                            pl_crs = compare_textual_location(pl_crs, source_id)
-                            pl_crs = pl_crs.with_columns(
-                                link_method = pl.lit('TXT')
-                            )
-                            list_pls.append(pl_crs)
-                        except:
-                            logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
-                            continue
+                        logging.info(f'\t\tSkipping location based linking due to missing or incorrect geolocation and textual location')
+                        continue
 
                 pl_data = pl.concat(list_pls, how='diagonal_relaxed')
 
@@ -218,8 +222,8 @@ def fusemine(args):
                     logging.info(f'\t\tSkipping text based linking due to missing textual information')
                     pass
 
-                if source_id == 'https://mrdata.usgs.gov/mrds':
-                    pl_data.write_csv('./mrds.csv')
+                if source_id == 'database::https://mrdata.usgs.gov/mrds':
+                    pl_data.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/src/umn-ta2-mineral-site-linkage/mrds.csv')
 
                 pl_data = merge_grouping_results(pl_data, source_id)
                 list_grouped.append(pl_data)
@@ -250,7 +254,12 @@ def fusemine(args):
             if not pl_loc.is_empty():
                 pl_loc = compare_geolocation(pl_loc, 'ALL', method=methods[2])
                 pl_loc = compare_text_embedding(pl_loc, 'ALL', items_to_compare=methods[3])
-                pl_loc = merge_grouping_results(pl_loc, 'ALL').drop(['latitude', 'longitude'])
+                pl_loc = merge_grouping_results(pl_loc, 'ALL')
+                
+                try:
+                    pl_loc = pl_loc.drop(['latitude', 'longitude'])
+                except:
+                    pass
 
             pl_data = pl.concat(
                 [pl_loc, pl_txt],   
@@ -281,10 +290,6 @@ def fusemine(args):
 
         as_csv(pl_data, output_directory, f'{output_file_name}', False)
         return 0
-
-    pl_tmp = pl_data.select(
-        pl.col(['ms_uri', 'GroupID'])
-    )
 
     try:
         as_csv(pl_data, output_directory, f'{output_file_name}', True)
@@ -369,10 +374,10 @@ def main():
     parser.add_argument('--single_stage',
                         help='Method for location-based single-stage linking')
 
-    parser.add_argument('--intralink', 
+    parser.add_argument('--intralink', default='distance',
                         help='Method for location-based intralinking')
 
-    parser.add_argument('--interlink',
+    parser.add_argument('--interlink', default='area',
                         help='Method for location-based interlinking')
 
     parser.add_argument('--same_as_directory', default='./output',

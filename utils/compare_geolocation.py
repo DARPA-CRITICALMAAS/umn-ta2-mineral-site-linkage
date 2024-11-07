@@ -16,7 +16,7 @@ from sklearn.cluster import HDBSCAN
 from utils.convert_dataframe import *
 from utils.dataframe_operations import *
 from utils.create_geocoordinate_representation import *
-from utils.unify_coordinate_system import *
+# from utils.unify_coordinate_system import *
 
 from utils.save_files import *
 
@@ -168,7 +168,7 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
         pl_data = add_index_columns(pl_data=pl_data,
                                     index_column_name='GroupID')
     
-    pl_data = unify_crs(pl_data, crs_column='crs')
+    # pl_data = unify_crs(pl_data, crs_column='crs')
 
     if not method or pl_data.shape[0] < 2:
         pl_data = pl_data.with_columns(
@@ -202,10 +202,19 @@ def compare_geolocation(pl_data, source_id:str|None=None, method:str|None=None):
             pl_data = compare_buffer_overlap(gpd_data, source_id)
 
     if not pl_location_invalid.is_empty():
-        pl_data = pl.concat(
-            [pl_data, pl_location_invalid],
-            how='diagonal_relaxed'
-        )
+        try:
+            pl_data = pl.concat(
+                [pl_data, pl_location_invalid],
+                how='diagonal_relaxed'
+            )
+        except:
+            pl_location_invalid = pl_location_invalid.drop(['latitude', 'longitude', 'location'])
+            pl_data = pl_data.drop(['latitude', 'longitude', 'location'])
+
+            pl_data = pl.concat(
+                [pl_data, pl_location_invalid],
+                how='diagonal_relaxed'
+            )
 
     logging.info(f'\t\tLocation linking with {method} - Elapsed time: {time.time() - start_time}')
 

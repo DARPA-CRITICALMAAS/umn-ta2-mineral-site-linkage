@@ -33,6 +33,7 @@ def unify_crs(pl_data, crs_column:str):
     list_crs_separated_data = pl_data.partition_by(
         crs_column
     )
+
     list_data = []
 
     for d in list_crs_separated_data:

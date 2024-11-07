@@ -60,18 +60,9 @@ def as_csv(pl_data, output_directory: str, output_file_name: str, bool_sameas: b
         tmp_pd = pd.DataFrame(list_uris_combination, columns=['ms_uri_1', 'ms_uri_2'])
         pl_data = pl.from_pandas(tmp_pd)
 
-        print(pl_data)
-
-        # Converting data to two column csv
-        # pl_data = pl_data.select(
-        #     ms_uri_1 = pl.col('ms_uri')
-        # ).with_columns(
-        #     ms_uri_2 = pl.col('ms_uri_1').list.get(0)
-        # ).explode(
-        #     'ms_uri_1'
-        # )
-
-    # Saving to {output_directory}/{output_file_name}
+    pl_data = pl_data.with_columns(
+        pl.col(['ms_uri_1', 'ms_uri_2']).str.replace('https://minmod.isi.edu/resource/', '')
+    )
     _, file_extension = os.path.splitext(output_file_name)
 
     if file_extension:

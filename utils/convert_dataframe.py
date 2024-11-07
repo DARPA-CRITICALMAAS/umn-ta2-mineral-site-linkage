@@ -49,16 +49,20 @@ def to_geopandas(df_input, input_dataframe_type: str, geometry_column='location'
                     )
             
             except:
-                gpd_input = gpd.GeoDataFrame(
-                    pd_input,
-                    geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
-                )
+                try:
+                    gpd_input = gpd.GeoDataFrame(
+                        pd_input,
+                        geometry = gpd.points_from_xy(pd_input['longitude'], pd_input['latitude'], crs=crs_value)
+                    )
+                    
+                    try: 
+                        gpd_input = gpd_input.drop('location', axis=1)
+                    except:
+                        pass
+
+                    gpd_input.rename_geometry('location', inplace=True)
+
+                    return gpd_input
                 
-                try: 
-                    gpd_input = gpd_input.drop('location', axis=1)
                 except:
-                    pass
-
-                gpd_input.rename_geometry('location', inplace=True)
-
-                return gpd_input
+                    return df_input
