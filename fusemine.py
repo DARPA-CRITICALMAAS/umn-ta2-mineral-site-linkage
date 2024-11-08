@@ -26,11 +26,11 @@ from utils.performance_evaluation import *
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def fusemine(args):
-    create_directory('./logs/')
+    create_directory(f'~/{os.path.dirname(os.path.realpath(__file__))}/logs/')
 
     logging.basicConfig(format='%(asctime)s: %(message)s', level=logging.INFO, 
                         handlers=[
-                            logging.FileHandler(f'logs/fusemine_{datetime.timestamp(datetime.now())}.log'),
+                            logging.FileHandler(f'~/{os.path.dirname(os.path.realpath(__file__))}/logs/fusemine_{datetime.timestamp(datetime.now())}.log'),
                             logging.StreamHandler()
                         ])
     logging.info(f'FuseMine is running on {device}')
@@ -73,7 +73,9 @@ def fusemine(args):
 
     output_directory = args.same_as_directory
     if not output_directory:
-        output_directory = './output'
+        output_directory = f'~/{os.path.dirname(os.path.realpath(__file__))}/output/'
+
+    create_directory(output_directory)
 
     output_file_name = args.same_as_filename
     if not output_file_name:
@@ -377,7 +379,7 @@ def main():
     parser.add_argument('--interlink', default='area',
                         help='Method for location-based interlinking')
 
-    parser.add_argument('--same_as_directory', default='./output',
+    parser.add_argument('--same_as_directory', 
                         help='Directory to store the same as CSV files (default: ./output)')
 
     parser.add_argument('--same_as_filename',
