@@ -25,6 +25,9 @@ def process_rawdata(args):
     path_output_dir = args.schema_output_directory
     path_filename = args.schema_output_filename
 
+    if not os.path.exists(path_output_dir):
+        os.makedirs(path_output_dir)
+
     logging.info(f'Processing data at {path_rawdata} to suggested mineral site schema')
 
     start_time = time.time()
@@ -130,7 +133,7 @@ def main():
     parser.add_argument('--attribute_map',
                         help='CSV file with label mapping information (see sample_mapfile.csv for reference)')
 
-    parser.add_argument('--schema_output_directory', required=True,
+    parser.add_argument('--schema_output_directory', default='./outputs/',
                         help='Directory where the processed raw mineral site database will be stored')
 
     parser.add_argument('--schema_output_filename', required=True,

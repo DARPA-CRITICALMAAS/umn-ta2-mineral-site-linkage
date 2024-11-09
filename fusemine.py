@@ -73,7 +73,7 @@ def fusemine(args):
 
     output_directory = args.same_as_directory
     if not output_directory:
-        output_directory = f'~/{os.path.dirname(os.path.realpath(__file__))}/output/'
+        output_directory = f'./outputs/'
 
     create_directory(output_directory)
 
@@ -358,7 +358,7 @@ def fusemine(args):
 def main():
     parser = argparse.ArgumentParser(description='Linking mineral sites within a database and across databases')
 
-    parser.add_argument('--commodity',
+    parser.add_argument('--commodity', required=True,
                         help='Specific commodity to focus on')
     
     parser.add_argument('--subset_file',
@@ -379,8 +379,8 @@ def main():
     parser.add_argument('--interlink', default='area',
                         help='Method for location-based interlinking')
 
-    parser.add_argument('--same_as_directory', 
-                        help='Directory to store the same as CSV files (default: ./output)')
+    parser.add_argument('--same_as_directory', default='./outputs/',
+                        help='Directory to store the same as CSV files')
 
     parser.add_argument('--same_as_filename',
                         help='Filename of the same as CSV file (recommended: ./<commodity>_sameas.csv)')
