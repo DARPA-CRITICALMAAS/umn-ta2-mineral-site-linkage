@@ -3,12 +3,18 @@
 raw_data=${1?Raw data file missing}
 attribute_map=${2?Attribute map file missing}
 folder_name=$3
+file_name=$4
 github_branch="new_data_$(date '+%Y%m%d')"
 
-file_name=$(basename $raw_data)
-file_name="${file_name%.*}"
+# Either use user defined file_name or raw_data name
+if [ $file_name ]; then
+    :
+else
+    file_name=$(basename $raw_data)
+    file_name="${file_name%.*}"
+fi
 
-# Deciding processed file save path
+# Either use user defined folder_name or default: db_unknown
 if [ $folder_name ]; then
     echo "Processed data will be saved as"
     echo "  "$folder_name"/"$file_name".json"
