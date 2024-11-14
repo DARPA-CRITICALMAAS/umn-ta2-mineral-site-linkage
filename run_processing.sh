@@ -33,6 +33,7 @@ data_directory='../ta2-minmod-data'
 
 if [ -d $data_directory ]; then
     echo "  "$data_directory "does exist."
+    cd ..
 else
     echo "Cloning minmod data repository"
     cd ..
