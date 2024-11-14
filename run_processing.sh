@@ -68,7 +68,7 @@ docker build -t ta2-linking .
 container_id=$(docker run -dit ta2-linking)
 
 # Move temporary data into docker container
-docker cp -r ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
+docker cp ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
 
 run_script=$(cat <<END
 echo "Running Preprocessing Step for FuseMine"
