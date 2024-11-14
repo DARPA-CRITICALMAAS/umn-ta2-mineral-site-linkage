@@ -62,49 +62,49 @@ cp $attribute_map ../tmp_data/
 raw_data_filename=$(basename $raw_data)
 attribute_map_filename=$(basename $attribute_map)
 
-# Create Docker container to run the program
-echo "Creating Docker container"
-docker build -t ta2-linking .
-container_id=$(docker run -dit ta2-linking)
+# # Create Docker container to run the program
+# echo "Creating Docker container"
+# docker build -t ta2-linking .
+# container_id=$(docker run -dit ta2-linking)
 
-# Move temporary data into docker container
-docker cp -r ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
+# # Move temporary data into docker container
+# docker cp -r ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
 
-run_script=$(cat <<END
-echo "Running Preprocessing Step for FuseMine"
-poetry run python3 process_data_to_schema.py --raw_data tmp_data/$raw_data_filename --attribute_map tmp_data/$attribute_map_filename --schema_output_filename $file_name
-exit
-END
-)
+# run_script=$(cat <<END
+# echo "Running Preprocessing Step for FuseMine"
+# poetry run python3 process_data_to_schema.py --raw_data tmp_data/$raw_data_filename --attribute_map tmp_data/$attribute_map_filename --schema_output_filename $file_name
+# exit
+# END
+# )
 
-# Running FuseMine on user input commodity
-docker exec -it $container_id /bin/bash -c "$run_script"
-echo ""
+# # Running FuseMine on user input commodity
+# docker exec -it $container_id /bin/bash -c "$run_script"
+# echo ""
 
-# Copying file from docker container to local
-echo "Moving" $commodity"_sameas.csv file from Docker container to local"
-docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral_sites/umn/
-echo ""
+# # Copying file from docker container to local
+# echo "Moving" $commodity"_sameas.csv file from Docker container to local"
+# docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral_sites/umn/
+# echo ""
 
-# Move to data directory
-echo "Uploading processed data to minmod data repository"
-cd ../ta2-minmod-data
-git add --all
-git commit -m "Adding preporcessed data"
-git push --set-upstream origin $github_branch
+# # Move to data directory
+# echo "Uploading processed data to minmod data repository"
+# cd ../ta2-minmod-data
+# git add --all
+# git commit -m "Adding preporcessed data"
+# git push --set-upstream origin $github_branch
 
-git checkout main
-git branch -D $github_branch
-echo ""
+# git checkout main
+# git branch -D $github_branch
+# echo ""
 
-# Stopping Docker container
-echo "Terminating Docker container"
-cd ../umn-ta2-mineral-site-linkage
-docker stop $container_id
-echo ""
+# # Stopping Docker container
+# echo "Terminating Docker container"
+# cd ../umn-ta2-mineral-site-linkage
+# docker stop $container_id
+# echo ""
 
-# Removing temporary data folder
-cd ..
-rm -r tmp_data
+# # Removing temporary data folder
+# cd ..
+# rm -r tmp_data
 
-echo "Please go to https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data to create a pull request for the same as links to be merged to main"
+# echo "Please go to https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data to create a pull request for the same as links to be merged to main"
