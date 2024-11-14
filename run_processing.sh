@@ -43,7 +43,7 @@ fi
 
 # Create new GitHub Branch for pushing in new data
 echo "Creating branch $github_branch in minmod data repository"
-cd ../ta2-minmod-data
+cd ta2-minmod-data
 git checkout main
 git pull
 git checkout -b $github_branch
