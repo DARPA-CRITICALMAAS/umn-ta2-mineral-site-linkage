@@ -85,7 +85,7 @@ echo ""
 
 # Copying file from docker container to local
 echo "Moving processed data file from Docker container to local"
-docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral_sites/umn/$folder_name
+docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral-sites/umn/$folder_name
 echo ""
 
 # Move to data directory
