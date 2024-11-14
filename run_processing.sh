@@ -49,7 +49,8 @@ git pull
 git checkout -b $github_branch
 
 # Creating folder with folder name under minmod data repo
-mkdir data/mineral_sites/umn/$folder_name
+cd data/mineral_sites/umn
+mkdir $folder_name
 echo ""
 
 # Create Docker container to run the program
