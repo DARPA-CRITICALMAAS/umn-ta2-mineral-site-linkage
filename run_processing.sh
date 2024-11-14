@@ -66,8 +66,10 @@ attribute_map_filename=$(basename $attribute_map)
 echo "Creating Docker container"
 docker build -t ta2-linking .
 container_id=$(docker run -dit ta2-linking)
+echo ""
 
 # Move temporary data into docker container
+echo "Copying raw data and attribute map into Docker container"
 docker cp ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
 
 run_script=$(cat <<END
@@ -81,30 +83,30 @@ END
 docker exec -it $container_id /bin/bash -c "$run_script"
 echo ""
 
-# # Copying file from docker container to local
-# echo "Moving" $commodity"_sameas.csv file from Docker container to local"
-# docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral_sites/umn/
-# echo ""
+# Copying file from docker container to local
+echo "Moving processed data file from Docker container to local"
+docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$file_name".json" ../ta2-minmod-data/data/mineral_sites/umn/$folder_name
+echo ""
 
-# # Move to data directory
-# echo "Uploading processed data to minmod data repository"
-# cd ../ta2-minmod-data
-# git add --all
-# git commit -m "Adding preporcessed data"
-# git push --set-upstream origin $github_branch
+# Move to data directory
+echo "Uploading processed data to minmod data repository"
+cd ../ta2-minmod-data
+git add --all
+git commit -m "Adding preprocessed data"
+git push --set-upstream origin $github_branch
 
-# git checkout main
-# git branch -D $github_branch
-# echo ""
+git checkout main
+git branch -D $github_branch
+echo ""
 
-# # Stopping Docker container
-# echo "Terminating Docker container"
-# cd ../umn-ta2-mineral-site-linkage
-# docker stop $container_id
-# echo ""
+# Stopping Docker container
+echo "Terminating Docker container"
+cd ../umn-ta2-mineral-site-linkage
+docker stop $container_id
+echo ""
 
-# # Removing temporary data folder
-# cd ..
-# rm -r tmp_data
+# Removing temporary data folder
+cd ..
+rm -r tmp_data
 
-# echo "Please go to https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data to create a pull request for the same as links to be merged to main"
+echo "Please go to https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data to create a pull request for the same as links to be merged to main"
