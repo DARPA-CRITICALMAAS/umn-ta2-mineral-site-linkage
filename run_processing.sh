@@ -12,6 +12,7 @@ if [ $file_name ]; then
 else
     file_name=$(basename $raw_data)
     file_name="${file_name%.*}"
+    echo "File name is not declared. Defaulting" $file_name 
 fi
 
 # Either use user defined folder_name or default: db_unknown
@@ -20,7 +21,7 @@ if [ $folder_name ]; then
     echo "  "$folder_name"/"$file_name".json"
 else
     folder_name='db_unknown'
-    echo "File/Folder name is not declared."    
+    echo "Folder name is not declared. Defaulting to db_unknown"    
 fi
 
 echo "Processed data will be saved as"
@@ -41,13 +42,6 @@ else
     
 fi
 
-# Creating temporary data folder with attribute map and raw data
-mkdir tmp_data
-cp $raw_data tmp_data/
-cp $attribute_map tmp_data/
-raw_data_filename=$(basename $raw_data)
-attribute_map_filename=$(basename $attribute_map)
-
 # Create new GitHub Branch for pushing in new data
 echo "Creating branch $github_branch in minmod data repository"
 cd ta2-minmod-data
@@ -59,9 +53,17 @@ git checkout -b $github_branch
 mkdir data/mineral-sites/umn/$folder_name
 echo ""
 
+cd ../umn-ta2-mineral-site-linkage
+
+# Creating temporary data folder with attribute map and raw data
+mkdir ../tmp_data
+cp $raw_data ../tmp_data/
+cp $attribute_map ../tmp_data/
+raw_data_filename=$(basename $raw_data)
+attribute_map_filename=$(basename $attribute_map)
+
 # Create Docker container to run the program
 echo "Creating Docker container"
-cd ../umn-ta2-mineral-site-linkage
 docker build -t ta2-linking .
 container_id=$(docker run -dit ta2-linking)
 
