@@ -41,6 +41,11 @@ else
     
 fi
 
+# Creating temporary data folder with attribute map and raw data
+mkdir tmp_data
+cp $raw_data tmp_data/
+cp $attribute_map tmp_data/
+
 # Create new GitHub Branch for pushing in new data
 echo "Creating branch $github_branch in minmod data repository"
 cd ta2-minmod-data
@@ -49,15 +54,19 @@ git pull
 git checkout -b $github_branch
 
 # Creating folder with folder name under minmod data repo
-cd data/mineral_sites/umn
-mkdir $folder_name
+mkdir data/mineral-sites/umn/$folder_name
 echo ""
+raw_data_filename=$(basename $raw_data)
+attribute_map_filename=$(basename $attribute_map)
 
 # Create Docker container to run the program
 echo "Creating Docker container"
 cd ../umn-ta2-mineral-site-linkage
 docker build -t ta2-linking .
 container_id=$(docker run -dit ta2-linking)
+
+# Move temporary data into docker container
+docker cp -r ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
 
 run_script=$(cat <<END
 echo "Running Preprocessing Step for FuseMine"
@@ -91,5 +100,9 @@ echo "Terminating Docker container"
 cd ../umn-ta2-mineral-site-linkage
 docker stop $container_id
 echo ""
+
+# Removing temporary data folder
+cd ..
+rm -r tmp_data
 
 echo "Please go to https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data to create a pull request for the same as links to be merged to main"
