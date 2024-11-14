@@ -45,6 +45,8 @@ fi
 mkdir tmp_data
 cp $raw_data tmp_data/
 cp $attribute_map tmp_data/
+raw_data_filename=$(basename $raw_data)
+attribute_map_filename=$(basename $attribute_map)
 
 # Create new GitHub Branch for pushing in new data
 echo "Creating branch $github_branch in minmod data repository"
@@ -56,8 +58,6 @@ git checkout -b $github_branch
 # Creating folder with folder name under minmod data repo
 mkdir data/mineral-sites/umn/$folder_name
 echo ""
-raw_data_filename=$(basename $raw_data)
-attribute_map_filename=$(basename $attribute_map)
 
 # Create Docker container to run the program
 echo "Creating Docker container"
@@ -70,7 +70,7 @@ docker cp -r ../tmp_data $container_id":/umn-ta2-mineral-site-linkage"
 
 run_script=$(cat <<END
 echo "Running Preprocessing Step for FuseMine"
-poetry run python3 process_data_to_schema.py --raw_data $raw_data --attribute_map $attribute_map --schema_output_filename $file_name
+poetry run python3 process_data_to_schema.py --raw_data tmp_data/$raw_data_filename --attribute_map tmp_data/$attribute_map_filename --schema_output_filename $file_name
 exit
 END
 )
