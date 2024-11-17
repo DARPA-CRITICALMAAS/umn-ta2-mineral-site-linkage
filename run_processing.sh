@@ -1,5 +1,8 @@
 #!/bin/bash 
 
+# Exit anytime when anything fails
+set -e
+
 raw_data=${1?Raw data file missing}
 attribute_map=${2?Attribute map file missing}
 folder_name=$3
