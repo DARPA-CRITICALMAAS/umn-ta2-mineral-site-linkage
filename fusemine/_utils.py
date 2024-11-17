@@ -1,4 +1,6 @@
+import os
 import logging
+from datetime import datetime
 
 class DefaultLogger:
     def __init__(self):
@@ -24,9 +26,6 @@ class DefaultLogger:
         sh.setFormatter(logging.Formatter("%(asctime)s: %(message)s"))
         self.logger.addHandler(sh)
 
-        logging.FileHandler(f'~/{os.path.dirname(os.path.realpath(__file__))}/logs/fusemine_{datetime.timestamp(datetime.now())}.log'),
-        logging.StreamHandler()
-
-        # Remove duplicate handlers
-        if len(self.logger.handlers) > 1:
-            self.logger.handlers = [self.logger.handlers[0]]
+        fh = logging.FileHandler(f'~/{os.path.dirname(os.path.realpath(__file__))}/logs/fusemine_{datetime.timestamp(datetime.now())}.log')
+        fh.setFormatter(logging.Formatter("%(asctime)s: %(message)s"))
+        self.logger.addHandler(fh)

@@ -1,9 +1,7 @@
 import os
-import logging
 import requests
 import configparser
 
-import spacy
 import pandas as pd
 import polars as pl
 import networkx as nx
@@ -11,8 +9,6 @@ import networkx as nx
 from shapely.wkt import loads
 from shapely.errors import WKTReadingError
 import warnings
-
-nlp = spacy.load('en_core_web_sm')
 
 warnings.filterwarnings("ignore")
 
@@ -125,8 +121,6 @@ def load_minmod_kg(commodity:str):
         pl.exclude('ms_uri').list.unique().list.join(',')
     ).with_columns(
         pl.col('record_id').cast(pl.Utf8)
-    ).with_columns(
-        site_name = pl.struct(pl.col('ms_name')).map_elements(lambda x: clean_site_name(x))
     ).drop('ms_name')
 
 
@@ -214,19 +208,6 @@ def load_minmod_kg(commodity:str):
     #     logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
     #     return pl.DataFrame()
 
-def clean_site_name(input_data: dict) -> str:
-    site_name = input_data['ms_name']
-
-    if ('Technical Report' in site_name) or ('Preliminary Economic' in site_name):
-        doc = nlp(site_name)
-        if doc.ents:
-            for ent in doc.ents:
-                if (ent.label_ == 'ORG') & ('project' in ent.text.lower()):
-                    site_name = (ent.text).lstrip("the ")
-
-        del doc
-                    
-    return site_name
 
 def separate_data(pl_sites):
     list_all_data_sources = set(pl_sites['source_id'].to_list())
