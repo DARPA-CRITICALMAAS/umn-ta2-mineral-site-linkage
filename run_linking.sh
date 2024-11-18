@@ -1,6 +1,7 @@
 #!/bin/bash 
 
-source ~/.bashrc
+# Exit anytime when anything fails
+set -e
 
 commodity=${1?Commodity parameter missing}
 github_branch="commodity_sameas_$(date '+%Y%m%d')"
@@ -18,15 +19,15 @@ else
     echo "  Completed"
 fi
 
-sleep 1s
-
 # Create new GitHub Branch for pushing in new data
 echo "Creating branch $github_branch in minmod data repository"
 cd ta2-minmod-data
 git checkout main
 git pull
 git checkout -b $github_branch
+git merge main
 echo ""
+
 
 # Create Docker container to run the program
 echo "Creating Docker container"

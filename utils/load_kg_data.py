@@ -16,6 +16,7 @@ config = configparser.ConfigParser()
 config.read('./params.ini')
 
 path_params = config['directory.paths']
+minmod_params = config['minmod']
 
 def safe_wkt_load(wkt_string):
     try:
@@ -24,7 +25,7 @@ def safe_wkt_load(wkt_string):
         print(f"Error converting WKT: {e}")
         return None
     
-def run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=False):
+def run_sparql_query(query, endpoint=minmod_params['END_POINT'], values=False):
     # add prefixes
     final_query = '''
     PREFIX dcterms: <http://purl.org/dc/terms/>
