@@ -24,7 +24,7 @@ echo "Creating branch $github_branch in minmod data repository"
 cd ta2-minmod-data
 git checkout main
 git pull
-git checkout -b $github_branch
+git checkout $github_branch || git checkout -b $github_branch
 git merge main
 echo ""
 
