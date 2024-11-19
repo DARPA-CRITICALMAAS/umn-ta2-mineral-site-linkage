@@ -73,8 +73,8 @@ def run_geokb_query(query, values=False):
 def load_minmod_kg(commodity:str):
     pl_commodity = pl.read_csv(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params['PATH_COMMODITY_MAPFILE']))
     commodity_QID = pl_commodity.filter(
-        pl.col('CommodityinMRDS').str.to_lowercase() == commodity.lower()
-    ).item(0, 'minmod_id')
+        pl.col('name').str.to_lowercase() == commodity.lower()
+    ).item(0, 'id')
 
     del pl_commodity
 
@@ -101,6 +101,7 @@ def load_minmod_kg(commodity:str):
     """ % (commodity_QID)
 
     pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
+    print(pl_ms)
     pl_ms = pl_ms.rename(
         {'ms.value': 'ms_uri',
         'source_id.value': 'source_id',
