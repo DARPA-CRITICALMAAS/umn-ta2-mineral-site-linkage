@@ -4,6 +4,7 @@ import configparser
 
 import pickle
 import polars as pl
+import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 from json import loads, dump
@@ -135,7 +136,9 @@ def as_json(pl_data, output_directory: str, output_file_name: str):
         location_info = pl.struct(pl.col(attribute_location_info)).map_elements(lambda x: data_to_none(input_object=x, col_decision='location', col_affected='crs', condition='POINT EMPTY')),
     )
 
-    str_data = pl_data.write_json()
+    pd_data = pl_data.to_pandas()
+    str_data = pd_data.to_json(orient="records")
+
     json_data = loads(str_data)
     cleaned_json_data = clean_nones(clean_nones(clean_nones(json_data)))
 
