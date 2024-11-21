@@ -1,5 +1,3 @@
-
-
 class BaseRepresentation:
     def rep_geocoordinate():
         return 0

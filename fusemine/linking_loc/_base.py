@@ -1,5 +1,5 @@
 from sklearn.cluster import HDBSCAN
 
 class BaseLocationLinker:
-    def __init__(self):
+    def hdb_distance(fusemine_model,) -> None:
         pass
