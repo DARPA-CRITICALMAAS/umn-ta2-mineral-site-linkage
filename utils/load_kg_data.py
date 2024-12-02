@@ -60,11 +60,11 @@ def run_sparql_query(query, endpoint=minmod_params['END_POINT'], values=False):
     except:
         return None
     
-def run_minmod_query(query, values=False):
-    return run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=values)
+# def run_sparql_query(query, values=False):
+#     return run_sparql_query(query, endpoint='https://minmod.isi.edu/sparql', values=values)
 
-def run_geokb_query(query, values=False):
-    return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
+# def run_geokb_query(query, values=False):
+#     return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
 
 def load_minmod_kg(commodity:str):
     pl_commodity = pl.read_csv(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params['PATH_COMMODITY_MAPFILE']))
@@ -96,7 +96,7 @@ def load_minmod_kg(commodity:str):
         }
     """ % (commodity_QID)
 
-    pl_ms = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_ms = pl.from_pandas(run_sparql_query(query, values=True))
     pl_ms = pl_ms.rename(
         {'ms.value': 'ms_uri',
         'source_id.value': 'source_id',
@@ -134,7 +134,7 @@ def load_minmod_kg(commodity:str):
             ?ms :mineral_inventory/:commodity/:normalized_uri/rdfs:label ?miq_comm .
         }
     """ % (commodity_QID)
-    pl_comm = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_comm = pl.from_pandas(run_sparql_query(query, values=True))
     pl_comm = pl_comm.rename(
         {'ms.value': 'ms_uri',
         'miq_comm.value': 'commodity'}
@@ -156,7 +156,7 @@ def load_minmod_kg(commodity:str):
             }
         }
     """ % (commodity_QID)
-    pl_dep_type = pl.from_pandas(run_minmod_query(query, values=True))
+    pl_dep_type = pl.from_pandas(run_sparql_query(query, values=True))
     pl_dep_type = pl_dep_type.rename(
         {'ms.value': 'ms_uri',
         'deposit_type.value': 'deposit_type'}
@@ -172,43 +172,6 @@ def load_minmod_kg(commodity:str):
     )
 
     return pl_sites
-            
-            # .with_columns(
-            #     site_name = pl.col('tmp_name') + pl.lit(',') + pl.col('aliases')
-            # ).drop('ms_name', 'tmp_name', 'aliases')
-
-            # pl_sites.write_csv('./check.csv')
-
-            # ------------ GENERATES HYPERSITES ------------ #
-            # sites_df.dropna(subset=['country', 'state_or_province', 'loc_wkt'], how='all', inplace=True)
-
-            # df_melted = df_all_sites.melt(id_vars=['group_id'], value_vars=['ms1.value', 'ms2.value'], value_name='ms')
-
-            # df_all_sites_groups = df_melted[['ms', 'group_id']].drop_duplicates()
-            # merged_df_all_sites = pd.merge(sites_df, df_all_sites_groups, how='left', on='ms')
-
-            # max_group_id = merged_df_all_sites['group_id'].fillna(0).max()
-            # merged_df_all_sites['group_id'] = merged_df_all_sites['group_id'].fillna(pd.Series(range(int(max_group_id) + 1, len(merged_df_all_sites) + int(max_group_id) + 1)))
-            # sorted_df_all_sites_all_dep = merged_df_all_sites.sort_values(by=['group_id', 'ms_name'])
-
-            # sorted_df_all_sites_all_dep.reset_index(drop=True, inplace=True)
-            # sorted_df_all_sites_all_dep.set_index('ms', inplace=True)
-            # sorted_df_all_sites_all_dep['info_count'] = sorted_df_all_sites_all_dep[['country', 'state_or_province', 'loc_wkt']].apply(lambda x: ((x != '') & (x.notna())).sum(), axis=1)
-            # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep.sort_values(by='info_count', ascending=False)
-            # sorted_df_all_sites_all_dep = sorted_df_all_sites_all_dep[~sorted_df_all_sites_all_dep.index.duplicated(keep='first')]
-            # sorted_df_all_sites_all_dep.drop(columns=['info_count'], inplace=True)
-            # sorted_df_all_sites_all_dep.reset_index(inplace=True)
-
-            # sorted_df_all_sites_all_dep.to_csv(f'{output_directory}/{commodity}_mineral_sites_hypersites.csv', index=False, mode='w')
-
-            # del sites_df, query_resp_df, pl_commodity, commodity_QID
-            # return pl_sites
-            # return separate_data(pl_sites)
-        
-    # except:
-    #     logging.error(f'Data cannot be loaded from MinMod knowledge graph at the moment. Please contact Craig Knoblock: knoblock@isi.edu')
-    #     return pl.DataFrame()
-
 
 def separate_data(pl_sites):
     list_all_data_sources = set(pl_sites['source_id'].to_list())

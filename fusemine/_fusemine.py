@@ -35,13 +35,13 @@ class FuseMine:
     def load_data(self,
                   method: str='kg'):
         
+
         self.method=method
 
         if method == 'kg':
-            self.data = data.get_kgdata(self, 
-                                   commodity_code=self.commodity_code,
-                                   country_code=self.country_code,
-                                   state_code=self.state_code)
+            Queryer = data.QueryKG()
+
+            self.data = Queryer.get_data(self.commodity_code)
         
         elif method == 'data':
             self.data = data.get_filedata()

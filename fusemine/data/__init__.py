@@ -1,7 +1,7 @@
 from ._load_file import get_filedata
-from ._load_kg import get_kgdata
+from ._load_kg import QueryKG
 
 __all__ = [
     "get_filedata",
-    "get_kgdata",
+    "QueryKG",
 ]
