@@ -4,7 +4,7 @@
 set -e
 
 commodity=${1?Commodity parameter missing}
-github_branch="commodity_sameas_$(date '+%Y%m%d')"
+github_branch="commodity_sameas_$(date '+%Y%m%d%H%m%s')"
 
 echo "Checking minmod data repository"
 data_directory='../ta2-minmod-data'
