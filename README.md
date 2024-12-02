@@ -12,7 +12,7 @@ To run FuseMine, ensure the following requirements are met:
 - **Network**: An active internet connection is required during execution.
 
 FuseMine simplifies usage by providing shell scripts for common workflows, including processing raw data into schema format and linking mineral sites. These scripts:
-1. Clone the [MinMod data repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data) (if not allready cloned).
+1. Clone the [MinMod data repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data) (if not already cloned).
 2. Create and run a Docker container for the specified task.
 3. Export the resulting data from the container
 4. Push the data to the data repository.
