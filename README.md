@@ -7,7 +7,7 @@ FuseMine is a comprehensive pipeline designed to link data across multiple miner
 ## Requirements
 To run FuseMine, ensure the following requirements are met:
 - **Hardware**: A local device with GPU support is recommended.
-- **Software**: Docker must be installed. Follw the installation steps on the official [Docker website](https://docs.docker.com/engine/install/).
+- **Software**: Docker must be installed. Follow the installation steps on the official [Docker website](https://docs.docker.com/engine/install/).
 - **Memory**: At least 10 GB of available memory is suggested (actual requirements depend on the data size).
 - **Network**: An active internet connection is required during execution.
 
