@@ -1,5 +1,5 @@
 # FuseMine
-Access the complete usage documentation in PDF format [here](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/FuseMine%20Usage%20Documentation.pdf).
+<!-- Access the complete usage documentation in PDF format [here](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/FuseMine%20Usage%20Documentation.pdf). -->
 
 ## Overview
 FuseMine is a comprehensive pipeline designed to link data across multiple mineral site databases, such as USMIN and MRDS, and mineral site records extracted from reports and tables through tools created by TA2 Inferlink and USC. It facilitates the reconciliation process by utilizing both geospatial data and semantic similarities in textual attributes, such as site name and commodity. 
@@ -7,12 +7,12 @@ FuseMine is a comprehensive pipeline designed to link data across multiple miner
 ## Requirements
 To run FuseMine, ensure the following requirements are met:
 - **Hardware**: A local device with GPU support is recommended.
-- **Software**: Docker must be installed. Follw the installation steps on the official [Docker website](https://docs.docker.com/engine/install/).
+- **Software**: Docker must be installed. Follow the installation steps on the official [Docker website](https://docs.docker.com/engine/install/).
 - **Memory**: At least 10 GB of available memory is suggested (actual requirements depend on the data size).
 - **Network**: An active internet connection is required during execution.
 
 FuseMine simplifies usage by providing shell scripts for common workflows, including processing raw data into schema format and linking mineral sites. These scripts:
-1. Clone the [MinMod data repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data) (if not allready cloned).
+1. Clone the [MinMod data repository](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data) (if not already cloned).
 2. Create and run a Docker container for the specified task.
 3. Export the resulting data from the container
 4. Push the data to the data repository.

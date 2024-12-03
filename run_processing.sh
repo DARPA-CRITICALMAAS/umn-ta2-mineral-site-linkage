@@ -7,7 +7,7 @@ raw_data=${1?Raw data file missing}
 attribute_map=${2?Attribute map file missing}
 folder_name=$3
 file_name=$4
-github_branch="new_data_$(date '+%Y%m%d')"
+github_branch="new_data_$(date '+%Y%m%d%H%m%s')"
 
 # Either use user defined file_name or raw_data name
 if [ $file_name ]; then
@@ -50,16 +50,16 @@ echo "Creating branch $github_branch in minmod data repository"
 cd ta2-minmod-data
 git checkout main
 git pull
-git checkout -b $github_branch
+git checkout $github_branch || git checkout -b $github_branch
 
 # Creating folder with folder name under minmod data repo
-mkdir data/mineral-sites/umn/$folder_name
+mkdir data/mineral-sites/umn/$folder_name || cd ./
 echo ""
 
 cd ../umn-ta2-mineral-site-linkage
 
 # Creating temporary data folder with attribute map and raw data
-mkdir ../tmp_data
+mkdir ../tmp_data || cd ./
 cp $raw_data ../tmp_data/
 cp $attribute_map ../tmp_data/
 raw_data_filename=$(basename $raw_data)
