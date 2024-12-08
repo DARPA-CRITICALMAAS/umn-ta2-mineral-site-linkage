@@ -15,12 +15,18 @@ logger.configure("INFO")
 
 class FuseMine:
     def __init__(self, 
-                 commodity: str='Tungsten',
+                 commodity: str|int='Tungsten',
                  country: str='ALL',
                  state: str='ALL',
-                 verbose: bool=False,
-                 ):
+                 verbose: bool=False) -> None:
         
+        if not commodity:
+            # TODO: get all
+            pass
+        elif isinstance(commodity, int):
+            # TODO: get data for all is critical commodity = commodity
+            pass
+
         self.commodity_code = entity2id(commodity)
         self.country_code = entity2id(country)
         self.state_code = entity2id(state)
@@ -30,8 +36,9 @@ class FuseMine:
         else:
             logger.set_level('WARNING')
 
-        return 0
-    
+    def link_records():
+        pass
+
     def load_data(self,
                   method: str='kg'):
         
