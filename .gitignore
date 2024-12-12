@@ -1,6 +1,7 @@
 __pycache__/
 ta2/
 output/
+outputs/
 logs/
 *.out
 *.log
