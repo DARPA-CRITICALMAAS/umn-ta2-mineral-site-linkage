@@ -26,7 +26,14 @@ git clone https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage.git
 cd umn-ta2-mineral-site-linkage
 ```
 
-## Usage
+## Usage (with Docker)
+```
+docker build -t ta2-linking .
+docker run -dit ta2-linking
+docker exec -it $container_id
+```
+
+## Usage (with Shell Script)
 ### Data Processing
 The data processing step requires a manually curated attribute map file, which maps the headers of the raw structured data to the MinMod KG schema. An example of an attribute map CSV is provided: [sample_mapfile.csv](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/sample_mapfile.csv). Attributes that FuseMine can map to are listed under 'attribute_label'. If there is no label in the raw data representing certain label (e.g., there is no column representing 'deposit_type_candidate') leave the 'corresponding_attribute_label' empty.
 
