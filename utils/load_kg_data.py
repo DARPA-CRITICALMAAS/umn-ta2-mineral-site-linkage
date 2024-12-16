@@ -15,8 +15,6 @@ warnings.filterwarnings("ignore")
 config = configparser.ConfigParser()
 config.read('./params.ini')
 
-path_params = config['directory.paths']
-minmod_params = config['minmod']
 
 def safe_wkt_load(wkt_string):
     try:
@@ -25,7 +23,7 @@ def safe_wkt_load(wkt_string):
         print(f"Error converting WKT: {e}")
         return None
     
-def run_sparql_query(query, endpoint=minmod_params['END_POINT'], values=False):
+def run_sparql_query(query, endpoint="https://minmod.isi.edu/sparql", values=False):
     # add prefixes
     final_query = '''
     PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -67,12 +65,14 @@ def run_sparql_query(query, endpoint=minmod_params['END_POINT'], values=False):
 #     return run_sparql_query(query, endpoint='https://geokb.wikibase.cloud/query/sparql', values=values)
 
 def load_minmod_kg(commodity:str):
-    pl_commodity = pl.read_csv(os.path.join(path_params['PATH_MAPFILE_DIR'], path_params['PATH_COMMODITY_MAPFILE']))
+    pl_commodity = pl.read_csv(os.path.join("/home/yaoyi/pyo00005/CriticalMAAS/umn-ta2-mineral-site-linkage/entities", "commodity.csv"))
     commodity_QID = pl_commodity.filter(
         pl.col('name').str.to_lowercase() == commodity.lower()
     ).item(0, 'id')
 
     del pl_commodity
+
+    # commodity_QID = 'Q578'
 
     # try:
     query = """
@@ -102,7 +102,7 @@ def load_minmod_kg(commodity:str):
         {'ms.value': 'ms_uri',
         'source_id.value': 'source_id',
         'record_id.value': 'record_id',
-        'ms_name.value': 'ms_name',
+        'ms_name.value': 'site_name',
         'country.value': 'country',
         'state_or_province.value': 'state_or_province',
         'loc_wkt.value': 'location',
@@ -123,7 +123,7 @@ def load_minmod_kg(commodity:str):
         pl.exclude('ms_uri').list.unique().list.join(',')
     ).with_columns(
         pl.col('record_id').cast(pl.Utf8)
-    ).drop('ms_name')
+    )
 
 
     query = """
