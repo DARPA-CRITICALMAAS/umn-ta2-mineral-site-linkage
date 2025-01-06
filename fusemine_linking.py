@@ -28,6 +28,9 @@ def main(commodity:str=None,
 
     # # Process database
     # fusemine.link()
+
+    # Finalize links
+    # fusemine.identify_links()
         
     # Save output
     # fusemine.save_output()

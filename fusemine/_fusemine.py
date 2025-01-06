@@ -109,7 +109,7 @@ class FuseMine:
         """
         
         """
-        if self.text_method == 'cosine':
+        if self.text_method == 'classify':
             # Run text serialization
             list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
             list_remaining_cols = list(set(list(self.data.columns)) - set(list_not_touched_cols))
@@ -117,8 +117,8 @@ class FuseMine:
                 pl.col(list_not_touched_cols),
                 text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
             )
-            pass
 
+        # TODO: add location preparation
         # Unify location crs system
         # list_data_by_crs = self.data.partition_by('crs')
         # list_converted_data = []
@@ -132,12 +132,47 @@ class FuseMine:
         #                                       str_geo_col='location',
         #                                       crs_val = c)
         #         converting.crs2crs(gpd_data, crs_val = )
-        pass
     
-    def link(self,) -> None:        
-        # linking.
+    def link(self,) -> None:    
+        """
+        TODO: Fill in information
+        """    
+        pl_loc = self.data.filter(
+            pl.col('location').is_not_null()
+        )
+        pl_none = self.data.filter(
+            pl.col('location').is_null()
+        )
 
-        pass
+        # TODO: add location based linking (geolocation)
+
+        # TODO: convert to pairs
+
+        # TODO: add text location based linking (if country equals, if state_or_province also equals)
+
+        self.data = self.data.with_columns(
+            text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]')
+        )
+
+        # TODO: check text_based linking
+        if self.text_method == 'classify':
+            self.model_dir = './fusemine/_model/trained_model/'
+            self.id2label = data.load_data('./fusemine/_model/id2label.pkl')
+
+            self.data = linking.text_pair_classification(pl_data=self.data,
+                                                         dir_model=self.model_dir,
+                                                         id2label=self.id2label)
+        else:
+            # TODO: add Fuseminev1
+            pass
+
+    def identify_links(self) -> None:
+        self.data = self.data.filter(
+            pl.col('linked') == 1 
+        ).select(
+            pl.col(['ms_uri_1', 'ms_uri_2']),
+            modified_at = pl.lit(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+        )
 
     def save_output(self,
                     save_format: str='csv') -> None:
