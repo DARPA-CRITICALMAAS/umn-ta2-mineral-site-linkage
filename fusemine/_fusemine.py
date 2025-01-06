@@ -106,22 +106,32 @@ class FuseMine:
         logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
         
     def prepare_data(self,) -> None:
+        """
+        
+        """
         if self.text_method == 'cosine':
             # Run text serialization
+            list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
+            list_remaining_cols = list(set(list(self.data.columns)) - set(list_not_touched_cols))
+            self.data = self.data.select(
+                pl.col(list_not_touched_cols),
+                text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
+            )
             pass
 
-        list_data_by_crs = self.data.partition_by('crs')
-        list_converted_data = []
+        # Unify location crs system
+        # list_data_by_crs = self.data.partition_by('crs')
+        # list_converted_data = []
 
-        for pl_data in list_data_by_crs:
-            # Convert to geopandas with uniform crs
-            c = pl_data.item(0, 'crs')
+        # for pl_data in list_data_by_crs:
+        #     # Convert to geopandas with uniform crs
+        #     c = pl_data.item(0, 'crs')
 
-            if c:
-                gpd_data = converting.non2geo(pl_data,
-                                              str_geo_col='location',
-                                              crs_val = c)
-                converting.crs2crs(gpd_data, crs_val = )
+        #     if c:
+        #         gpd_data = converting.non2geo(pl_data,
+        #                                       str_geo_col='location',
+        #                                       crs_val = c)
+        #         converting.crs2crs(gpd_data, crs_val = )
         pass
     
     def link(self,) -> None:        
