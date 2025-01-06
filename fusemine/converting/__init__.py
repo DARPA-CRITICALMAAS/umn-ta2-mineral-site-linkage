@@ -1,5 +1,6 @@
 from ._crs import crs2crs
 from ._entity import entity2id, id2entity
+from ._datatype import *
 
 __all__ = [
     "crs2crs",
