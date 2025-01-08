@@ -7,7 +7,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=pl.MapWithoutReturnDtypeWarning)
 
-from fusemine import data, converting, linking
+from fusemine import data, converting, representation, linking
+from fusemine import training
 
 from fusemine._utils import (
     DefaultLogger,
