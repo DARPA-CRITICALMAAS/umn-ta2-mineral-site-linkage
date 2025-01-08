@@ -5,11 +5,13 @@ from datetime import datetime, timezone
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=pl.MapWithoutReturnDtypeWarning)
 
 from fusemine import data, converting, linking
 
 from fusemine._utils import (
-    DefaultLogger
+    DefaultLogger,
+    compile_entities,
 )
 import fusemine._save_utils as save_utils
 
@@ -21,6 +23,7 @@ class FuseMine:
                  commodity: str='all',
                  country: str='all', state: str='all',
 
+                 file_input:str=None,
                  dir_output:str=None,
                  dir_entities:str='./fusemine/_entities',
 
@@ -29,17 +32,43 @@ class FuseMine:
                  start_fresh:bool=False,
 
                  verbose: bool=False,) -> None:
-        
-        if (commodity == 'all') and (country == 'all') and (state == 'all'):
+
+        # Set default information
+        self.commodity = commodity
+        self.country = country
+        self.state = state
+
+        # End program if information is not correctly added in
+        if (self.commodity == 'all') and (self.country == 'all') and (self.state == 'all'):
             raise ValueError("Provide either the focus commodity or textual location to use FuseMine")
         
-        if (state != 'all') and (country == 'all'):
+        if (self.state != 'all') and (self.country == 'all'):
             raise ValueError("Provide both the country name and state name of the desire region to use FuseMine")
+        
+        # Convert string input in QNode
+        self.set_variables()
+        
+        self.file_input = file_input
+        self.dir_ouput = dir_output
+        self.dir_entities = dir_entities
 
-        # TODO: Load entities
-        self.entities = None
+        self.start_fresh = start_fresh
+        self.location_method = location_method
+        self.text_method = text_method
 
-        # TODO: Check with item names being title case
+        if verbose:
+            logger.set_level('DEBUG')
+        else:
+            logger.set_level('WARNING')
+
+    def set_variables(self) -> None:
+        # Load_entity as dataframe
+        path_entities_mapfile = os.path.join(self.dir_entities, '_selected_cols.pkl')
+        if data.check_exist(path_entities_mapfile) != -1:
+            self.dict_entity_cols = data.load_data(path_entities_mapfile, '.pkl')
+
+        self.entities = compile_entities(self.dir_entities, self.dict_entity_cols)
+        logger.info(f"Entities dictionary has been created based on those available as CSV in {self.dir_entities}")
 
         # Convert commodity to commodity QNodes + Sanity Check
         pl_entities_commodity = self.entities['commodity']
@@ -54,56 +83,54 @@ class FuseMine:
             del tmp_crit_entities
 
         else:
-            tmp_crit_entities = pl_entities_commodity.filter(pl.col('name') == commodity)
+            tmp_crit_entities = pl_entities_commodity.filter(pl.col('name') == self.commodity)
 
             if tmp_crit_entities:
                 self.focus_commodity_id = [tmp_crit_entities.item(0, 'minmod_id')]
-                self.focus_commodity = [commodity]
+                self.focus_commodity = [self.commodity]
             else:
                 raise ValueError(f"{self.commodity} is not an acceptable commodity."
-                                 f"Refer to 'name' column in {dir_entities}/commodity.csv for an appropriate commodity name")
+                                 f"Refer to 'name' column in {self.dir_entities}/commodity.csv for an appropriate commodity name")
 
-        # Load information about textual location (country)
-        if self.country != 'all':
-            self.country_id = self.entities['country'].filter(pl.col('name') == country).item(0, 'minmod_id')
-        else:
-            self.country_id = None
-        self.country = country
-
-        # Load informationa about textual location (state)
+        # Convert state to state QNode
         if self.state != 'all':
-            self.state_id = self.entities['state_or_province'].filter(pl.col('country_name') == country, pl.col('name') == state).item(0, 'minmod_id')
+            self.state_id = self.entities['state_or_province'].filter(pl.col('country_name') == self.country, pl.col('name') == self.state).item(0, 'minmod_id')
         else:
             self.state_id = None
-        self.state = state
 
-        self.start_fresh = start_fresh
-        self.location_method = location_method
-        self.text_method = text_method
-
-        if verbose:
-            logger.set_level('DEBUG')
+        # Convert state to state QNode
+        if self.country != 'all':
+            self.country_id = self.entities['country'].filter(pl.col('name') == self.country).item(0, 'minmod_id')
         else:
-            logger.set_level('WARNING')
+            self.country_id = None
+
+        pass
 
     def load_data(self,
-                  method: str='kg',
-                  input_data: str=None) -> None:
+                  input_data: str=None,
+                  method: str=None,) -> None:
         
         self.method=method
 
-        if method == 'kg':
-            Queryer = data.QueryKG()
-            self.data = Queryer.get_data(self.commodity_code)
+        if method == 'data':
+            self.data = data.get_filedata(input_data=input_data)
+
+        # if method == 'kg':
+        Queryer = data.QueryKG()
+        self.data = Queryer.get_data(list_commodity_id = self.focus_commodity_id,
+        country_id = self.country_id,
+        state_or_province_id = self.state_id)
         
-        elif method == 'data':
-            self.data = data.get_filedata()
+        # elif method == 'data':
+        #     self.data = data.get_filedata()
+
+        logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
 
         if not self.start_fresh:
             # TODO: retrieve also sameas links
             self.same_as = None
-
-        logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
+            logger.info("Sameas links available on minmod has been loaded.")
+            logger.info("FuseMine will omit those with sameas links.")
         
     def prepare_data(self,) -> None:
         """
@@ -166,6 +193,8 @@ class FuseMine:
             # TODO: add Fuseminev1
             pass
 
+        logger.info(f"Linking completed for commodity {c}")
+
     def identify_links(self) -> None:
         self.data = self.data.filter(
             pl.col('linked') == 1 
@@ -179,10 +208,13 @@ class FuseMine:
         """
         TODO: Fill in information
         """
-        path_output = os.path.join(self.dir_output, self.file_output)
+        list_commodities = self.data.keys()
 
-        try:
-            data.save_data(self.data, path_save=path_output, save_format=save_format)
-        except:
-            logger.warning("Unacceptable save format. Defaulting to pickle.")
-            data.save_data(self.data, path_save=self.path_output, save_format='pickle')
+        for c in list_commodities:
+            path_output = os.path.join(self.dir_output, f"{c}_sameas_{datetime.now(timezone.utc).strftime('%m%d')}.large")
+
+            try:
+                data.save_data(self.data, path_save=path_output, save_format=save_format)
+            except:
+                logger.warning("Unacceptable save format. Defaulting to pickle.")
+                data.save_data(self.data, path_save=self.path_output, save_format='pickle')

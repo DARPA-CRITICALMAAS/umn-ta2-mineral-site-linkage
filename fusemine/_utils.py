@@ -45,3 +45,44 @@ class DefaultLogger:
         fh = logging.FileHandler(f'./logs/procmine_{datetime.timestamp(datetime.now())}.log')
         fh.setFormatter(logging.Formatter("%(asctime)s: %(message)s"))
         self.logger.addHandler(fh)
+
+def compile_entities(dir_entities: str, dict_entities_col: Dict[str, List[str]]) -> Dict[str, pl.DataFrame]:
+    """
+    Before calling ProcMine, recompile the entities folder
+    (In case there has been any updates to the entities)
+
+    # TODO: fill info
+    Arguments
+    : dir_entities
+
+    Return
+    """
+
+    if data.check_exist(dir_entities) < 0:
+        raise ValueError("Unable to locate entities directory")
+    
+    if data.check_mode(dir_entities) != 'dir':
+        raise ValueError("This is not an entity directory")
+
+    dict_all_entities = {}
+
+    for filename in os.listdir(dir_entities):
+        if data.check_mode(filename) != '.csv':
+            continue
+
+        path_entity = os.path.join(dir_entities, filename)
+        pl_data = data.load_data(path_entity, '.csv')
+
+        entity_type = data.return_basename(filename)
+
+        if 'minmod_id' not in list(pl_data.columns):
+            continue
+
+        pl_data = pl_data.select(
+            pl.col('minmod_id'),
+            pl.col(dict_entities_col[entity_type]).str.to_lowercase()
+        )
+
+        dict_all_entities[entity_type] = pl_data
+
+    return dict_all_entities
