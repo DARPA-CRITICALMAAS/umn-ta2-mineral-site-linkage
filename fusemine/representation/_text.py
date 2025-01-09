@@ -1,7 +1,10 @@
 import random
-from Typing import List, Dict
+from typing import List, Dict
 
 import polars as pl
+from sentence_transformers import SentenceTransformer
+
+st_model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
 
 def text_serialization(struct_attributes:Dict[str,str],
                        method:str,
@@ -30,3 +33,6 @@ def special_tokens(method:str):
     
     elif method == 'attribute_value_token':
         return '[COL] ', ' [VAL] ', ' '
+    
+def text_embedding(list_text: List[str]):
+    return st_model.encode(list_text, convert_to_tensor=True)

@@ -2,6 +2,7 @@ import numpy as np
 import polars as pl
 
 import torch
+from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer
 
@@ -49,3 +50,12 @@ def convert_to_datadict(pl_data:pl.DataFrame,
 
 def tokenize_function(dict_input:dict):
     return tokenizer(dict_input['text'], padding='max_length', truncation=True, max_length=512)
+
+def text_embedding_cosine(list_embeddings: list):
+    similarity_score = pairwise_cosine_similarity(list_embeddings).numpy(force=True)
+    similarity_score = np.triu(similarity_score)
+
+    list_condition_satisfied = np.transpose(np.nonzero(similarity_score > 0.85))
+
+    # TODO: complete
+    pass

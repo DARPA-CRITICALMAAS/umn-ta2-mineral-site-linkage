@@ -1,11 +1,16 @@
 import os
 import warnings
+import urllib3
 import polars as pl
 from datetime import datetime, timezone
+
+import time     # TODO: remove later
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=pl.MapWithoutReturnDtypeWarning)
+# warnings.filterwarnings("ignore", category=urllib3.InsecureRequestWarning)
+urllib3.disable_warnings()
 
 from fusemine import data, converting, representation, linking
 from fusemine import training
@@ -46,12 +51,12 @@ class FuseMine:
         if (self.state != 'all') and (self.country == 'all'):
             raise ValueError("Provide both the country name and state name of the desire region to use FuseMine")
         
-        # Convert string input in QNode
-        self.set_variables()
-        
         self.file_input = file_input
         self.dir_ouput = dir_output
         self.dir_entities = dir_entities
+
+        # Convert string input in QNode
+        self.set_variables()
 
         self.start_fresh = start_fresh
         self.location_method = location_method
@@ -78,7 +83,7 @@ class FuseMine:
             self.focus_commodity = pl_entities_commodity['name'].to_list()
 
         elif self.commodity.lower() == 'critical':
-            tmp_crit_entities = pl_entities_commodity.filter(pl.col('is_critical_commodity') == 1)  # Filter those with is critical commodity == 1
+            tmp_crit_entities = pl_entities_commodity.filter(pl.col('is_critical_commodity') == '1')  # Filter those with is critical commodity == 1
             self.focus_commodity_id = tmp_crit_entities['minmod_id'].to_list()
             self.focus_commodity = tmp_crit_entities['name'].to_list()
             del tmp_crit_entities
@@ -86,7 +91,7 @@ class FuseMine:
         else:
             tmp_crit_entities = pl_entities_commodity.filter(pl.col('name') == self.commodity)
 
-            if tmp_crit_entities:
+            if not tmp_crit_entities.is_empty():
                 self.focus_commodity_id = [tmp_crit_entities.item(0, 'minmod_id')]
                 self.focus_commodity = [self.commodity]
             else:
@@ -105,8 +110,6 @@ class FuseMine:
         else:
             self.country_id = None
 
-        pass
-
     def load_data(self,
                   input_data: str=None,
                   method: str=None,) -> None:
@@ -118,12 +121,11 @@ class FuseMine:
 
         # if method == 'kg':
         Queryer = data.QueryKG()
-        self.data = Queryer.get_data(list_commodity_id = self.focus_commodity_id,
-        country_id = self.country_id,
-        state_or_province_id = self.state_id)
-        
-        # elif method == 'data':
-        #     self.data = data.get_filedata()
+        start_time = time.time()
+        self.data = Queryer.get_data(list_commodity_code = self.focus_commodity_id,
+                                     country_code = self.country_id,
+                                     state_code = self.state_id)
+        print(time.time() - start_time)
 
         logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
 

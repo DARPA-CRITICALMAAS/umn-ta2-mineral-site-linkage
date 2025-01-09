@@ -1,5 +1,5 @@
 import random
-from Typing import List, Dict
+from typing import List, Dict
 
 import polars as pl
 

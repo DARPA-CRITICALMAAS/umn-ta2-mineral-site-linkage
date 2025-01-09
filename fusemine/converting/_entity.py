@@ -1,4 +1,4 @@
-from Typing import List, Dict
+from typing import List, Dict
 import polars as pl
 
 def entity2id(list_entity: list,

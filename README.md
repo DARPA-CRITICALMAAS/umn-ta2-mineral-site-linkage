@@ -45,7 +45,7 @@ docker exec -it <container_id> /bin/bash
 
 2. Run the command
 ```
-poetry run python3 fusemine.py --commodity <commodity>
+poetry run python3 run_fusemine.py --commodity <commodity>
 ```
 - `commodity`: The specific commodity to focus on. The commodity name must match one of the MRDS commodity names listed [here](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/data/entities/commodity.csv).
 

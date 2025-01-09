@@ -80,7 +80,7 @@ def compile_entities(dir_entities: str, dict_entities_col: Dict[str, List[str]])
 
         pl_data = pl_data.select(
             pl.col('minmod_id'),
-            pl.col(dict_entities_col[entity_type]).str.to_lowercase()
+            pl.col(dict_entities_col[entity_type]).cast(pl.Utf8).str.to_lowercase()
         )
 
         dict_all_entities[entity_type] = pl_data
