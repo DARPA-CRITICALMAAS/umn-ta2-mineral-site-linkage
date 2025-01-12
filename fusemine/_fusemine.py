@@ -2,6 +2,7 @@ import os
 import warnings
 import urllib3
 import polars as pl
+import pickle
 from datetime import datetime, timezone
 
 import time     # TODO: remove later
@@ -112,20 +113,23 @@ class FuseMine:
 
     def load_data(self,
                   input_data: str=None,
-                  method: str=None,) -> None:
+                  method: str='kg',) -> None:
         
-        self.method=method
+        self.method = method
 
         if method == 'data':
             self.data = data.get_filedata(input_data=input_data)
 
         # if method == 'kg':
         Queryer = data.QueryKG()
-        start_time = time.time()
         self.data = Queryer.get_data(list_commodity_code = self.focus_commodity_id,
                                      country_code = self.country_id,
                                      state_code = self.state_id)
-        print(time.time() - start_time)
+        
+        print(self.data)
+
+        with open('./_dev_files/file.pkl', 'wb') as handle:
+            pickle.dump(self.data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
 
@@ -134,18 +138,34 @@ class FuseMine:
             self.same_as = None
             logger.info("Sameas links available on minmod has been loaded.")
             logger.info("FuseMine will omit those with sameas links.")
+
+    def load_dev(self,
+                 method: str='kg',) -> None:
         
+        self.method = method
+
+        with open('./_dev_files/file.pkl', 'rb') as handle:
+            self.data = pickle.load(handle)
+
     def prepare_data(self,) -> None:
         """
-        
+        TODO: fill in information
+
         """
+        list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
         if self.text_method == 'classify':
             # Run text serialization
-            list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
             list_remaining_cols = list(set(list(self.data.columns)) - set(list_not_touched_cols))
             self.data = self.data.select(
                 pl.col(list_not_touched_cols),
                 text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
+            )   # TODO: Check
+
+        elif self.text_method == 'cosine':
+            # V1 relies only on mineral site name
+            self.data = self.data.select(
+                pl.col(list_not_touched_cols),
+                pl.col(['site_name', 'other_names'])
             )
 
         # TODO: add location preparation
@@ -196,7 +216,7 @@ class FuseMine:
             # TODO: add Fuseminev1
             pass
 
-        logger.info(f"Linking completed for commodity {c}")
+        [c_code]
 
     def identify_links(self) -> None:
         self.data = self.data.filter(
@@ -211,13 +231,13 @@ class FuseMine:
         """
         TODO: Fill in information
         """
-        list_commodities = self.data.keys()
+        list_commodities_code = self.data.keys()
 
-        for c in list_commodities:
-            path_output = os.path.join(self.dir_output, f"{c}_sameas_{datetime.now(timezone.utc).strftime('%m%d')}.large")
+        for idx, c_code in enumerate(list_commodities_code):
+            path_output = os.path.join(self.dir_output, f"{self.focus_commodity[idx]}_sameas_{datetime.now(timezone.utc).strftime('%m%d')}.large")
 
             try:
-                data.save_data(self.data, path_save=path_output, save_format=save_format)
+                data.save_data(self.data[c_code], path_save=path_output, save_format=save_format)
             except:
                 logger.warning("Unacceptable save format. Defaulting to pickle.")
-                data.save_data(self.data, path_save=self.path_output, save_format='pickle')
+                data.save_data(self.data[c_code], path_save=self.path_output, save_format='pickle')

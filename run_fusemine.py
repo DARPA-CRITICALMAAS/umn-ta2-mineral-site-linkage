@@ -7,7 +7,9 @@ def main(commodity:str=None,
          geo_method:str='distance',
          text_method:str='classify',
          input_data:str=None,
-         output_directory:str=None) -> None:
+         output_directory:str=None,
+         
+         is_dev:bool=False) -> None:
 
     fusemine = FuseMine(commodity=commodity,
                         country=country,
@@ -17,10 +19,13 @@ def main(commodity:str=None,
                         start_fresh=start_fresh)
     
     # Load data from minmod or user input datafile (if exists)
-    if input_data:
-        fusemine.load_data(input_data=input_data, method='data')
+    if not is_dev:
+        if input_data:
+            fusemine.load_data(input_data=input_data, method='data')
+        else:
+            fusemine.load_data()
     else:
-        fusemine.load_data()
+        fusemine.load_dev()
 
     # Prepare data for linking purpose (unify crs, serialize data etc)
     # fusemine.prepare_data()
@@ -51,7 +56,7 @@ if __name__ == '__main__':
         
     parser.add_argument('--input_data',
                         help="If run FuseMine with data on KG and local data. Local data will not be pushed to minmod. Sameas links will not be pushed to minmod.")
-    
+
     parser.add_argument('--output_directory',
                         help='Directory for processed mineral site database')
 
@@ -64,10 +69,13 @@ if __name__ == '__main__':
     parser.add_argument('--text_method', default='classify', type=str,
                         help='Method to use for linking based on textual attributes on the records (Options: classify/cosine)')
     
+    parser.add_argument('--dev', action='store_true')
+    
     args = parser.parse_args()
 
     main(commodity=args.commodity, 
          country=args.country, state=args.state,
          start_fresh=args.ignore_previous_sameas,
          input_data=args.input_data,
-         output_directory=args.output_directory)
+         output_directory=args.output_directory,
+         is_dev=args.dev)

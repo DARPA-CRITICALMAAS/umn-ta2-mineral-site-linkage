@@ -47,16 +47,11 @@ class QueryKG:
         """
         dict_data = {}
 
-        # for c in list_commodity_code:
-        #     dict_data[c] = 
-        # # TODO: fill self.data with the data queried from knowledge graph
-        # print(list_commodity_code)
-        # print(country_code)
-        # print(state_code)
-
-        self.load_minmod(list_commodity_code[0])
-
+        for c in list_commodity_code:
+            dict_data[c] = self.load_minmod(c)
+    
         if country_code and state_code:
+            # Add feature to filter by county and state code
             pass
 
         return dict_data
