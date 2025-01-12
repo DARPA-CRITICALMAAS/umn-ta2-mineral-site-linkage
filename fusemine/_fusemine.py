@@ -1,6 +1,5 @@
 import os
 import warnings
-import urllib3
 import polars as pl
 import pickle
 from datetime import datetime, timezone
