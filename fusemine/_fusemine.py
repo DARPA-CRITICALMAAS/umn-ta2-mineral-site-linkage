@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", category=pl.MapWithoutReturnDtypeWarning)
 urllib3.disable_warnings()
 
 from fusemine import data, converting, representation, linking
-from fusemine import training
+# from fusemine import training
 
 from fusemine._utils import (
     DefaultLogger,
