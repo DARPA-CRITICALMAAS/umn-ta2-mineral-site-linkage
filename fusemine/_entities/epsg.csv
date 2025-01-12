@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d5e668ac36bb3e6666a792a57ab71bead7abeac301e09639407c0c8fd8afbafd
-size 90
+minmod_id,name
+Q701,EPSG:4326
+Q702,EPSG:4267
+Q703,EPSG:3857
+Q704,EPSG:26912
+Q705,EPSG:2994
