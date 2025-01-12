@@ -28,7 +28,7 @@ def main(commodity:str=None,
         fusemine.load_dev()
 
     # Prepare data for linking purpose (unify crs, serialize data etc)
-    # fusemine.prepare_data()
+    fusemine.prepare_data()
 
     # # Process database
     # fusemine.link()
