@@ -35,7 +35,7 @@ class FuseMine:
                  dir_entities:str='./fusemine/_entities',
 
                  location_method:str='distance',
-                 text_method:str='cosine',
+                 text_method:str='classify',
                  start_fresh:bool=False,
 
                  verbose: bool=False,) -> None:
@@ -124,7 +124,7 @@ class FuseMine:
         Queryer = data.QueryKG()
         self.data = Queryer.get_data(list_commodity_code = self.focus_commodity_id,
                                      country_code = self.country_id,
-                                     state_code = self.state_id)
+                                     state_code = self.state_id)        # data: Dict[str, pl.DataFrame]
 
         logger.info(f"Loaded all data for commodity {self.focus_commodity} located in state {self.state} country {self.country}")
 
@@ -151,20 +151,31 @@ class FuseMine:
             list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
             if self.text_method == 'classify':
                 # Run text serialization
-                list_remaining_cols = list(set(list(pl_data.columns)) - set(list_not_touched_cols))
-                self.data[code] = pl_data.select(
-                    pl.col(list_not_touched_cols),
-                    text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
-                )   # TODO: Check
+                print(pl_data.columns)
+                list_remaining_cols = list(set(pl_data.columns) - set(list_not_touched_cols))
 
-            elif self.text_method == 'cosine':
-                # V1 relies only on mineral site name
-                self.data[code] = pl_data.select(
+                pl_data = pl_data.select(
                     pl.col(list_not_touched_cols),
-                    pl.col(['site_name', 'other_names'])
+                    text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs'))
                 )
 
-            print(self.data[code])
+                print(pl_data)
+                # pl_data = pl_data.select(
+                #     pl.col(list_not_touched_cols),
+                #     text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
+                # )   # TODO: Check
+
+                # print(code)
+                # print(pl_data)
+
+            # elif self.text_method == 'cosine':
+            #     # V1 relies only on mineral site name
+            #     self.data[code] = pl_data.select(
+            #         pl.col(list_not_touched_cols),
+            #         pl.col(['site_name', 'other_names'])
+            #     )
+
+            # print(self.data[code])
 
         # Prepare location attribute
 
