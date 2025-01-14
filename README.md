@@ -32,6 +32,7 @@ Before running FuseMine, ensure that all data is available on the [MinMod Knowle
 ```
 ./run_linking.sh <commodity>
 ```
+
 - `commodity`: The specific commodity to focus on. The commodity name must match one of the MRDS commodity names listed [here](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/data/entities/commodity.csv).    
 <!-- TODO: replace -->
 
@@ -44,6 +45,7 @@ docker exec -it <container_id> /bin/bash
 ```
 - `container_id`: Container ID of the created Docker container. Can be found by running `docker ps`
 
+
 2. Run the command
 ```
 poetry run python3 run_fusemine.py --commodity <commodity>
@@ -51,9 +53,23 @@ poetry run python3 run_fusemine.py --commodity <commodity>
 - `commodity`: The specific commodity to focus on. The commodity name must match one of the MRDS commodity names listed [here](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/data/entities/commodity.csv).
 
 3. Move data from Docker container to local
+
 ```
 exit
 docker cp <container_id>:/umn-ta2-mineral-site-linkage/output/<commodity>_<date>_sameas.csv <save_path>
+```
+
+- `save_path`: Path of directory to store the same_as links
+
+4. Stop Docker container
+```
+docker stop <container_id>
+```
+
+3. Move data from Docker container to local
+```
+exit
+docker cp <container_id>:/umn-ta2-mineral-site-linkage/outputs/<commodity>_sameas.csv <save_path>
 ```
 - `save_path`: Path of directory to store the same_as links
 
