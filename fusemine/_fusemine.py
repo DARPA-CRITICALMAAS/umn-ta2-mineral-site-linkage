@@ -222,13 +222,11 @@ class FuseMine:
 
             # TODO: does not start with 'un' ex. unnamed occurence, unidentified etc.
 
-            print(pl_loc_based)
-
+            # Separate those that have EXACT match on name
+            # Very highly likely they are linked
             pl_guaranteed = pl_loc_based.filter(
                 pl.col('bool_name_match') == True
             ).with_columns(link_text_result = pl.lit(1))
-
-            print(pl_guaranteed)
 
             pl_loc_based = pl_loc_based.filter(
                 pl.col('bool_name_match') == False

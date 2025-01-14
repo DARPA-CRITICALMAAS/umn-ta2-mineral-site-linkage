@@ -19,6 +19,12 @@ def main(commodity:str=None,
                         location_method=geo_method, text_method=text_method,
                         start_fresh=start_fresh)
 
+    # Load data (either from KG only or both)
+    if input_data:
+        fusemine.load_data(input_data=input_data, method='data')
+    else:
+        fusemine.load_data()
+
     # Prepare data for linking purpose (unify crs, serialize data etc)
     fusemine.prepare_data()
 
