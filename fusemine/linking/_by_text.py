@@ -26,7 +26,7 @@ def text_pair_classification(pl_data:pl.DataFrame,
     )
     trainer = Trainer(trained_model)
 
-    predictions, label_ids, metrics = trainer.predict(test_dataset=tokenized_data['test'])
+    predictions, _, _ = trainer.predict(test_dataset=tokenized_data['test'])
     predicted_label = np.argmax(predictions, axis=1)
 
     pl_data = pl_data.with_columns(

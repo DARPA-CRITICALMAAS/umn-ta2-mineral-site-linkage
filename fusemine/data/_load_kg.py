@@ -1,17 +1,12 @@
-import os
 import requests
-import configparser
 from typing import Dict, List
 
 import pandas as pd
 import polars as pl
-import networkx as nx
 
-import pyproj
-from shapely import wkt, ops
-from shapely.wkt import loads, dumps
+from shapely import wkt
+from shapely.wkt import loads
 from shapely.errors import WKTReadingError
-import warnings
 
 class QueryKG:
     def __init__(self,
