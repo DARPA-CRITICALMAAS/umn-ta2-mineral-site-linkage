@@ -1,11 +1,15 @@
-from typing import Dict
+from typing import Dict, List
+from itertools import combinations
 
 import polars as pl
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 
-def geo2non(gpd_data: gpd.GeoDataFrame) -> pl.DataFrame:
+from ._crs import crs2crs
+
+def geo2non(gpd_data: gpd.GeoDataFrame,
+            geom_col: str='location') -> pl.DataFrame:
     """
     Converts geodataframe to polars data frame
 
@@ -17,9 +21,10 @@ def geo2non(gpd_data: gpd.GeoDataFrame) -> pl.DataFrame:
     """
     if 'crs' not in list(gpd_data.columns):
         gpd_data['crs'] = str(gpd_data.crs)
-    gpd_data['location'] = gpd_data['geometry'].apply(wkt.dumps)
+    
+    gpd_data[geom_col] = gpd_data[geom_col].apply(wkt.dumps)
+    # gpd_data = gpd_data.drop('geometry', axis=1)
 
-    gpd_data = gpd_data.drop('geometry', axis=1)
     pl_data = pl.from_pandas(gpd_data)
 
     return pl_data
@@ -27,7 +32,7 @@ def geo2non(gpd_data: gpd.GeoDataFrame) -> pl.DataFrame:
 def non2geo(pl_data: pl.DataFrame,
             str_lat_col: str=None, str_long_col: str=None,
             str_geo_col: str=None,
-            crs_val: str='EPSG:4326') -> gpd.GeoDataFrame:
+            crs_val: str='EPSG:4326'):
     """
     # TODO: fill in information
 
@@ -37,28 +42,27 @@ def non2geo(pl_data: pl.DataFrame,
     : crs_val:
 
     Return
+    : gpd_data
+    : pl_data_nl
     """
 
-    if str_lat_col:
-        df_data = pl_data.with_columns(pl.col([str_lat_col, str_long_col]).cast(pl.Float64)).to_pandas()
-        gpd_data = gpd.GeoDataFrame(
-            df_data,
-            geometry=gpd.points_from_xy(df_data[str_long_col], df_data[str_lat_col]),
-            crs=crs_val
-        ).drop([str_lat_col, str_long_col], axis=1)
+    list_crs_partitioned_data = pl_data.partition_by('crs')
 
-    if str_geo_col:
-        df_data = pl_data.to_pandas()
-        df_data[str_geo_col] = df_data[str_geo_col].apply(lambda x: wkt.loads(x))
+    list_gpd = []
+    list_pl_data = []
 
-        gpd_data = gpd.GeoDataFrame(
-            df_data,
-            geometry=str_geo_col,
-            crs=crs_val)
-        
-        gpd_data = gpd_data.drop(str_geo_col, axis=1)
+    for d in list_crs_partitioned_data:
+        sub_gpd_data, sub_pl_data_nl = crs2crs(input_data=d, input_crs=d.item(0, 'crs'), output_crs=crs_val)
+        list_gpd.append(sub_gpd_data)
+        list_pl_data.append(sub_pl_data_nl)
 
-    return gpd_data
+    gpd_data = gpd.GeoDataFrame(pd.concat(list_gpd, ignore_index=True), geometry=str_geo_col, crs=crs_val)
+    pl_data_nl = pl.concat(
+        list_pl_data,
+        how='diagonal'
+    )
+
+    return gpd_data, pl_data_nl
 
 def non2dict(pl_data: pl.DataFrame,
              key_col:str=None,
@@ -75,6 +79,9 @@ def non2dict(pl_data: pl.DataFrame,
     """
     if not key_col and not val_col:
         raise ValueError("Need to state either key column or value column")
+    
+    if key_col and val_col:
+        return dict(zip(pl_data[key_col].to_list(), pl_data[val_col].to_list()))
 
     if key_col:
         dict_data = pl_data.rows_by_key(key=key_col)
@@ -94,3 +101,11 @@ def non2dict(pl_data: pl.DataFrame,
             dict_data.update(tmp_dict_data)  
 
     return dict_data
+
+def listlist2pairs(list_uris: List[List[str]]):
+    list_pairs = []
+
+    for i in list_uris:
+        list_pairs.extend(list(combinations(i, 2)))
+
+    return list_pairs

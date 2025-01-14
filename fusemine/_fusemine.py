@@ -1,11 +1,12 @@
 import os
 import warnings
 import urllib3
-import polars as pl
 import pickle
-from datetime import datetime, timezone
 
-import time     # TODO: remove later
+import polars as pl
+import pandas as pd
+
+from datetime import datetime, timezone
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -53,7 +54,9 @@ class FuseMine:
             raise ValueError("Provide both the country name and state name of the desire region to use FuseMine")
         
         self.file_input = file_input
-        self.dir_ouput = dir_output
+        if not dir_output:
+            dir_output = './output'
+        self.dir_output = dir_output
         self.dir_entities = dir_entities
 
         # Convert string input in QNode
@@ -62,6 +65,8 @@ class FuseMine:
         self.start_fresh = start_fresh
         self.location_method = location_method
         self.text_method = text_method
+
+        self.pl_linked_data = {}
 
         if verbose:
             logger.set_level('DEBUG')
@@ -134,115 +139,137 @@ class FuseMine:
             logger.info("Sameas links available on minmod has been loaded.")
             logger.info("FuseMine will omit those with sameas links.")
 
-    def load_dev(self,
-                 method: str='kg',) -> None:
-        
-        self.method = method
-
-        with open('./_dev_files/file.pkl', 'rb') as handle:
-            self.data = pickle.load(handle)
-
     def prepare_data(self,) -> None:
         """
         TODO: fill in information
 
         """
+        self.gpd_data = {}
+        self.pl_data_nl = {}
         for code, pl_data in self.data.items():
-            list_not_touched_cols = ['ms_uri', 'source_id', 'location', 'crs']
+            list_not_touched_cols = ['ms_uri', 'source_id', 'country', 'state_or_province', 'site_name', 'location', 'crs']
             if self.text_method == 'classify':
                 # Run text serialization
-                print(pl_data.columns)
-                list_remaining_cols = list(set(pl_data.columns) - set(list_not_touched_cols))
+                # TODO: Check order of text
+                list_remaining_cols = ['country', 'state_or_province', 'location', 'site_name', 'other_names', 'commodity', 'deposit_type']
 
                 pl_data = pl_data.select(
                     pl.col(list_not_touched_cols),
-                    text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs'))
+                    text = pl.struct(pl.col(list_remaining_cols).str.to_lowercase()).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs'))
                 )
 
-                print(pl_data)
-                # pl_data = pl_data.select(
-                #     pl.col(list_not_touched_cols),
-                #     text = pl.struct(pl.col(list_remaining_cols)).map_elements(lambda x: converting.text_serialization(x, method=self.method))
-                # )   # TODO: Check
+            elif self.text_method == 'cosine':
+                # V1 relies only on mineral site name
+                self.data[code] = pl_data.select(
+                    pl.col(list_not_touched_cols),
+                    pl.col(['site_name', 'other_names'])
+                )
 
-                # print(code)
-                # print(pl_data)
-
-            # elif self.text_method == 'cosine':
-            #     # V1 relies only on mineral site name
-            #     self.data[code] = pl_data.select(
-            #         pl.col(list_not_touched_cols),
-            #         pl.col(['site_name', 'other_names'])
-            #     )
-
-            # print(self.data[code])
-
-        # Prepare location attribute
-
-        # TODO: add location preparation
-        # Unify location crs system
-        # list_data_by_crs = self.data.partition_by('crs')
-        # list_converted_data = []
-
-        # for pl_data in list_data_by_crs:
-        #     # Convert to geopandas with uniform crs
-        #     c = pl_data.item(0, 'crs')
-
-        #     if c:
-        #         gpd_data = converting.non2geo(pl_data,
-        #                                       str_geo_col='location',
-        #                                       crs_val = c)
-        #         converting.crs2crs(gpd_data, crs_val = )
+            else: raise ValueError("Unacceptable text method. \n",
+                                   "Please select between classify/cosine")
+            
+            # Prepare location attribute
+            self.gpd_data[code], self.pl_data_nl[code] = converting.non2geo(pl_data, str_geo_col='location')
     
     def link(self,) -> None:    
         """
         TODO: Fill in information
         """    
-        pl_loc = self.data.filter(
-            pl.col('location').is_not_null()
-        )
-        pl_none = self.data.filter(
-            pl.col('location').is_null()
-        )
+        for code, gpd_data_i in self.gpd_data.items():
+            # Location_based linking
+            if self.location_method == 'distance':
+                gpd_data_i = representation.point_rep(gpd_data_i)
+                gpd_data_i = linking.group_proximity(gpd_data_i)
 
-        # TODO: add location based linking (geolocation)
+            # Convert location grouped to polars df
+            pl_data_i = converting.geo2non(gpd_data_i)
 
-        # TODO: convert to pairs
+            # Merge converted with no location
+            pl_data_c = pl.concat(
+                [pl_data_i, self.pl_data_nl[code]],
+                how='diagonal'
+            )
 
-        # TODO: add text location based linking (if country equals, if state_or_province also equals)
+            dict_uri_text = converting.non2dict(pl_data=pl_data_c,
+                                                key_col='ms_uri', val_col='text')
+            dict_uri_name = converting.non2dict(pl_data=pl_data_c,
+                                                key_col='ms_uri', val_col='site_name')
 
-        self.data = self.data.with_columns(
-            text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]')
-        )
+            # Group by state & country
+            pl_data_c = linking.group_txt_loc(pl_data_c, link_lvl='state')
+            # Group only by country
+            pl_data_c = linking.group_txt_loc(pl_data_c, link_lvl='country')
 
-        # TODO: check text_based linking
-        if self.text_method == 'classify':
+            # Create text compare pairs
+            # Priority: grp_loc -> grp_state -> grp_country
+            list_loc_based = pl_data_c.filter(
+                pl.col('grp_loc') != -1,
+                ~pl.col('grp_loc').is_null()).group_by('grp_loc').agg([pl.all()])['ms_uri'].to_list()
+            
+            pairs = converting.listlist2pairs(list_loc_based)
+
+            pd_loc_based = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
+
+            pl_loc_based = pl.from_pandas(pd_loc_based).with_columns(
+                ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
+                ms_uri2_text = pl.col('ms_uri_2').replace(dict_uri_text),
+                ms_uri1_name = pl.col('ms_uri_1').replace(dict_uri_name),
+                ms_uri2_name = pl.col('ms_uri_2').replace(dict_uri_name),
+            ).with_columns(
+                text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]'),
+                bool_name_match = (pl.col('ms_uri1_name') == pl.col('ms_uri2_name')),
+            ).drop(['ms_uri1_name', 'ms_uri2_name'])
+
+            # TODO: does not start with 'un' ex. unnamed occurence, unidentified etc.
+
+            print(pl_loc_based)
+
+            pl_guaranteed = pl_loc_based.filter(
+                pl.col('bool_name_match') == True
+            ).with_columns(link_text_result = pl.lit(1))
+
+            print(pl_guaranteed)
+
+            pl_loc_based = pl_loc_based.filter(
+                pl.col('bool_name_match') == False
+            )
+
             self.model_dir = './fusemine/_model/trained_model/'
-            self.id2label = data.load_data('./fusemine/_model/id2label.pkl')
+            self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
 
-            self.data = linking.text_pair_classification(pl_data=self.data,
-                                                         dir_model=self.model_dir,
-                                                         id2label=self.id2label)
-        else:
-            # TODO: add Fuseminev1
-            pass
+            # TODO: Check if universal. If not remove
+            logger.info(f'Estimated RunTime: {0.004 * (1/30) * (pl_loc_based.shape[0])} min')
 
-        [c_code]
+            pl_text_linked = linking.text_pair_classification(
+                pl_data = pl_loc_based,
+                dir_model=self.model_dir,
+                id2label=self.id2label,
+            )
+
+            pl_text_linked.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/umn-ta2-mineral-site-linkage/tmp.csv')
+
+            self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
+
 
     def identify_links(self) -> None:
-        self.data = self.data.filter(
-            pl.col('linked') == 1 
-        ).select(
-            pl.col(['ms_uri_1', 'ms_uri_2']),
-            modified_at = pl.lit(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
-        )
+        for code, pl_linked_data in self.pl_linked_data.items():
+            pl_linked_data = self.pl_linked_data[code].filter(
+                pl.col('link_text_result') == 0
+            ).select(
+                pl.col(['ms_uri_1', 'ms_uri_2']).str.replace('https://minmod.isi.edu/resource/', ''),
+                modified_at = pl.lit(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            )
+
+            self.data[code] = pl_linked_data
 
     def save_output(self,
-                    save_format: str='csv') -> None:
+                    save_format: str='CSV') -> None:
         """
         TODO: Fill in information
         """
         list_commodities_code = self.data.keys()
+
+        data.check_directory_path(path_directory=self.dir_output, bool_create=True)
 
         for idx, c_code in enumerate(list_commodities_code):
             path_output = os.path.join(self.dir_output, f"{self.focus_commodity[idx]}_sameas_{datetime.now(timezone.utc).strftime('%m%d')}.large")
@@ -251,4 +278,4 @@ class FuseMine:
                 data.save_data(self.data[c_code], path_save=path_output, save_format=save_format)
             except:
                 logger.warning("Unacceptable save format. Defaulting to pickle.")
-                data.save_data(self.data[c_code], path_save=self.path_output, save_format='pickle')
+                data.save_data(self.data[c_code], path_save=path_output, save_format='pickle')

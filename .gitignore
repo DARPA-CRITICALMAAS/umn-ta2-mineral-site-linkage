@@ -1,7 +1,8 @@
 __pycache__/
-ta2/
-output/
-outputs/
+**/__pycache__/
+
 logs/
-*.out
-*.log
+output/
+
+_archive_utils/
+_dev_files/

@@ -1,3 +1,4 @@
+import pickle # TODO: delete later
 import argparse
 from fusemine import FuseMine
 
@@ -17,27 +18,18 @@ def main(commodity:str=None,
                         dir_output=output_directory,
                         location_method=geo_method, text_method=text_method,
                         start_fresh=start_fresh)
-    
-    # Load data from minmod or user input datafile (if exists)
-    if not is_dev:
-        if input_data:
-            fusemine.load_data(input_data=input_data, method='data')
-        else:
-            fusemine.load_data()
-    else:
-        fusemine.load_dev()
 
     # Prepare data for linking purpose (unify crs, serialize data etc)
     fusemine.prepare_data()
 
-    # # Process database
-    # fusemine.link()
-
+    # Process database
+    fusemine.link()
+    
     # Finalize links
-    # fusemine.identify_links()
-        
+    fusemine.identify_links()
+
     # Save output
-    # fusemine.save_output()
+    fusemine.save_output()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TA2 FuseMine-Mineral Site Linking')

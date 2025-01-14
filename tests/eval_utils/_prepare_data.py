@@ -24,6 +24,6 @@ def check_mode(path_file: str) -> str:
 def combine_dfs(dfgt: pl.DataFrame,
                 dfpred: pl.DataFrame) -> pl.DataFrame:
     # Preserve only those that are available on the ground truth dataset
-    dfgt = dfgt.join(dfpred, left_on=['ms_uri_1', 'ms_uri_2'])
+    dfgt = dfgt.join(dfpred, how='left', on=['ms_uri_1', 'ms_uri_2'])
 
     return dfgt

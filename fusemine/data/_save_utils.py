@@ -23,20 +23,21 @@ def save_data(input_data:pl.DataFrame,
         with open(f'{path_save}.pkl', 'wb') as handle:
             pickle.dump(input_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    if save_format.lower() == 'csv':
+    elif save_format.lower() == 'csv':
         # TODO: Test
         try:
+            print(input_data)
             input_data.write_csv(f'{path_save}.csv')
         except:
             # Incase dataframe consists of some format not supported by polars write csv
             pd_data = input_data.to_pandas()
             pd_data.to_csv(f'{path_save}.csv')
 
-    if save_format.lower() == 'json':
+    elif save_format.lower() == 'json':
         # TODO: Create
         file_extension = '.json'
 
-    if save_format.lower() in ['geojson', 'geo']:
+    elif save_format.lower() in ['geojson', 'geo']:
         # TODO: Create
         file_extension = '.geojson'
 

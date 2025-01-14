@@ -5,13 +5,22 @@ import polars as pl
 import eval_utils
 
 def main(path_same_as: str,
-         ground_truth_type: str) -> None:
+         ground_truth_type: str,
+         specific: bool,) -> None:
     
     # Load prediction (same_as) file
     sameas_name, sameas_mode = os.path.splitext(path_same_as)
     if sameas_mode != '.csv':
         raise ValueError("Same as file must be in CSV format.")
-    pl_sameas = eval_utils.load_df(sameas_name, 'csv').with_columns(pl.lit(1).alias('prediction'))   
+    pl_sameas = eval_utils.load_df(sameas_name, 'csv').select(
+        ['ms_uri_1', 'ms_uri_2']
+    )
+    pl_sameas_reverse = pl_sameas.rename({'ms_uri_1':'ms_uri_2', 'ms_uri_2': 'ms_uri_1'})
+
+    pl_sameas = pl.concat(
+        [pl_sameas, pl_sameas_reverse],
+        how='diagonal'
+    ).with_columns(pl.lit(1).alias('prediction'))   
 
     # Load ground truth file
     if ground_truth_type not in ['w_idmt', 'w_gbw', 'ni_umidwest']:
@@ -27,9 +36,15 @@ def main(path_same_as: str,
 
     # Create metrics dictionary
     dict_metrics = {}
-    dict_metrics.update(eval_utils.f1_val(pl_data=pl_data))
-    dict_metrics.update(eval_utils.precision_val(pl_data=pl_data))
-    dict_metrics.update(eval_utils.recall_val(pl_data=pl_data))
+    if specific:
+        dict_metrics.update(eval_utils.f1_val(pl_data=pl_data))
+    else:
+        dict_metrics.update(eval_utils.f1_val(pl_data=pl_data,
+                                              bool_indiv=False))
+    dict_metrics.update(eval_utils.acc_val(pl_data=pl_data))
+    if specific:
+        dict_metrics.update(eval_utils.precision_val(pl_data=pl_data))
+        dict_metrics.update(eval_utils.recall_val(pl_data=pl_data))
     
     # Print out table
     eval_utils.display_table(dict_data=dict_metrics)  
@@ -40,10 +55,14 @@ if __name__ == '__main__':
     parser.add_argument('--same_as_file', required=True, type=str,
                         help='Directory or file where the mineral site database is located')
     
-    parser.add_argument('--ground_truth_type', required=True, type=str, default='w_idmt'
+    parser.add_argument('--ground_truth_type', required=True, type=str, default='w_idmt',
                         help='Options: w_idmt, w_gbw, ni_umidwest')
+    
+    parser.add_argument('--specific', action='store_true',
+                        help='Use tag if you will also like class-wise F1 score, precision, and recall')
     
     args = parser.parse_args()
 
     main(path_same_as=args.same_as_file,
-         ground_truth_type=args.ground_truth_type)
+         ground_truth_type=args.ground_truth_type,
+         specific=args.specific,)

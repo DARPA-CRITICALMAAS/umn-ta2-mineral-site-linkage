@@ -2,15 +2,17 @@ import statistics
 import polars as pl
 import geopandas as gpd
 
-def point_rep(gpd_input: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def point_rep(gpd_input: gpd.GeoDataFrame,
+              geom_col: str='location') -> gpd.GeoDataFrame:
     # Convert geometry to point using centroid
-    gpd_input['geometry'] = gpd_input['geometry'].apply(lambda x: x.centroid if x.type!="Point" else x)
+    gpd_input[geom_col] = gpd_input[geom_col].apply(lambda x: x.centroid if x.type!="Point" else x)
     
     return gpd_input
 
-def area_rep(gpd_input: gpd.GeoDataFrame) -> gpd.GeoDataFrame: 
+def area_rep(gpd_input: gpd.GeoDataFrame,
+             geom_col: str='location') -> gpd.GeoDataFrame: 
     # Apply buffer to convert input polygon
-    gpd_input['geometry'] = gpd_input['geometry'].buffer(distance=3000)
+    gpd_input[geom_col] = gpd_input[geom_col].buffer(distance=3000)
 
     return gpd_input
 

@@ -14,8 +14,8 @@ def text_pair_classification(pl_data:pl.DataFrame,
                              id2label:dict) -> pl.DataFrame:
     """
 
-    0: 'No'
-    1: 'Yes'
+    '0' = Yes
+    '1' = No
     """
     # Convert data to Dataset dictionary
     tokenized_data = convert_to_datadict(pl_data=pl_data, id2label=id2label)

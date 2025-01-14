@@ -8,7 +8,7 @@ from fusemine import data
 
 class DefaultLogger:
     def __init__(self):
-        self.logger = logging.getLogger('ProcMine')
+        self.logger = logging.getLogger('FuseMine')
         self.log_dir = './logs/'
 
     def configure(self, 
@@ -42,7 +42,7 @@ class DefaultLogger:
 
         # Initiating filehandler i.e., log file
         data.check_directory_path(path_directory='./logs/')  # Creating log folder if not exist
-        fh = logging.FileHandler(f'./logs/procmine_{datetime.timestamp(datetime.now())}.log')
+        fh = logging.FileHandler(f'./logs/fusemine_{datetime.timestamp(datetime.now())}.log')
         fh.setFormatter(logging.Formatter("%(asctime)s: %(message)s"))
         self.logger.addHandler(fh)
 
