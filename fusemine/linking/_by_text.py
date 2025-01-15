@@ -2,6 +2,7 @@ import numpy as np
 import polars as pl
 
 import torch
+from scipy.special import softmax
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
 from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer
@@ -28,6 +29,9 @@ def text_pair_classification(pl_data:pl.DataFrame,
 
     predictions, _, _ = trainer.predict(test_dataset=tokenized_data['test'])
     predicted_label = np.argmax(predictions, axis=1)
+    confidence = softmax(predictions, axis=1)
+
+    print(confidence) # TODO: remove
 
     pl_data = pl_data.with_columns(
         link_text_result = pl.Series(predicted_label)
@@ -54,8 +58,6 @@ def tokenize_function(dict_input:dict):
 def text_embedding_cosine(list_embeddings: list):
     similarity_score = pairwise_cosine_similarity(list_embeddings).numpy(force=True)
     similarity_score = np.triu(similarity_score)
-
-    list_condition_satisfied = np.transpose(np.nonzero(similarity_score > 0.85))
 
     # TODO: complete
     pass

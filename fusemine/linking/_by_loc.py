@@ -16,7 +16,7 @@ def group_proximity(gpd_input: gpd.GeoDataFrame,
     arr_coordinates = np.array(list(zip(gpd_input[geom_col].x, gpd_input[geom_col].y)))
 
     clusters = HDBSCAN(min_cluster_size=2,
-                       cluster_selection_epsilon=7000).fit(arr_coordinates).labels_
+                       cluster_selection_epsilon=15000).fit(arr_coordinates).labels_
     
     gpd_input['grp_loc'] = clusters
 
