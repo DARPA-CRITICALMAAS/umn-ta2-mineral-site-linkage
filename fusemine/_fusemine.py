@@ -280,7 +280,7 @@ class FuseMine:
                 dir_model=self.model_dir,
                 id2label=self.id2label,
             )
-            # Add functionality with combining confidence of cosine similarity and classification confidence
+            # TODO: Add functionality with combining confidence of cosine similarity and classification confidence
             self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
 
     def identify_links(self) -> None:

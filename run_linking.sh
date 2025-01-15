@@ -37,7 +37,7 @@ container_id=$(docker run -dit ta2-linking)
 
 run_script=$(cat <<END
 echo "Running FuseMine for commodity: "$commodity
-poetry run python3 fusemine.py --commodity $commodity
+poetry run python3 run_fusemine.py --commodity $commodity
 exit
 END
 )
@@ -48,8 +48,8 @@ echo "  Completed"
 echo ""
 
 # Copying file from docker container to local
-echo "Moving" $commodity"_sameas.csv file from Docker container to local"
-docker cp $container_id":/umn-ta2-mineral-site-linkage/outputs/"$commodity"_sameas.csv" ../ta2-minmod-data/data/same-as/umn/
+echo "Moving" $commodity"_sameas_"$(date '+%m%d')".csv file from Docker container to local"
+docker cp $container_id":/umn-ta2-mineral-site-linkage/output/"$commodity"_sameas_"$(date '+%m%d')".large.csv" ../ta2-minmod-data/data/same-as/umn/
 echo "  Completed"
 echo ""
 
