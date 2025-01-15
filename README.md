@@ -73,20 +73,20 @@ FuseMine has been evaluated using the following three datasets:
 - [Spatial data associated with tungsten skarn resource assessment of the Northern Rocky Mountains, Montana and Idaho](https://www.usgs.gov/data/spatial-data-associated-tungsten-skarn-resource-assessment-northern-rocky-mountains-montana)
     - **States**: Idaho, Montana
     - **Focus Commodity**: Tungsten
-    - **Data Path**: [`./tests/eval_data/w_idmt.csv`](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/tests/eval_data/w_idmt.csv)
+    - **Data Path**: [`./tests/eval_data/w_idmt.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/tests/eval_data/w_idmt.csv)
 - [Tungsten skarn mineral resource assessment of the Great Basin region of western Nevada and eastern California - Geodatabase](https://www.usgs.gov/data/tungsten-skarn-mineral-resource-assessment-great-basin-region-western-nevada-and-eastern-0)
     - **States**: Nevada, California
     - **Focus Commodity**: Tungsten
-    - **Data Path**: [`./tests/eval_data/w_gbw.csv`](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/tests/eval_data/w_gbw.csv)
+    - **Data Path**: [`./tests/eval_data/w_gbw.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/tests/eval_data/w_gbw.csv)
 - Nickel in Upper Midwest United States
     - **States**: Michigan, Minnesota, Wisconsin
     - **Focus Commodity**: Nickel
-    - **Data Path**: [`./tests/eval_data/ni_umidwest.csv`](https://github.com/DARPA-CRITICALMAAS/ta2-minmod-data/blob/main/tests/eval_data/ni_umidwest.csv)
+    - **Data Path**: [`./tests/eval_data/ni_umidwest.csv`](https://github.com/DARPA-CRITICALMAAS/umn-ta2-mineral-site-linkage/blob/main/tests/eval_data/ni_umidwest.csv)
 
 The following table summarizes the model's performance, evaluated based on Accuracy and [Macro-averaged F1 Score](https://en.wikipedia.org/wiki/F-score#Macro_F1):
 
-| Dataset | Accuracy (%) | Macro-averaged F1 Score (%) |
-| --- | --- | --- |
-| `w_idmt` | 99.95 | 70.57 |
-| `w_gbw` | 99.89 | 72.98 |
-| `ni_umidwest` |  |  |
+| Dataset | Accuracy (%) | Macro-averaged F1 Score (%) | Count Correct Links | Count Correct Non-links |
+| --- | --- | --- | --- | --- |
+| `w_idmt` | 99.95 | 70.57 |  |  |
+| `w_gbw` | 99.89 | 72.98 |  |  |
+| `ni_umidwest` |  |  |  |  |
