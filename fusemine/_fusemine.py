@@ -244,7 +244,7 @@ class FuseMine:
                 id2label=self.id2label,
             )
 
-            pl_text_linked.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/umn-ta2-mineral-site-linkage/tmp.csv')
+            # pl_text_linked.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/umn-ta2-mineral-site-linkage/tmp.csv')
 
             self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
 
