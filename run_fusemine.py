@@ -28,6 +28,9 @@ def main(commodity:str=None,
     # Prepare data for linking purpose (unify crs, serialize data etc)
     fusemine.prepare_data()
 
+    # with open('./dev_fusemine.pkl', 'rb') as handle:
+    #     fusemine = pickle.load(handle)
+
     # Process database
     fusemine.link()
     

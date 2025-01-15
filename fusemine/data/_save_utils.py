@@ -24,9 +24,7 @@ def save_data(input_data:pl.DataFrame,
             pickle.dump(input_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     elif save_format.lower() == 'csv':
-        # TODO: Test
         try:
-            print(input_data)
             input_data.write_csv(f'{path_save}.csv')
         except:
             # Incase dataframe consists of some format not supported by polars write csv

@@ -206,9 +206,36 @@ class FuseMine:
                 pl.col('grp_loc') != -1,
                 ~pl.col('grp_loc').is_null()).group_by('grp_loc').agg([pl.all()])['ms_uri'].to_list()
             
+            list_pl_state = pl_data_c.filter(
+                pl.col('grp_state') != -1,
+            ).partition_by('grp_state')
+            list_pl_state = [(i if i.filter(pl.col('grp_loc').is_null()).shape[0] > 0 else pl.DataFrame()) for i in list_pl_state]
+
+            list_pl_country = pl_data_c.filter(
+                pl.col('grp_country') != -1,
+                ((~pl.col('grp_loc').is_null()) | (pl.col('grp_state') == -1))
+            ).partition_by('grp_country')
+            list_pl_country = [(i if i.filter(pl.col('grp_state') == -1).shape[0] > 0 else pl.DataFrame()) for i in list_pl_country]
+
+            for pl_state in list_pl_state:
+                if pl_state.is_empty():
+                    continue
+
+                tmp_loc = pl_state.filter(
+                    ~(pl.col('grp_loc').is_null())
+                )['ms_uri'].to_list()
+                tmp_non_loc = pl_state.filter(
+                    pl.col('grp_loc').is_null()
+                )['ms_uri'].to_list()
+
+                if (len(tmp_loc) > 0) and (len(tmp_non_loc) > 0):
+                    list_loc_based.append([tmp_loc, tmp_non_loc])
+                        
             pairs = converting.listlist2pairs(list_loc_based)
 
             pd_loc_based = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
+
+            pd_loc_based.to_csv('tmp.csv')
 
             pl_loc_based = pl.from_pandas(pd_loc_based).with_columns(
                 ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
@@ -218,9 +245,12 @@ class FuseMine:
             ).with_columns(
                 text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]'),
                 bool_name_match = (pl.col('ms_uri1_name') == pl.col('ms_uri2_name')),
-            ).drop(['ms_uri1_name', 'ms_uri2_name'])
+            )
 
-            # TODO: does not start with 'un' ex. unnamed occurence, unidentified etc.
+            # Filter those with 'Unnamed' and 'Unidenfied' and auto-the result to non-match
+            pl_loc_based = pl_loc_based.filter(
+                ~((pl.col('ms_uri1_name').str.contains('(?i)unnamed|unidentified')) | (pl.col('ms_uri2_name').str.contains('(?i)unnamed|unidentified')))
+            ).drop(['ms_uri1_name', 'ms_uri2_name'])
 
             # Separate those that have EXACT match on name
             # Very highly likely they are linked
@@ -235,19 +265,12 @@ class FuseMine:
             self.model_dir = './fusemine/_model/trained_model/'
             self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
 
-            # TODO: Check if universal. If not remove
-            logger.info(f'Estimated RunTime: {0.004 * (1/30) * (pl_loc_based.shape[0])} min')
-
             pl_text_linked = linking.text_pair_classification(
                 pl_data = pl_loc_based,
                 dir_model=self.model_dir,
                 id2label=self.id2label,
             )
-
-            pl_text_linked.write_csv('/home/yaoyi/pyo00005/CriticalMAAS/umn-ta2-mineral-site-linkage/tmp.csv')
-
             self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
-
 
     def identify_links(self) -> None:
         for code, pl_linked_data in self.pl_linked_data.items():

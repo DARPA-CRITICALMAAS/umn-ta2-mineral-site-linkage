@@ -1,5 +1,5 @@
 from typing import Dict, List
-from itertools import combinations
+from itertools import combinations, product
 
 import polars as pl
 import pandas as pd
@@ -106,6 +106,9 @@ def listlist2pairs(list_uris: List[List[str]]):
     list_pairs = []
 
     for i in list_uris:
-        list_pairs.extend(list(combinations(i, 2)))
+        if isinstance(i[0], str):
+            list_pairs.extend(list(combinations(i, 2)))
+        elif isinstance(i[0], list):
+            list_pairs.extend(list(product(i[0], i[1])))
 
     return list_pairs

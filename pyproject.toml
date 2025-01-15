@@ -1,6 +1,6 @@
 [project]
 name = "umn-ta2-mineral-site-linkage"
-version = "2.0.0"
+version = "2.1.0"
 description = "FuseMine: CriticalMAAS TA2 pipeline to link mineral site record"
 authors = [
     {name = "Jiyoon Pyo",email = "jiyoonp0228@gmail.com"}
