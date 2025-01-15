@@ -31,10 +31,9 @@ def text_pair_classification(pl_data:pl.DataFrame,
     predicted_label = np.argmax(predictions, axis=1)
     confidence = softmax(predictions, axis=1)
 
-    print(confidence) # TODO: remove
-
     pl_data = pl_data.with_columns(
-        link_text_result = pl.Series(predicted_label)
+        link_text_result = pl.Series(predicted_label),
+        classification_confidence = confidence
     )
 
     return pl_data

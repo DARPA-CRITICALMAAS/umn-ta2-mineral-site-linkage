@@ -280,7 +280,16 @@ class FuseMine:
                 dir_model=self.model_dir,
                 id2label=self.id2label,
             )
+            list_cosine_score = linking.text_embedding_cosine(pl_text_linked['combined_names'].to_list())
+
+            pl_text_linked = pl_text_linked.with_columns(
+                cosine_score = pl.Series(list_cosine_score)
+            )
+            # TODO: add the classification score with cosine score
+            pl_text_linked = pl_text_linked.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()]).map_elements(lambda x: mean(x))
+            # TODO: Do statistical mean on similarity
             # TODO: Add functionality with combining confidence of cosine similarity and classification confidence
+
             self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
 
     def identify_links(self) -> None:
