@@ -63,7 +63,10 @@ class FuseMine:
 
         self.start_fresh = start_fresh
         self.location_method = location_method
-        self.text_method = text_method
+        self.text_method = [text_method]
+        
+        if text_method == 'combine':
+            self.text_method = ['cosine', 'classify']
 
         self.pl_linked_data = {}
 
@@ -188,6 +191,7 @@ class FuseMine:
             if self.location_method == 'distance':
                 gpd_data_i = representation.point_rep(gpd_data_i)
                 gpd_data_i = linking.group_proximity(gpd_data_i)
+            # TODO: add area based linking
 
             # Convert location grouped to polars df
             pl_data_i = converting.geo2non(gpd_data_i)
@@ -197,13 +201,6 @@ class FuseMine:
                 [pl_data_i, self.pl_data_nl[code]],
                 how='diagonal'
             )
-
-            # Create text dict (used for classification)
-            dict_uri_text = converting.non2dict(pl_data=pl_data_c,
-                                                key_col='ms_uri', val_col='text')
-            # Create name dict (use for guarantee & unnamed/unidentified filtering)
-            dict_uri_name = converting.non2dict(pl_data=pl_data_c,
-                                                key_col='ms_uri', val_col='org_site_name')
 
             # Group by state & country
             pl_data_c = linking.group_txt_loc(pl_data_c, link_lvl='state')
@@ -247,6 +244,13 @@ class FuseMine:
 
             pd_loc_based = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
 
+            # Create text dict (used for classification)
+            dict_uri_text = converting.non2dict(pl_data=pl_data_c,
+                                                key_col='ms_uri', val_col='text')
+            # Create name dict (use for guarantee & unnamed/unidentified filtering)
+            dict_uri_name = converting.non2dict(pl_data=pl_data_c,
+                                                key_col='ms_uri', val_col='org_site_name')
+
             pl_loc_based = pl.from_pandas(pd_loc_based).with_columns(
                 ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
                 ms_uri2_text = pl.col('ms_uri_2').replace(dict_uri_text),
@@ -272,23 +276,28 @@ class FuseMine:
                 pl.col('bool_name_match') == False
             )
 
-            self.model_dir = './fusemine/_model/trained_model/'
-            self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
+            # TODO: rename the dataframe
+            if 'classify' in self.text_method:
+                self.model_dir = './fusemine/_model/trained_model/'
+                self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
 
-            pl_text_linked = linking.text_pair_classification(
-                pl_data = pl_loc_based,
-                dir_model=self.model_dir,
-                id2label=self.id2label,
-            )
-            list_cosine_score = linking.text_embedding_cosine(pl_text_linked['combined_names'].to_list())
+                pl_text_linked = linking.text_pair_classification(
+                    pl_data = pl_loc_based,
+                    dir_model=self.model_dir,
+                    id2label=self.id2label,
+                )   # adds column classification_confidence
 
-            pl_text_linked = pl_text_linked.with_columns(
-                cosine_score = pl.Series(list_cosine_score)
-            )
-            # TODO: add the classification score with cosine score
-            pl_text_linked = pl_text_linked.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()]).map_elements(lambda x: mean(x))
-            # TODO: Do statistical mean on similarity
-            # TODO: Add functionality with combining confidence of cosine similarity and classification confidence
+            if 'cosine' in self.text_method:
+                # TODO: combine and explode the name columns
+                list_cosine_score = linking.text_embedding_cosine(pl_text_linked['combined_names'].to_list())
+                cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
+
+                pl_text_linked = pl_text_linked.with_columns(
+                    cosine_confidence = pl.Series(cosine_confidence)
+                )
+            
+            pl_text_linked = pl_text_linked.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()])
+            converting.determine_label()
 
             self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
 

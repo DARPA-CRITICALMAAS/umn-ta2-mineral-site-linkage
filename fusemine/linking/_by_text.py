@@ -1,5 +1,6 @@
 import numpy as np
 import polars as pl
+from Typing import List
 
 import torch
 from scipy.special import softmax
@@ -10,6 +11,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 tokenizer = AutoTokenizer.from_pretrained('roberta-base')
 
+# Classification Version
 def text_pair_classification(pl_data:pl.DataFrame,
                              dir_model:str,
                              id2label:dict) -> pl.DataFrame:
@@ -35,6 +37,7 @@ def text_pair_classification(pl_data:pl.DataFrame,
         link_text_result = pl.Series(predicted_label),
         classification_confidence = confidence
     )
+    # TODO: chech if classification confidence as np array can be stored
 
     return pl_data
 
@@ -54,9 +57,10 @@ def convert_to_datadict(pl_data:pl.DataFrame,
 def tokenize_function(dict_input:dict):
     return tokenizer(dict_input['text'], padding='max_length', truncation=True, max_length=512)
 
-def text_embedding_cosine(list_embeddings: list):
+# Cosine Version
+def text_embedding_cosine(list_embeddings: list) -> List[List[float]]:
     similarity_score = pairwise_cosine_similarity(list_embeddings).numpy(force=True)
     similarity_score = np.triu(similarity_score)
+    # Change this to return List[List[float]] ex. [[x, 1-x], [y, 1-y]]
 
-    # TODO: complete
-    pass
+    return similarity_score
