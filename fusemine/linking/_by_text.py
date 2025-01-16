@@ -1,6 +1,6 @@
 import numpy as np
 import polars as pl
-from Typing import List
+from typing import List
 
 import torch
 from scipy.special import softmax

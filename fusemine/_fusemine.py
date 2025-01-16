@@ -149,34 +149,25 @@ class FuseMine:
         self.gpd_data = {}
         self.pl_data_nl = {}
         for code, pl_data in self.data.items():
-            list_not_touched_cols = list({'ms_uri', 'source_id', 'country', 'state_or_province', 'site_name', 'location', 'crs'} & set(list(pl_data.columns)))
-            if self.text_method == 'classify':
-                # Run text serialization
-                # TODO: Check order of text
-                list_remaining_cols = list({'country', 'state_or_province', 'location', 'site_name', 'other_names', 'commodity', 'deposit_type'} & set(list(pl_data.columns)))
+            # list_not_touched_cols = list({'ms_uri', 'source_id', 'country', 'state_or_province', 'site_name', 'location', 'crs'} & set(list(pl_data.columns)))
+            if 'classify' in self.text_method:
+                list_textify_cols = list({'country', 'state_or_province', 'location', 'site_name', 'other_names', 'commodity', 'deposit_type'} & set(list(pl_data.columns)))
 
-                pl_data = pl_data.select(
-                    pl.col(list_not_touched_cols),
-                    text = pl.struct(pl.col(list_remaining_cols).str.to_lowercase()).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs'))
-                )
-
-            elif self.text_method == 'cosine':
-                # V1 relies only on mineral site name
-                suffix_regex = data.load_data(os.path.join(self.dir_entities, '_site_suffix'), '.pkl')
-                commodity_regex = data.load_data(os.path.join(self.dir_entities, '_commodities_prefix'), '.pkl')
-                self.data[code] = pl_data.select(
-                    pl.col(list_not_touched_cols),
-                    pl.col(['site_name', 'other_names']).str.replace_all(rf"{suffix_regex}", '').str.replace_all(rf"{commodity_regex}", '').str.replace_all(r"\s+", ' ')
-                )
-
-            else:
-                # FuseMine V3 combine classification with cosine similarity
-                # Aim to mitigate issue with classification based not performing well on foreign named mines
-                list_site_names = {'site_name', 'other_names'} & set(list(pl_data.columns))
                 pl_data = pl_data.with_columns(
-                    pl.col('site_name').alias('org_site_name'),
-                    pl.col(list_site_names).str.replace_all(rf"{suffix_regex}", '').str.replace_all(rf"{commodity_regex}", '').str.replace_all(r"\s+", ' '),
-                    text = pl.struct(pl.col(list_remaining_cols).str.to_lowercase()).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs')),
+                    text = pl.struct(pl.col(list_textify_cols).str.to_lowercase()).map_elements(lambda x: converting.text_serialization(x, method='attribute_value_pairs'))
+                )
+
+            if 'cosine' in self.text_method:
+                suffix_regex = data.load_data(os.path.join(self.dir_entities, '_site_suffix.pkl'), '.pkl')
+                commodity_regex = data.load_data(os.path.join(self.dir_entities, '_commodities_prefix.pkl'), '.pkl')
+                
+                # Combine all possible names
+                list_available_name_cols = list({'site_name', 'other_names'} & set(list(pl_data.columns)))
+                pl_data = pl_data.with_columns(
+                    all_names = pl.concat_str(
+                        [pl.col(list_available_name_cols)],
+                        separator = "; ",
+                    ).str.replace_all(rf"{suffix_regex}", '').str.replace_all(rf"{commodity_regex}", '').str.replace_all(r"\s+", ' ')
                 )
             
             # Prepare location attribute
@@ -191,7 +182,9 @@ class FuseMine:
             if self.location_method == 'distance':
                 gpd_data_i = representation.point_rep(gpd_data_i)
                 gpd_data_i = linking.group_proximity(gpd_data_i)
-            # TODO: add area based linking
+            if self.location_method == 'area':
+                # TODO: append area based method
+                pass
 
             # Convert location grouped to polars df
             pl_data_i = converting.geo2non(gpd_data_i)
@@ -202,9 +195,9 @@ class FuseMine:
                 how='diagonal'
             )
 
-            # Group by state & country
+            # Group by state & country text
             pl_data_c = linking.group_txt_loc(pl_data_c, link_lvl='state')
-            # Group only by country
+            # Group only by country text
             pl_data_c = linking.group_txt_loc(pl_data_c, link_lvl='country')
 
             # Create text compare pairs
@@ -237,12 +230,16 @@ class FuseMine:
 
                 if (len(tmp_loc) > 0) and (len(tmp_non_loc) > 0):
                     list_loc_based.append([tmp_loc, tmp_non_loc])
-                elif (len(tmp_loc) == 0 ) and (len(tmp_non_loc) > 0):
+                elif (len(tmp_loc) == 0) and (len(tmp_non_loc) > 0):
+                    # Incase only text based location available
                     list_loc_based.append(tmp_non_loc)
                         
             pairs = converting.listlist2pairs(list_loc_based)
 
-            pd_loc_based = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
+            # Create ms_uri_1, ms_uri_2 pair dataframe
+            pd_uri_pairs = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
+
+            # TODO: CLean up this part
 
             # Create text dict (used for classification)
             dict_uri_text = converting.non2dict(pl_data=pl_data_c,
@@ -250,8 +247,8 @@ class FuseMine:
             # Create name dict (use for guarantee & unnamed/unidentified filtering)
             dict_uri_name = converting.non2dict(pl_data=pl_data_c,
                                                 key_col='ms_uri', val_col='org_site_name')
-
-            pl_loc_based = pl.from_pandas(pd_loc_based).with_columns(
+            
+            pl_uri_pairs = pl.from_pandas(pd_uri_pairs).with_columns(
                 ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
                 ms_uri2_text = pl.col('ms_uri_2').replace(dict_uri_text),
                 ms_uri1_name = pl.col('ms_uri_1').replace(dict_uri_name),
@@ -262,44 +259,45 @@ class FuseMine:
             )
 
             # Filter those with 'Unnamed' and 'Unidenfied' and auto-the result to non-match
-            pl_loc_based = pl_loc_based.filter(
+            pl_uri_pairs = pl_uri_pairs.filter(
                 ~((pl.col('ms_uri1_name').str.contains('(?i)unnamed|unidentified')) | (pl.col('ms_uri2_name').str.contains('(?i)unnamed|unidentified')))
             ).drop(['ms_uri1_name', 'ms_uri2_name'])
 
             # Separate those that have EXACT match on name
             # Very highly likely they are linked
-            pl_guaranteed = pl_loc_based.filter(
+            pl_guaranteed = pl_uri_pairs.filter(
                 pl.col('bool_name_match') == True
             ).with_columns(link_text_result = pl.lit(0))
 
-            pl_loc_based = pl_loc_based.filter(
+            pl_uri_pairs = pl_uri_pairs.filter(
                 pl.col('bool_name_match') == False
             )
 
-            # TODO: rename the dataframe
             if 'classify' in self.text_method:
                 self.model_dir = './fusemine/_model/trained_model/'
                 self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
 
-                pl_text_linked = linking.text_pair_classification(
-                    pl_data = pl_loc_based,
+                pl_uri_pairs = linking.text_pair_classification(
+                    pl_data = pl_uri_pairs,
                     dir_model=self.model_dir,
                     id2label=self.id2label,
                 )   # adds column classification_confidence
 
             if 'cosine' in self.text_method:
                 # TODO: combine and explode the name columns
-                list_cosine_score = linking.text_embedding_cosine(pl_text_linked['combined_names'].to_list())
+                list_cosine_score = linking.text_embedding_cosine(pl_uri_pairs['combined_names'].to_list())
                 cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
 
-                pl_text_linked = pl_text_linked.with_columns(
+                pl_uri_pairs = pl_uri_pairs.with_columns(
                     cosine_confidence = pl.Series(cosine_confidence)
                 )
+
+            print(pl_uri_pairs)
             
-            pl_text_linked = pl_text_linked.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()])
+            pl_uri_pairs = pl_uri_pairs.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()])
             converting.determine_label()
 
-            self.pl_linked_data[code] = pl.concat([pl_text_linked, pl_guaranteed], how='diagonal_relaxed')
+            self.pl_linked_data[code] = pl.concat([pl_uri_pairs, pl_guaranteed], how='diagonal_relaxed')
 
     def identify_links(self) -> None:
         for code, pl_linked_data in self.pl_linked_data.items():

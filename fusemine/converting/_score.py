@@ -1,8 +1,14 @@
-from Typing import List
+from typing import List
 
 import numpy as np
 
 def oned2twod(oneD_list: List[float],):
+    """
+    TODO: fill information
+
+    Arguments:
+
+    """
     # TODO: check
     oneD_list = np.transpose(np.array(oneD_list))
     otherD_list = np.transpose(np.array(1 - oneD_list))
@@ -11,6 +17,12 @@ def oned2twod(oneD_list: List[float],):
 
 def determine_label(input_scores:List[List[List[float]]]|List[List[float]], 
                     text_method:str = 'combined') -> List[int]:
+    """
+    TODO: fill information
+
+    Arguments:
+    
+    """
     input_scores = np.array(input_scores)
 
     if text_method == 'combined':

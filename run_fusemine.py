@@ -6,7 +6,7 @@ def main(commodity:str=None,
          country:str=None, state:str=None,
          start_fresh:bool=False,
          geo_method:str='distance',
-         text_method:str='classify',
+         text_method:str='cosine',
          input_data:str=None,
          output_directory:str=None,
          
@@ -28,17 +28,20 @@ def main(commodity:str=None,
     # Prepare data for linking purpose (unify crs, serialize data etc)
     fusemine.prepare_data()
 
-    # with open('./dev_fusemine.pkl', 'rb') as handle:
-    #     fusemine = pickle.load(handle)
+    with open('./fusemine_model.pkl', 'wb') as handle:
+        pickle.dump(fusemine, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('./fusemine_model.pkl', 'rb') as handle:
+        fusemine = pickle.load(handle)
 
     # Process database
     fusemine.link()
     
-    # Finalize links
-    fusemine.identify_links()
+    # # Finalize links
+    # fusemine.identify_links()
 
-    # Save output
-    fusemine.save_output()
+    # # Save output
+    # fusemine.save_output()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='TA2 FuseMine-Mineral Site Linking')
