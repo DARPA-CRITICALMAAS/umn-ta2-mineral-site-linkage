@@ -13,7 +13,7 @@ def oned2twod(oneD_list: List[float],):
     oneD_list = np.transpose(np.array(oneD_list))
     otherD_list = np.transpose(np.array(1 - oneD_list))
 
-    return np.hstack(oneD_list, otherD_list).tolist()
+    return np.hstack((oneD_list, otherD_list)).tolist()
 
 def determine_label(input_scores:List[List[List[float]]]|List[List[float]], 
                     text_method:str = 'combined') -> List[int]:

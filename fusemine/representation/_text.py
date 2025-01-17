@@ -35,4 +35,4 @@ def special_tokens(method:str):
         return '[COL] ', ' [VAL] ', ' '
     
 def text_embedding(list_text: List[str]):
-    return st_model.encode(list_text, convert_to_tensor=True)
+    return st_model.encode(list_text)

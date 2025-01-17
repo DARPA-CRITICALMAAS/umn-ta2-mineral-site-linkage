@@ -5,6 +5,7 @@ from typing import List
 import torch
 from scipy.special import softmax
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
+from sklearn.metrics.pairwise import cosine_similarity
 from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer
 
@@ -58,9 +59,18 @@ def tokenize_function(dict_input:dict):
     return tokenizer(dict_input['text'], padding='max_length', truncation=True, max_length=512)
 
 # Cosine Version
-def text_embedding_cosine(list_embeddings: list) -> List[List[float]]:
-    similarity_score = pairwise_cosine_similarity(list_embeddings).numpy(force=True)
-    similarity_score = np.triu(similarity_score)
-    # Change this to return List[List[float]] ex. [[x, 1-x], [y, 1-y]]
+def text_embedding_cosine(list_embedding1: List[List[float]],
+                          list_embedding2: List[List[float]]=[]) -> List[List[float]]:
+    if len(list_embedding2) == 0:
+        similarity_score = pairwise_cosine_similarity(list_embedding1).numpy(force=True)
+        similarity_score = np.triu(similarity_score)
 
-    return similarity_score
+        return similarity_score
+    else:
+        similarity_score = cosine_similarity(list_embedding1, list_embedding2)
+
+        print(similarity_score)
+
+        print(similarity_score[0,:])
+        
+        return similarity_score

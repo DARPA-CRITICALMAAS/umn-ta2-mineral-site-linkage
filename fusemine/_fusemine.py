@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore", category=pl.MapWithoutReturnDtypeWarning)
 urllib3.disable_warnings()
 
 from fusemine import data, converting, representation, linking
-# from fusemine import training
+from sklearn.metrics.pairwise import cosine_similarity # TODO: remove
 
 from fusemine._utils import (
     DefaultLogger,
@@ -35,7 +35,7 @@ class FuseMine:
                  dir_entities:str='./fusemine/_entities',
 
                  location_method:str='distance',
-                 text_method:str='classify',
+                 text_method:str='cosine',
                  start_fresh:bool=False,
 
                  verbose: bool=False,) -> None:
@@ -60,10 +60,11 @@ class FuseMine:
 
         # Convert string input in QNode
         self.set_variables()
-
-        self.start_fresh = start_fresh
+        self.start_fresh = start_fresh            
+            
         self.location_method = location_method
         self.text_method = [text_method]
+        print(self.text_method)
         
         if text_method == 'combine':
             self.text_method = ['cosine', 'classify']
@@ -173,7 +174,7 @@ class FuseMine:
             # Prepare location attribute
             self.gpd_data[code], self.pl_data_nl[code] = converting.non2geo(pl_data, str_geo_col='location')
     
-    def link(self,) -> None:    
+    def fresh_link(self,) -> None:    
         """
         TODO: Fill in information
         """    
@@ -239,41 +240,48 @@ class FuseMine:
             # Create ms_uri_1, ms_uri_2 pair dataframe
             pd_uri_pairs = pd.DataFrame(pairs, columns=['ms_uri_1', 'ms_uri_2'])
 
-            # TODO: CLean up this part
-
-            # Create text dict (used for classification)
-            dict_uri_text = converting.non2dict(pl_data=pl_data_c,
-                                                key_col='ms_uri', val_col='text')
             # Create name dict (use for guarantee & unnamed/unidentified filtering)
             dict_uri_name = converting.non2dict(pl_data=pl_data_c,
-                                                key_col='ms_uri', val_col='org_site_name')
-            
+                                                key_col='ms_uri', val_col='site_name')
+
+            # Basic name operation
+            # Those will EXACT name match will have a high chance of 
             pl_uri_pairs = pl.from_pandas(pd_uri_pairs).with_columns(
-                ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
-                ms_uri2_text = pl.col('ms_uri_2').replace(dict_uri_text),
                 ms_uri1_name = pl.col('ms_uri_1').replace(dict_uri_name),
                 ms_uri2_name = pl.col('ms_uri_2').replace(dict_uri_name),
+            ).filter(
+                ~((pl.col('ms_uri1_name').str.contains('(?i)unnamed|unidentified')) | (pl.col('ms_uri2_name').str.contains('(?i)unnamed|unidentified')))
             ).with_columns(
-                text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]'),
-                bool_name_match = (pl.col('ms_uri1_name') == pl.col('ms_uri2_name')),
+                bool_name_match = (pl.col('ms_uri1_name') == pl.col('ms_uri2_name'))
             )
 
-            # Filter those with 'Unnamed' and 'Unidenfied' and auto-the result to non-match
+            # Filter those with 'Unnamed' and 'Unidentified' and auto-the result to non-match
             pl_uri_pairs = pl_uri_pairs.filter(
                 ~((pl.col('ms_uri1_name').str.contains('(?i)unnamed|unidentified')) | (pl.col('ms_uri2_name').str.contains('(?i)unnamed|unidentified')))
             ).drop(['ms_uri1_name', 'ms_uri2_name'])
 
             # Separate those that have EXACT match on name
-            # Very highly likely they are linked
             pl_guaranteed = pl_uri_pairs.filter(
                 pl.col('bool_name_match') == True
             ).with_columns(link_text_result = pl.lit(0))
 
+
+            # Use only those that are bool name match False
             pl_uri_pairs = pl_uri_pairs.filter(
                 pl.col('bool_name_match') == False
             )
 
             if 'classify' in self.text_method:
+                dict_uri_text = converting.non2dict(pl_data=pl_data_c,
+                                                    key_col='ms_uri', val_col='text')
+                pl_uri_pairs = pl.from_pandas(pd_uri_pairs).with_columns(
+                    ms_uri1_text = pl.col('ms_uri_1').replace(dict_uri_text),
+                    ms_uri2_text = pl.col('ms_uri_2').replace(dict_uri_text),
+                ).with_columns(
+                    text = pl.lit('[CLS]') + pl.col('ms_uri1_text') + pl.lit('[SEP]') + pl.col('ms_uri2_text') + pl.lit('[SEP]'),
+                )
+
+                # Load model
                 self.model_dir = './fusemine/_model/trained_model/'
                 self.id2label = data.load_data('./fusemine/_model/id2label.pkl', '.pkl')
 
@@ -284,20 +292,43 @@ class FuseMine:
                 )   # adds column classification_confidence
 
             if 'cosine' in self.text_method:
-                # TODO: combine and explode the name columns
-                list_cosine_score = linking.text_embedding_cosine(pl_uri_pairs['combined_names'].to_list())
-                cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
+                pl_data_c = pl_data_c.with_columns(pl.col('all_names').str.replace_all(r"\s*[\|,;]\s*", ";").str.split(';'))
+                dict_uri_names = converting.non2dict(pl_data=pl_data_c,
+                                                     key_col='ms_uri', val_col='all_names')
+                
+                pl_uri_pairs = pl.from_pandas(pd_uri_pairs).with_columns(
+                    ms_uri1_name = pl.col('ms_uri_1').replace_strict(dict_uri_names),
+                    ms_uri2_name = pl.col('ms_uri_2').replace_strict(dict_uri_names),
+                ).explode('ms_uri1_name').explode('ms_uri2_name').with_columns(
+                    pl.col(['ms_uri1_name', 'ms_uri2_name']).str.strip_chars()
+                ).drop_nulls()
+                
+                ms_uri1_embeddings = representation.text_embedding(pl_uri_pairs['ms_uri1_name'].to_list())
+                ms_uri2_embeddings = representation.text_embedding(pl_uri_pairs['ms_uri2_name'].to_list())
 
-                pl_uri_pairs = pl_uri_pairs.with_columns(
-                    cosine_confidence = pl.Series(cosine_confidence)
-                )
+                print(ms_uri1_embeddings.shape)
 
+                # list_cosine_score = linking.text_embedding_cosine(ms_uri1_embeddings, ms_uri2_embeddings)
+                # print(list_cosine_score)
+                # cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
+
+                # pl_uri_pairs = pl_uri_pairs.with_columns(
+                #     cosine_confidence = pl.Series(cosine_confidence)
+                # )
+
+            pl_uri_pairs.select(pl.col(['ms_uri_1', 'ms_uri_2', 'cosine_confidence'])).to_pandas().to_csv('./cosine.csv')
             print(pl_uri_pairs)
             
             pl_uri_pairs = pl_uri_pairs.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()])
             converting.determine_label()
 
             self.pl_linked_data[code] = pl.concat([pl_uri_pairs, pl_guaranteed], how='diagonal_relaxed')
+
+    def default_link(self,):
+        # for code, gpd_data_i in self.gpd_data.items():
+        #     self.pl_linked_data[code] = pl.concat([pl_uri_pairs, pl_guaranteed], how='diagonal_relaxed')
+        #     pass
+        pass
 
     def identify_links(self) -> None:
         for code, pl_linked_data in self.pl_linked_data.items():

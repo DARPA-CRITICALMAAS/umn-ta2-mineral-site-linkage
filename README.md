@@ -56,23 +56,7 @@ poetry run python3 run_fusemine.py --commodity <commodity>
 
 ```
 exit
-docker cp <container_id>:/umn-ta2-mineral-site-linkage/output/<commodity>_<date>_sameas.csv <save_path>
-<<<<<<< HEAD
-=======
-```
-
-- `save_path`: Path of directory to store the same_as links
-
-4. Stop Docker container
-```
-docker stop <container_id>
-```
-
-3. Move data from Docker container to local
-```
-exit
-docker cp <container_id>:/umn-ta2-mineral-site-linkage/outputs/<commodity>_sameas.csv <save_path>
->>>>>>> main
+docker cp <container_id>:/umn-ta2-mineral-site-linkage/output/<commodity>_<date:mmdd>_sameas.csv <save_path>
 ```
 - `save_path`: Path of directory to store the same_as links
 
