@@ -64,7 +64,6 @@ class FuseMine:
             
         self.location_method = location_method
         self.text_method = [text_method]
-        print(self.text_method)
         
         if text_method == 'combine':
             self.text_method = ['cosine', 'classify']
@@ -150,7 +149,6 @@ class FuseMine:
         self.gpd_data = {}
         self.pl_data_nl = {}
         for code, pl_data in self.data.items():
-            # list_not_touched_cols = list({'ms_uri', 'source_id', 'country', 'state_or_province', 'site_name', 'location', 'crs'} & set(list(pl_data.columns)))
             if 'classify' in self.text_method:
                 list_textify_cols = list({'country', 'state_or_province', 'location', 'site_name', 'other_names', 'commodity', 'deposit_type'} & set(list(pl_data.columns)))
 
@@ -300,27 +298,23 @@ class FuseMine:
                     ms_uri1_name = pl.col('ms_uri_1').replace_strict(dict_uri_names),
                     ms_uri2_name = pl.col('ms_uri_2').replace_strict(dict_uri_names),
                 ).explode('ms_uri1_name').explode('ms_uri2_name').with_columns(
-                    pl.col(['ms_uri1_name', 'ms_uri2_name']).str.strip_chars()
-                ).drop_nulls()
+                    pl.col(['ms_uri1_name', 'ms_uri2_name']).str.strip_chars().str.to_titlecase()
+                ).filter(
+                    pl.col('ms_uri1_name') != '',
+                    pl.col('ms_uri2_name') != ''
+                )
                 
                 ms_uri1_embeddings = representation.text_embedding(pl_uri_pairs['ms_uri1_name'].to_list())
                 ms_uri2_embeddings = representation.text_embedding(pl_uri_pairs['ms_uri2_name'].to_list())
 
-                print(ms_uri1_embeddings.shape)
+                list_cosine_score = linking.text_embedding_cosine(ms_uri1_embeddings, ms_uri2_embeddings)
+                cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
 
-                # list_cosine_score = linking.text_embedding_cosine(ms_uri1_embeddings, ms_uri2_embeddings)
-                # print(list_cosine_score)
-                # cosine_confidence = converting.oned2twod(oneD_list=list_cosine_score)
-
-                # pl_uri_pairs = pl_uri_pairs.with_columns(
-                #     cosine_confidence = pl.Series(cosine_confidence)
-                # )
-
-            pl_uri_pairs.select(pl.col(['ms_uri_1', 'ms_uri_2', 'cosine_confidence'])).to_pandas().to_csv('./cosine.csv')
-            print(pl_uri_pairs)
-            
-            pl_uri_pairs = pl_uri_pairs.group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()])
-            converting.determine_label()
+                pl_uri_pairs = pl_uri_pairs.with_columns(
+                    cosine_confidence = pl.Series(cosine_confidence)
+                ).group_by(['ms_uri_1', 'ms_uri_2']).agg([pl.all()]).with_columns(
+                    pl.struct(pl.col('cosine_confidence')).map_elements(lambda x: converting.combined_cosine_scoring(x['cosine_confidence']))
+                )
 
             self.pl_linked_data[code] = pl.concat([pl_uri_pairs, pl_guaranteed], how='diagonal_relaxed')
 
@@ -331,15 +325,27 @@ class FuseMine:
         pass
 
     def identify_links(self) -> None:
-        for code, pl_linked_data in self.pl_linked_data.items():
-            pl_linked_data = self.pl_linked_data[code].filter(
-                pl.col('link_text_result') == 0
+        for code, pl_df in self.pl_linked_data.items():
+            # TODO: if any of them have 1.0 confidence for cosine-0 then assign that
+            if not 'classify_confidence' in list(pl_df.columns):
+                pl_df = pl_df.with_columns(classify_confidence = pl.lit(0.5))
+            if not 'cosine_confidence' in list(pl_df.columns):
+                pl_df = pl_df.with_columns(cosine_confidence = pl.lit(0.5))
+
+            pl_df = pl_df.with_columns(
+                link_result = pl.when(
+                    (pl.col('classify_confidence') + pl.col('cosine_confidence')) > 1
+                ).then(0).otherwise(1)
+            ).filter(
+                pl.col('link_result') == 0
             ).select(
                 pl.col(['ms_uri_1', 'ms_uri_2']).str.replace('https://minmod.isi.edu/resource/', ''),
                 modified_at = pl.lit(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
             )
 
-            self.data[code] = pl_linked_data
+            pl_df.to_pandas().to_csv('./cosineclassify.csv')
+
+            self.data[code] = pl_df
 
     def save_output(self,
                     save_format: str='CSV') -> None:

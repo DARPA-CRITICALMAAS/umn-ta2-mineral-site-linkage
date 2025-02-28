@@ -5,7 +5,7 @@ from typing import List
 import torch
 from scipy.special import softmax
 from torchmetrics.functional.pairwise import pairwise_cosine_similarity
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import paired_cosine_distances
 from datasets import Dataset, DatasetDict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer
 
@@ -30,15 +30,21 @@ def text_pair_classification(pl_data:pl.DataFrame,
     )
     trainer = Trainer(trained_model)
 
-    predictions, _, _ = trainer.predict(test_dataset=tokenized_data['test'])
-    predicted_label = np.argmax(predictions, axis=1)
-    confidence = softmax(predictions, axis=1)
+    with torch.no_grad():
+        # https://stackoverflow.com/questions/63076190/how-to-calculate-the-memory-requirement-of-bert
+        # TODO: test if this reduces memory requirement
+
+        # predictions, _, _ = trainer.predict(test_dataset=tokenized_data['test'])
+        predictions, _, _ = trainer.predict(test_dataset=tokenized_data['test'])
+        # predicted_label = np.argmax(predictions, axis=1)
+        confidence = softmax(predictions, axis=1)
 
     pl_data = pl_data.with_columns(
-        link_text_result = pl.Series(predicted_label),
+        # link_text_result = pl.Series(predicted_label),
         classification_confidence = confidence
-    )
-    # TODO: chech if classification confidence as np array can be stored
+    ).with_columns(
+        pl.struct(pl.col('classification_confidence')).map_elements(lambda x: x['classification_confidence'][0])
+    )       # TODO: check if working properly
 
     return pl_data
 
@@ -62,15 +68,13 @@ def tokenize_function(dict_input:dict):
 def text_embedding_cosine(list_embedding1: List[List[float]],
                           list_embedding2: List[List[float]]=[]) -> List[List[float]]:
     if len(list_embedding2) == 0:
-        similarity_score = pairwise_cosine_similarity(list_embedding1).numpy(force=True)
+        with torch.no_grad():
+            similarity_score = pairwise_cosine_similarity(list_embedding1).numpy(force=True)
         similarity_score = np.triu(similarity_score)
 
         return similarity_score
     else:
-        similarity_score = cosine_similarity(list_embedding1, list_embedding2)
-
-        print(similarity_score)
-
-        print(similarity_score[0,:])
+        with torch.no_grad():
+            similarity_score = paired_cosine_distances(list_embedding1, list_embedding2)
         
         return similarity_score
